@@ -23,7 +23,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun App() {
     MaterialTheme {
         var showContent by remember { mutableStateOf(false) }
-        val greeting = remember { Greeting().greet() }
         Column (
             Modifier.fillMaxSize(),
             Arrangement.Center,
