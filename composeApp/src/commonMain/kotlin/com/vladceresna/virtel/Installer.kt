@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun Installer() {
+    var installFolder by remember { mutableStateOf("") }
         Column (
             Modifier.fillMaxSize(),
             Arrangement.Center,
@@ -41,5 +43,15 @@ fun Installer() {
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center
             )
+            TextField(
+                value = installFolder,
+                onValueChange = { installFolder = it },
+                label = { Text("Label") }
+            )
+            Button(
+                onClick = {}
+            ){
+                Text("Install")
+            }
         }
 }
