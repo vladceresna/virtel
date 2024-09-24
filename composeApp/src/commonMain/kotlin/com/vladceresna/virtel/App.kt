@@ -18,31 +18,50 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+enum class PageType {
+    STARTUP,
+    INSTALLING,
+
+}
+
+
 @Composable
 @Preview
 fun App() {
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column (
-            Modifier.fillMaxSize(),
-            Arrangement.Center,
-            Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Virtel",
-                modifier = Modifier.padding(10.dp),
-                fontWeight = FontWeight(900),
-                fontSize = 75.sp,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "made by\nVlad Ceresna",
-                modifier = Modifier.padding(20.dp),
-                fontWeight = FontWeight(500),
-                color = Color(0,200,0,255),
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center
-            )
+        var showContent by remember { mutableStateOf(PageType.STARTUP) }
+        when(showContent){
+            PageType.STARTUP -> {
+                Column (
+                    Modifier.fillMaxSize(),
+                    Arrangement.Center,
+                    Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Virtel",
+                        modifier = Modifier.padding(10.dp),
+                        fontWeight = FontWeight(900),
+                        fontSize = 75.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "made by\nVlad Ceresna",
+                        modifier = Modifier.padding(20.dp),
+                        fontWeight = FontWeight(500),
+                        color = Color(0,200,0,255),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(onClick = {showContent = PageType.INSTALLING}){
+                        Text("Install")
+                    }
+                }
+            }
+            PageType.INSTALLING -> {
+                Installer()
+            }
+            else -> {}
         }
+
     }
 }
