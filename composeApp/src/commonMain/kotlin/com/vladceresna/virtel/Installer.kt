@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -43,7 +45,7 @@ fun Installer() {
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center
             )
-            TextField(
+            OutlinedTextField(
                 value = installFolder,
                 onValueChange = { installFolder = it },
                 label = { Text("Label") }
