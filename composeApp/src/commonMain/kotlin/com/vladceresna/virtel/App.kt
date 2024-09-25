@@ -82,7 +82,9 @@ fun App() {
                         label = { Text("Label") }
                     )
                     Button(
-                        onClick = {}
+                        onClick = {
+                            
+                        }
                     ){
                         Text("Install")
                     }
