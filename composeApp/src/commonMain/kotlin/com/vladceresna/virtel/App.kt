@@ -2,6 +2,12 @@ package com.vladceresna.virtel
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import io.ktor.server.cio.CIO
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
+import io.ktor.util.reflect.TypeInfo
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
@@ -11,6 +17,7 @@ fun App() {
     MaterialTheme (){
         Application("vladceresna.virtel.launcher")
     }
+
 }
 
 

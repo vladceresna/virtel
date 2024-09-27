@@ -54,6 +54,8 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
+            implementation("io.ktor:ktor-server-cio:3.0.0-rc-1")
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
