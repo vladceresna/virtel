@@ -1,4 +1,6 @@
 [versions]
+coroutines = "1.9.0"
+ktor = "2.3.12"
 agp = "8.2.2"
 android-compileSdk = "34"
 android-minSdk = "24"
@@ -18,6 +20,11 @@ kotlinx-coroutines = "1.8.1"
 material3 = "1.8.0"
 
 [libraries]
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

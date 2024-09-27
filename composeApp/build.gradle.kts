@@ -32,10 +32,15 @@ kotlin {
     
     sourceSets {
         val desktopMain by getting
-        
+
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.kotlinx.coroutines.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -47,6 +52,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+            implementation(libs.ktor.client.core)
+            implementation(libs.kotlinx.coroutines.core)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -89,6 +96,7 @@ android {
     }
     dependencies {
         debugImplementation(compose.uiTooling)
+        implementation(libs.kotlinx.coroutines.android)
     }
 }
 
