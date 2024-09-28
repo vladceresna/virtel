@@ -1,6 +1,6 @@
 package com.vladceresna.virtel
 
-object Processor {
+object VirtelSystem {
     var installPath = ""
 
     var programs: List<Program> = mutableListOf()
@@ -28,6 +28,4 @@ object Processor {
     fun runProgram(appId:String) {
 
     }
-
-
 }
