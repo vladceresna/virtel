@@ -1,4 +1,4 @@
-package com.vladceresna.virtel
+package com.vladceresna.virtel.runner
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,21 +18,22 @@ import androidx.compose.material3.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Screen(appId: String, darkTheme: Boolean) {
+fun Screen() {
     var text by remember { mutableStateOf("") }
+    var virtelSystem = VirtelSystem
 
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(appId) },
+                title = { Text(virtelSystem.currentRunnedProgram.appId) },
             )
         }
     ){
         Surface (
             modifier = Modifier.fillMaxSize().padding(0.dp,64.dp,0.dp,0.dp)
         ) {
-            var dom = ScreenOperator
+            var dom = ScreenModel(ProgramStatus.SCREEN)
             Column {
                 Text(text)
                 OutlinedTextField(
@@ -40,6 +41,14 @@ fun Screen(appId: String, darkTheme: Boolean) {
                     onValueChange = { text = it },
                     label = { Text("Label") }
                 )
+                Button(
+                    onClick = {
+                        virtelSystem.isLoading = true
+                        virtelSystem.renderFunction()
+                    }
+                ){
+                    Text("Click")
+                }
             }
 
         }
