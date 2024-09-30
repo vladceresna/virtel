@@ -57,6 +57,9 @@ kotlin {
             implementation("io.ktor:ktor-server-cio:3.0.0-rc-1")
 
         }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
@@ -78,6 +81,7 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     packaging {
         resources {
@@ -107,7 +111,7 @@ compose.desktop {
         mainClass = "com.vladceresna.virtel.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "com.vladceresna.virtel"
             packageVersion = "1.0.0"
         }

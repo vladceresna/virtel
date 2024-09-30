@@ -1,7 +1,6 @@
 package com.vladceresna.virtel.runner
 
 import com.vladceresna.virtel.getHomePath
-import com.vladceresna.virtel.getPlatform
 import kotlinx.coroutines.delay
 import kotlinx.io.files.Path
 
@@ -15,7 +14,7 @@ data object VirtelSystem {
 
 
     suspend fun start() {
-        delay(5000)
+        delay(1000)
         if(!isInstalled()){
             println(getHomePath())
         }

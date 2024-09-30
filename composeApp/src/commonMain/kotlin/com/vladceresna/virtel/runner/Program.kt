@@ -5,8 +5,7 @@ import kotlinx.io.files.Path
 data class Program(
     var appId: String,
     var path: Path,
-    var status: ProgramStatus,
-
+    var status: ProgramStatus
 )
 
 enum class ProgramStatus{

@@ -1,4 +1,4 @@
-package com.vladceresna.virtel.runner
+package com.vladceresna.virtel.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,9 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
-import com.vladceresna.virtel.Platform
 import com.vladceresna.virtel.getHomePath
 import com.vladceresna.virtel.getPlatform
+import com.vladceresna.virtel.runner.VirtelSystem
+import com.vladceresna.virtel.runner.WidgetModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +30,7 @@ fun VirtelScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(virtelSystem.currentRunnedProgram.appId) },
+                title = { Text(VirtelSystem.currentRunnedProgram.appId) },
             )
         }
 
@@ -47,8 +48,8 @@ fun VirtelScreen() {
                 )
                 Button(
                     onClick = {
-                        virtelSystem.isLoading = true
-                        virtelSystem.renderFunction()
+                        VirtelSystem.isLoading = true
+                        VirtelSystem.renderFunction()
 
                     }
                 ){

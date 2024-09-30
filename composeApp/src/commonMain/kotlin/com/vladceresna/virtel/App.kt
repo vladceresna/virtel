@@ -3,8 +3,8 @@ package com.vladceresna.virtel
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
 import com.example.compose.AppTheme
-import com.vladceresna.virtel.runner.LoadingScreen
-import com.vladceresna.virtel.runner.VirtelScreen
+import com.vladceresna.virtel.screens.LoadingScreen
+import com.vladceresna.virtel.screens.VirtelScreen
 import com.vladceresna.virtel.runner.VirtelSystem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
