@@ -55,7 +55,7 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
             implementation("io.ktor:ktor-server-cio:3.0.0-rc-1")
-
+            implementation("com.squareup.okio:okio:3.9.1")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

@@ -1,4 +1,4 @@
-package com.vladceresna.virtel.runner
+package com.vladceresna.virtel.models
 
 import kotlinx.io.files.Path
 
@@ -9,5 +9,5 @@ data class Program(
 )
 
 enum class ProgramStatus{
-    SCREEN, BACKGROUND
+    SCREEN, BACKGROUND, DISABLED
 }

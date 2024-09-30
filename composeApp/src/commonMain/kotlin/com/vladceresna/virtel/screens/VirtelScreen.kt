@@ -18,7 +18,7 @@ import androidx.compose.material3.*
 import com.vladceresna.virtel.getHomePath
 import com.vladceresna.virtel.getPlatform
 import com.vladceresna.virtel.runner.VirtelSystem
-import com.vladceresna.virtel.runner.WidgetModel
+import com.vladceresna.virtel.models.WidgetModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

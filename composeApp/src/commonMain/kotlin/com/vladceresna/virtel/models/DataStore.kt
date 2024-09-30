@@ -1,4 +1,4 @@
-package com.vladceresna.virtel.runner
+package com.vladceresna.virtel.models
 
 data object DataStore {
     var data:Map<DataType,List<Any>> = emptyMap()

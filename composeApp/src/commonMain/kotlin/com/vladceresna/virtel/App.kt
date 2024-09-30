@@ -3,6 +3,7 @@ package com.vladceresna.virtel
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
 import com.example.compose.AppTheme
+import com.vladceresna.virtel.other.VirtelException
 import com.vladceresna.virtel.screens.LoadingScreen
 import com.vladceresna.virtel.screens.VirtelScreen
 import com.vladceresna.virtel.runner.VirtelSystem

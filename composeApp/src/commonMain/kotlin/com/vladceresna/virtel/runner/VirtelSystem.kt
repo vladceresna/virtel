@@ -1,49 +1,36 @@
 package com.vladceresna.virtel.runner
 
+import com.vladceresna.virtel.controllers.FileSystem
 import com.vladceresna.virtel.getHomePath
+import com.vladceresna.virtel.models.Program
+import com.vladceresna.virtel.models.ProgramStatus
+import com.vladceresna.virtel.other.VirtelException
 import kotlinx.coroutines.delay
 import kotlinx.io.files.Path
 
 data object VirtelSystem {
-    lateinit var renderFunction: () -> Unit
-    lateinit var currentRunnedProgram: Program
-
     var isLoading: Boolean = true
-    var installPath = ""
-    var programs: List<Program> = mutableListOf()
+    lateinit var renderFunction: () -> Unit
+    var currentRunnedProgram: Program = Program("s", Path(""),ProgramStatus.SCREEN)//TODO:VisualModule
 
+    var fileSystem = FileSystem
 
     suspend fun start() {
         delay(1000)
-        if(!isInstalled()){
-            println(getHomePath())
+        val homePath = getHomePath()
+        if(homePath == null) throw VirtelException()//TODO:Fix iOS and JVM
+        else fileSystem.scan(homePath)
+        if(fileSystem.isInstalled().not()){
+            install()
         }
-        scanPrograms()
+
+
         isLoading = false
         renderFunction()
     }
 
-    fun scanPrograms(): Unit {
-        currentRunnedProgram = Program(
-            "appId",
-            Path("appId"),
-            ProgramStatus.SCREEN
-        )
+    fun install(){
+        fileSystem.install()
     }
 
-    fun isInstalled(): Boolean {
-        return false // TODO
-    }
-    fun install(path:String){
-
-    }
-    fun getInstallPath() {
-
-    }
-    fun getApps(): List<Program> {
-        return emptyList()
-    }
-    fun runProgram(appId:String) {
-
-    }
 }
