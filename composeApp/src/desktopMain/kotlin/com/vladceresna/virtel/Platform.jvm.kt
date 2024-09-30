@@ -5,3 +5,6 @@ class JVMPlatform: Platform {
 }
 
 actual fun getPlatform(): Platform = JVMPlatform()
+actual fun getHomePath(): String? {
+    return System.getProperty("user.home")
+}

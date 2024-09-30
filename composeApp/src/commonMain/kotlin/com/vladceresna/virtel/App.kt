@@ -4,7 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
 import com.example.compose.AppTheme
 import com.vladceresna.virtel.runner.LoadingScreen
-import com.vladceresna.virtel.runner.Screen
+import com.vladceresna.virtel.runner.VirtelScreen
 import com.vladceresna.virtel.runner.VirtelSystem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -27,7 +27,7 @@ fun App(theme: Boolean = isSystemInDarkTheme()) {
         if (virtelSystem.isLoading) {
             LoadingScreen()
         } else {
-            Screen()
+            VirtelScreen()
         }
     }
 }
