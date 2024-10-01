@@ -23,7 +23,7 @@ data object VirtelSystem {
         if(fileSystem.isInstalled().not()){
             install()
         }
-
+        //TODO:running
 
         isLoading = false
         renderFunction()
