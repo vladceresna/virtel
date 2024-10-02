@@ -1,11 +1,13 @@
 package com.vladceresna.virtel.models
 
-import kotlinx.io.files.Path
+import okio.Path
+
 
 data class Program(
     var appId: String,
     var path: Path,
     var status: ProgramStatus
+    //TODO:more configs and scans
 )
 
 enum class ProgramStatus{

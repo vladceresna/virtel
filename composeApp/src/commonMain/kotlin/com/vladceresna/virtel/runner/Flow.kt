@@ -15,6 +15,7 @@ class Flow {
             }
         }
     }
+    //todo: read file and split by lines
 }
 
 data class Step(

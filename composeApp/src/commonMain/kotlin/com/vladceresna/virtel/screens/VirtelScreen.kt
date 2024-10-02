@@ -30,7 +30,7 @@ fun VirtelScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(VirtelSystem.currentRunnedProgram.appId) },
+                title = { Text(VirtelSystem.getCurrentRunnedProgram().appId) },
             )
         }
 

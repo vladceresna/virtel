@@ -1,6 +1,6 @@
 [versions]
 coroutines = "1.9.0"
-ktor = "2.3.12"
+ktor = "3.0.0-rc-1"
 agp = "8.2.2"
 android-compileSdk = "34"
 android-minSdk = "24"

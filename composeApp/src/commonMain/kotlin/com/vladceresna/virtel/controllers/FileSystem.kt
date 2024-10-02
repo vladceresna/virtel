@@ -1,7 +1,5 @@
 package com.vladceresna.virtel.controllers
 
-import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.SYSTEM
@@ -33,6 +31,8 @@ data object FileSystem {
         FileSystem.SYSTEM.createDirectories(launcherCodePath.toPath())
         Launchers.loadLauncher(
             "https://drive.usercontent.google.com/u/0/uc?id=1xPqJuiJO1E9C7GP91E0c5cYPe5xnDCOb&export=download")
+        //Launchers.loadLauncher("https://ktor.io/")
+
     }
 
 

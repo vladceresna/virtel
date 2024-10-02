@@ -1,19 +1,23 @@
 package com.vladceresna.virtel.runner
 
 import com.vladceresna.virtel.controllers.FileSystem
+import com.vladceresna.virtel.controllers.Programs
 import com.vladceresna.virtel.getHomePath
 import com.vladceresna.virtel.models.Program
 import com.vladceresna.virtel.models.ProgramStatus
 import com.vladceresna.virtel.other.VirtelException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.io.files.Path
 
 data object VirtelSystem {
     var isLoading: Boolean = true
     lateinit var renderFunction: () -> Unit
-    var currentRunnedProgram: Program = Program("s", Path(""),ProgramStatus.SCREEN)//TODO:VisualModule
 
-    var fileSystem = FileSystem
+    val programs = Programs
+    val fileSystem = FileSystem
 
     suspend fun start() {
         delay(1000)
@@ -23,14 +27,20 @@ data object VirtelSystem {
         if(fileSystem.isInstalled().not()){
             install()
         }
-        //TODO:running
-
+        Programs.scanPrograms()
+        Programs.startProgram("vladceresna.virtel.launcher")
         isLoading = false
         renderFunction()
     }
 
     fun install(){
         fileSystem.install()
+    }
+
+
+
+    fun getCurrentRunnedProgram():Program{
+        return programs.currentRunnedProgram
     }
 
 }
