@@ -1,9 +1,11 @@
 package com.vladceresna.virtel.runner
 
+import com.vladceresna.virtel.controllers.Data
+import com.vladceresna.virtel.controllers.DataStore
+import com.vladceresna.virtel.controllers.DataType
 import com.vladceresna.virtel.controllers.FileSystem
 import com.vladceresna.virtel.controllers.Log
 import com.vladceresna.virtel.controllers.Programs
-import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.log
 import okio.Path.Companion.toPath
 import okio.SYSTEM
@@ -12,12 +14,27 @@ class Flow (
     var appId: String,
     var flowName: String
 ) {
-    fun cmdWrite(args: List<String>){
-        log(args.toString(),Log.PROGRAM)
+    fun cmdWrite(args: MutableList<String>){
+        var value = DataStore.find(appId, DataType.VAR, args.get(0)).value
+        log(value.toString(),Log.PROGRAM)
     }
-    fun cmdRead(args: List<String>){
+    fun cmdRead(args: MutableList<String>){
+        var resVarName = DataStore.find(appId, DataType.VAR, args.get(0)).value//check if value is clear, pure startly
+        DataStore.data.add(Data(appId, DataType.VAR, resVarName as String, readln()!!))
 
     }
+    fun stgPut(args: MutableList<String>){
+
+    }
+    fun stgGet(args: MutableList<String>) {
+
+    }
+    fun stgDel(args: MutableList<String>) {
+
+    }
+
+
+
     fun runStep(step: Step){
         if(Programs.findProgram(appId).debugMode) {
             log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
@@ -27,8 +44,20 @@ class Flow (
                 "write" -> cmdWrite(step.args)
                 "read" -> cmdRead(step.args)
             }
+            "stg" -> when(step.cmd){
+                "put" -> stgPut(step.args)
+                "get" -> stgGet(step.args)
+                "del" -> stgDel(step.args)
+            }
+            "mat" -> when(step.cmd){
+                "plus" -> cmdWrite(step.args)
+                "minus" -> cmdRead(step.args)
+                "mult" -> cmdRead(step.args)
+                "div" -> cmdRead(step.args)
+            }
         }
     }
+
     fun runFile(fileName:String){
         val code = okio.FileSystem.SYSTEM.read(
             "${FileSystem.programsPath}/${appId}${FileSystem.srCode}$fileName".toPath())

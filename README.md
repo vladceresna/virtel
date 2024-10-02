@@ -94,7 +94,7 @@ Outputs:
 ---------
 ### List of currently implemented modules:
 - [x] csl (Command line)
-- [x] obj (Objects store (vars))
+- [x] stg (Storage objects store (vars))
 - [ ] mat (Math operations)
 - [ ] str (String operations (ex. cut))
 - [ ] bln (Boolean operations)
