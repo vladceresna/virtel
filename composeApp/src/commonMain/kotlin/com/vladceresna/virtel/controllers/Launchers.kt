@@ -22,6 +22,5 @@ data object Launchers {
                 com.vladceresna.virtel.controllers.FileSystem.launcherStartPath.toPath()
             ){writeUtf8(result)}
         }
-        println(url)
     }
 }

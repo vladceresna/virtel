@@ -1,16 +1,9 @@
-package com.vladceresna.virtel.runner
+package com.vladceresna.virtel.controllers
 
-import com.vladceresna.virtel.controllers.FileSystem
-import com.vladceresna.virtel.controllers.Programs
 import com.vladceresna.virtel.getHomePath
-import com.vladceresna.virtel.models.Program
-import com.vladceresna.virtel.models.ProgramStatus
+import com.vladceresna.virtel.runner.Program
 import com.vladceresna.virtel.other.VirtelException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.io.files.Path
 
 data object VirtelSystem {
     var isLoading: Boolean = true
@@ -20,6 +13,7 @@ data object VirtelSystem {
     val fileSystem = FileSystem
 
     suspend fun start() {
+        log("Virtel Platform starting...", Log.INFO)
         delay(1000)
         val homePath = getHomePath()
         if(homePath == null) throw VirtelException()//TODO:Fix iOS and JVM
@@ -27,10 +21,14 @@ data object VirtelSystem {
         if(fileSystem.isInstalled().not()){
             install()
         }
+        //TODO:read configs
         Programs.scanPrograms()
+        log("Virtel Launcher starting...", Log.INFO)
         Programs.startProgram("vladceresna.virtel.launcher")
+
         isLoading = false
         renderFunction()
+        log("Virtel Platform started", Log.SUCCESS)
     }
 
     fun install(){
@@ -39,7 +37,7 @@ data object VirtelSystem {
 
 
 
-    fun getCurrentRunnedProgram():Program{
+    fun getCurrentRunnedProgram(): Program {
         return programs.currentRunnedProgram
     }
 

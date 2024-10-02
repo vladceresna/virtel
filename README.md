@@ -93,7 +93,7 @@ Outputs:
 
 ---------
 ### List of currently implemented modules:
-- [x] cmd (Command line)
+- [x] csl (Command line)
 - [x] obj (Objects store (vars))
 - [ ] mat (Math operations)
 - [ ] str (String operations (ex. cut))
@@ -103,7 +103,7 @@ Outputs:
 - [ ] fls (Files)
 - [ ] scr (Operate screen components)
 - [ ] dgm (Diagrams)
-- [ ] srv (Server on selected ports)
+- [ ] srv (Server on selected ports) srv new "8080" "operator.steps" 
 - [ ] clt (Client for urls)
 - [ ] wss (WebSockets)
 - [ ] blt (Bluetooth)

@@ -1,9 +1,8 @@
 package com.vladceresna.virtel.controllers
 
-import com.vladceresna.virtel.models.Program
-import com.vladceresna.virtel.models.ProgramStatus
+import com.vladceresna.virtel.runner.Program
+import com.vladceresna.virtel.runner.ProgramStatus
 import com.vladceresna.virtel.other.VirtelException
-import com.vladceresna.virtel.runner.Flow
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.SYSTEM
@@ -15,10 +14,12 @@ data object Programs {
 
 
     fun scanPrograms(){
-        var tempres:List<Any> = okio.FileSystem.SYSTEM.list(fileSystem.programsPath.toPath())
+        log("Programs scanning",Log.INFO)
+        var tempres:List<Path> = okio.FileSystem.SYSTEM.list(fileSystem.programsPath.toPath())
         tempres.forEach {
-            programs.add(Program((it as Path).name, it, ProgramStatus.DISABLED))
+            programs.add(Program(it.toString()).also { it.scan() })
         }
+        log("Programs scanned",Log.SUCCESS)
     }
 
     fun findProgram(appId:String): Program {
@@ -32,9 +33,12 @@ data object Programs {
 
     fun startProgram(appId: String){
         var program = findProgram(appId)
-        runProgram(program)
+        program.scan()
+        currentRunnedProgram = program
+        program.run()
     }
     fun runProgram(program: Program){
-        //TODO: getconfigs, caches, run new coroutine, thread, flow with code
+        program.run()
+
     }
 }

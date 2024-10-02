@@ -1,8 +1,19 @@
 package com.vladceresna.virtel.screens
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -17,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import com.vladceresna.virtel.getHomePath
 import com.vladceresna.virtel.getPlatform
-import com.vladceresna.virtel.runner.VirtelSystem
+import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.models.WidgetModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,37 +37,69 @@ fun VirtelScreen() {
     var text by remember { mutableStateOf("") }
     var virtelSystem = VirtelSystem
 
+    Column {
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(VirtelSystem.getCurrentRunnedProgram().appId) },
-            )
-        }
-
-    ){
-        Surface (
-            modifier = Modifier.fillMaxSize().padding(0.dp,64.dp,0.dp,0.dp)
-        ) {
-            var dom = WidgetModel()
-            Column {
-                Text(text)
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = { Text("${getPlatform().name}${getHomePath()}") }
+        Scaffold(
+            Modifier.weight(9f),
+            topBar = {
+                TopAppBar(
+                    title = { Text(VirtelSystem.getCurrentRunnedProgram().appId) },
                 )
-                Button(
-                    onClick = {
-                        VirtelSystem.isLoading = true
-                        VirtelSystem.renderFunction()
+            },
+            bottomBar = {
+                BottomAppBar(
+                    actions = {
+                        IconButton(onClick = { /* do something */ }) {
+                            Icon(Icons.Filled.Check, contentDescription = "Localized description")
+                        }
+                        IconButton(onClick = { /* do something */ }) {
+                            Icon(Icons.Filled.Edit, contentDescription = "Localized description")
+                        }
+                        IconButton(onClick = { /* do something */ }) {
+                            Icon(
+                                Icons.Filled.Settings,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                        IconButton(onClick = { /* do something */ }) {
+                            Icon(Icons.Filled.Add, contentDescription = "Localized description")
+                        }
+                    },
+                    floatingActionButton = {
+                        Column {
+                            FloatingActionButton(
+                                onClick = { /* do something */ },
+                                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+                                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+                            ) {
+                                Icon(Icons.Filled.Menu, "Localized description")
+                            }
+                        }
 
                     }
-                ){
-                    Text("Click")
-                }
+                )
             }
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxSize().padding(0.dp, 64.dp, 0.dp, 0.dp)
+            ) {
+                var dom = WidgetModel()
+                Column {
 
+                }
+
+            }
+        }
+        Row(Modifier.weight(1f)) {
+            IconButton(onClick = { /* do something */ },Modifier.weight(1f)) {
+                Icon(Icons.Filled.Add, contentDescription = "Localized description")
+            }
+            IconButton(onClick = { /* do something */ },Modifier.weight(1f)) {
+                Icon(Icons.Filled.Add, contentDescription = "Localized description")
+            }
+            IconButton(onClick = { /* do something */ },Modifier.weight(1f)) {
+                Icon(Icons.Filled.Add, contentDescription = "Localized description")
+            }
         }
     }
 
