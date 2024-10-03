@@ -12,6 +12,17 @@ data object DataStore {
             .and(it.name.equals(name))
         } ?: throw VirtelException()
     }
+    fun tryGet(scopeAppId: String, type: DataType, name: String): Data {
+        var name = name.replace("\"","")
+        try {
+            return find(scopeAppId, type, name)
+        } catch (e:VirtelException){
+            return Data(scopeAppId,type,name,name)
+        }
+    }
+    fun put(scopeAppId: String, type: DataType, name: String, value: Any){
+        data.add(Data(scopeAppId,type,name,value))
+    }
 }
 
 data class Data(

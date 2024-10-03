@@ -10,28 +10,68 @@ import com.vladceresna.virtel.controllers.log
 import okio.Path.Companion.toPath
 import okio.SYSTEM
 
+
+/**
+ * In exectime:
+ * - value/var (or variable with it): tryGet: any name
+ * - varName (var need to write/save in): clear using: newVarName
+ * **/
 class Flow (
     var appId: String,
     var flowName: String
 ) {
-    fun cmdWrite(args: MutableList<String>){
-        var value = DataStore.find(appId, DataType.VAR, args.get(0)).value
+    /** csl write (text)
+     * */
+    fun cslWrite(args: MutableList<String>){
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value
         log(value.toString(),Log.PROGRAM)
     }
-    fun cmdRead(args: MutableList<String>){
-        var resVarName = DataStore.find(appId, DataType.VAR, args.get(0)).value//check if value is clear, pure startly
-        DataStore.data.add(Data(appId, DataType.VAR, resVarName as String, readln()!!))
-
+    /** csl read (newVarName)
+     * */
+    fun cslRead(args: MutableList<String>){
+        DataStore.put(appId, DataType.VAR, args.get(0), readln()!!)
     }
+    /** stg put (value) (newVarName)
+     * */
     fun stgPut(args: MutableList<String>){
-
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value
+        var resVarName = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value
+        DataStore.put(appId,DataType.VAR, resVarName.toString(), value)
     }
+    /** stg get (newVarName)
+     * */
     fun stgGet(args: MutableList<String>) {
-
+        var varName = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value
+        DataStore.tryGet(appId,DataType.VAR, varName.toString())
     }
+    /** stg del (newVarName)
+     * */
     fun stgDel(args: MutableList<String>) {
-
+        DataStore.data.remove(DataStore.tryGet(appId, DataType.VAR, args.get(1)))
     }
+    /** mat plus (a) (b) (newVarName)
+     * */
+    fun matPlus(args: MutableList<String>) {
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value
+        var resVarName = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value
+        DataStore.put(appId,DataType.VAR, resVarName.toString(), value)
+    }
+    /** mat minus (a) (b) (newVarName)
+     * */
+    fun matMinus(args: MutableList<String>) {
+        DataStore.data.remove(DataStore.tryGet(appId, DataType.VAR, args.get(1)))
+    }
+    /** mat mult (a) (b) (newVarName)
+     * */
+    fun matMult(args: MutableList<String>) {
+        DataStore.data.remove(DataStore.tryGet(appId, DataType.VAR, args.get(1)))
+    }
+    /** mat div (a) (b) (newVarName)
+     * */
+    fun matDiv(args: MutableList<String>) {
+        DataStore.data.remove(DataStore.tryGet(appId, DataType.VAR, args.get(1)))
+    }
+
 
 
 
@@ -40,9 +80,9 @@ class Flow (
             log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
         }
         when(step.mod){
-            "cmd" -> when(step.cmd){
-                "write" -> cmdWrite(step.args)
-                "read" -> cmdRead(step.args)
+            "csl" -> when(step.cmd){
+                "write" -> cslWrite(step.args)
+                "read" -> cslRead(step.args)
             }
             "stg" -> when(step.cmd){
                 "put" -> stgPut(step.args)
@@ -50,10 +90,10 @@ class Flow (
                 "del" -> stgDel(step.args)
             }
             "mat" -> when(step.cmd){
-                "plus" -> cmdWrite(step.args)
-                "minus" -> cmdRead(step.args)
-                "mult" -> cmdRead(step.args)
-                "div" -> cmdRead(step.args)
+                "plus" -> matPlus(step.args)
+                "minus" -> matMinus(step.args)
+                "mult" -> matMult(step.args)
+                "div" -> matDiv(step.args)
             }
         }
     }
@@ -135,3 +175,5 @@ data class Step(
     lateinit var cmd: String
     var args: MutableList<String> = mutableListOf()
 }
+
+
