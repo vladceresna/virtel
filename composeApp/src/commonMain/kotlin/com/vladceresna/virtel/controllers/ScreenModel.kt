@@ -18,10 +18,15 @@ data object ScreenModel {
 
 }
 
-data class WidgetModel(
-    var childs: MutableList<WidgetModel> = mutableListOf(),
-    var widgetType: WidgetType = WidgetType.VIEW
-) {
+data class WidgetModel(var widgetType: WidgetType = WidgetType.VIEW) {
+    var childs: MutableList<String> = mutableListOf()//names/ids
+
+    var width = -2//fill/wrap/fixed
+    var height = -2
+    var variant = 0//primary/secondary/tertiary/destructive
+    var title = "Label"
+    var value = ""
+    var onclick = "noclick.steps"
 
 }
 

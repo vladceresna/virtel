@@ -13,15 +13,19 @@ data object DataStore {
         } ?: throw VirtelException()
     }
     fun tryGet(scopeAppId: String, type: DataType, name: String): Data {
-        var name = name.replace("\"","")
+        var name = name
         try {
             return find(scopeAppId, type, name)
         } catch (e:VirtelException){
-            return Data(scopeAppId,type,name,name)
+            if (name.startsWith("\"").and(name.endsWith("\""))){
+                name = name.replace("\"","")
+                return Data(scopeAppId,type,name,name)
+            }
+            throw VirtelException()
         }
     }
     fun put(scopeAppId: String, type: DataType, name: String, value: Any){
-        data.add(Data(scopeAppId,type,name,value))
+        data.add(Data(scopeAppId, type, name, value))
     }
 }
 
