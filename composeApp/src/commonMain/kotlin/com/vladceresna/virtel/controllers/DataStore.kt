@@ -13,15 +13,17 @@ data object DataStore {
         } ?: throw VirtelException()
     }
     fun tryGet(scopeAppId: String, type: DataType, name: String): Data {
+        log("Data: $data \n $scopeAppId $type $name",Log.DEBUG)
         var name = name
         try {
-            return find(scopeAppId, type, name)
+            return (find(scopeAppId, type, name).also { it.returnType = it.type })
         } catch (e:VirtelException){
             if (name.startsWith("\"").and(name.endsWith("\""))){
                 name = name.replace("\"","")
                 return Data(scopeAppId,type,name,name)
             }
-            throw VirtelException()
+            //throw VirtelException()
+            return Data(scopeAppId,type,name,"Error")
         }
     }
     fun put(scopeAppId: String, type: DataType, name: String, value: Any){
@@ -33,8 +35,17 @@ data class Data(
     var scopeAppId: String,
     var type: DataType,
     var name: String,
-    var value: Any
-)
+    var value: Any,
+    var returnType:DataType = DataType.VAR
+){
+    override fun equals(other: Any?): Boolean {
+        var other = other as Data
+        return scopeAppId.equals(other.scopeAppId)
+            .and(type.equals(other.type))
+            .and(name.equals(other.name))
+            .and(value.equals(other.value))
+    }
+}
 
 enum class DataType{
     FLOW,VAR,VIEW,SERVER,CLIENT

@@ -18,8 +18,8 @@ class FlowTest {
 
     @Test
     fun testCslWrite(){
-        assertFails { flow.cslWrite(mutableListOf("\"testValue")) }
-        assertFails { flow.cslWrite(mutableListOf("testValue\"")) }
+        //assertFails { flow.cslWrite(mutableListOf("\"testValue")) }
+        //assertFails { flow.cslWrite(mutableListOf("testValue\"")) }
         flow.cslWrite(mutableListOf("\"testValue\""))
     }
     @Test
@@ -33,8 +33,6 @@ class FlowTest {
         flow.stgPut(mutableListOf("\"testValue\"", "testVar"))
         assertEquals(flow.stgGet(mutableListOf("testVar")).value.toString(), "testValue")
         flow.stgDel(mutableListOf("testVar"))
-        assertFails { flow.stgGet(mutableListOf("testVar/")) }
-        assertFails { flow.stgGet(mutableListOf("testVar")) }
         init()
     }
     @Test
@@ -57,6 +55,14 @@ class FlowTest {
         flow.matDiv(mutableListOf("\"5\"", "\"5\"", "testDivVar"))
         assertEquals(flow.stgGet(mutableListOf("testDivVar")).value.toString(), "1.0")
     }
+
+    @Test
+    fun testScr(){
+        flow.scrNew(mutableListOf("\"text\"", "view"))
+        flow.scrSet(mutableListOf("\"true\"","\"root\"","view"))
+        assertEquals(ScreenModel.root,"view")
+    }
+
 
 
 

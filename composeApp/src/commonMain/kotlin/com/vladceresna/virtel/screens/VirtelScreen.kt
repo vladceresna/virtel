@@ -1,9 +1,12 @@
 package com.vladceresna.virtel.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -24,16 +27,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
+import androidx.compose.runtime.key
+import androidx.lifecycle.ViewModel
+import com.vladceresna.virtel.controllers.DataStore
+import com.vladceresna.virtel.controllers.DataType
+import com.vladceresna.virtel.controllers.Log
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.ScreenModel
+import com.vladceresna.virtel.controllers.WidgetModel
+import com.vladceresna.virtel.controllers.WidgetType
+import com.vladceresna.virtel.controllers.log
+import io.ktor.util.reflect.instanceOf
+import kotlinx.coroutines.delay
+import kotlin.reflect.KClass
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VirtelScreen() {
+fun VirtelScreen(rd:Boolean) {
     var text by remember { mutableStateOf("") }
     var virtelSystem = VirtelSystem
 
     var screen = ScreenModel
+
 
     Column {
         Scaffold(
@@ -44,19 +59,13 @@ fun VirtelScreen() {
                 )
             },
             bottomBar = {
-                BottomAppBar(
+                /*BottomAppBar(
                     actions = {
                         IconButton(onClick = { /* do something */ }) {
                             Icon(Icons.Filled.Check, contentDescription = "Localized description")
                         }
                         IconButton(onClick = { /* do something */ }) {
                             Icon(Icons.Filled.Edit, contentDescription = "Localized description")
-                        }
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(
-                                Icons.Filled.Settings,
-                                contentDescription = "Localized description"
-                            )
                         }
                         IconButton(onClick = { /* do something */ }) {
                             Icon(Icons.Filled.Add, contentDescription = "Localized description")
@@ -74,13 +83,33 @@ fun VirtelScreen() {
                         }
 
                     }
-                )
+                )*/
             }
         ) {
             Surface(
                 modifier = Modifier.fillMaxSize().padding(0.dp, 64.dp, 0.dp, 0.dp)
             ) {
+                rd
                 //todo:rendering
+                var rootData = DataStore.tryGet(virtelSystem.getCurrentRunnedProgram().appId,DataType.VIEW, "${ScreenModel.root}")
+                var root = rootData.value
+                var isView = false
+                when (rootData.returnType){
+                    DataType.VIEW -> isView = true
+                    else -> {}
+                }
+                println("$rootData $root $isView")
+                log("Enrend", Log.DEBUG)
+                if (isView) {
+                    root = root as WidgetModel
+                    log("Render", Log.DEBUG)
+                    var modifier = Modifier.weight(root.weight).fillMaxSize()
+                    when (root.widgetType) {
+                        WidgetType.TEXT -> Text(root.title, modifier)
+                        else -> Box(modifier)
+                    }
+                }
+
             }
         }
         Row {

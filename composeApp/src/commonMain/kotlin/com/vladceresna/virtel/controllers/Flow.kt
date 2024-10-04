@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.controllers
 
+import com.vladceresna.virtel.other.VirtelException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -75,7 +76,8 @@ class Flow (
     /** scr new (viewType) (newVarName)
      * */
     fun scrNew(args: MutableList<String>) {
-        var widgetType = when(args.get(0)){
+        var cleartype = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var widgetType = when(cleartype){
             "view" -> WidgetType.VIEW
             "text" -> WidgetType.TEXT
             "button" -> WidgetType.BUTTON
@@ -97,12 +99,14 @@ class Flow (
     /** scr set (value) (property) (newVarName)
      * */
     fun scrSet(args: MutableList<String>) {
-        var value = ""
-        try {
-            value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
-        } catch (e:Exception){ }
+        var property = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        /*try {
+
+        } catch (e:Exception){ }*/
         var widget = DataStore.tryGet(appId, DataType.VIEW, args.get(2)).value as WidgetModel
-        when(args.get(1)){
+        println("$value,$property,$widget")
+        when(property){
             "width" -> widget.width = when(value){
                 "wrap" -> -1
                 "fill" -> -2
@@ -113,6 +117,7 @@ class Flow (
                 "fill" -> -2
                 else -> value.toInt()
             }
+            "weight" -> widget.weight = value.toFloat()
             "variant" -> widget.variant = when(value){
                 "primary" -> 0
                 "secondary" -> 1
@@ -123,12 +128,28 @@ class Flow (
             "title" -> widget.title = value
             "value" -> widget.value = value
             "onclick" -> widget.onclick = value
-            "child" -> widget.childs.add(args.get(0))
+            "child" -> widget.childs.add(value)
+            "root" -> ScreenModel.root = when(value){
+                "true" -> args.get(2)
+                "false" -> ""
+                else -> throw VirtelException()
+            }
         }
-        scrDel(mutableListOf(args.get(2)))
+        DataStore.data.remove(DataStore.tryGet(appId, DataType.VIEW, args.get(2)))
         DataStore.put(appId,DataType.VIEW,args.get(2),widget)
     }
-
+    /** scr nav (file) (navName)
+     * */
+    fun scrNav(args: MutableList<String>) {
+        var file = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var navName = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        when(navName){
+            "settings" -> ScreenModel.settingsClick = { CoroutineScope(Job()).launch { runFile(file) }}
+            "home" -> ScreenModel.homeClick = { CoroutineScope(Job()).launch { runFile(file) }}
+            "back" -> ScreenModel.backClick = { CoroutineScope(Job()).launch { runFile(file) }}
+            else -> throw VirtelException()
+        }
+    }
     /** run one (file)
      * */
     fun runOne(args: MutableList<String>){
@@ -188,6 +209,7 @@ class Flow (
                     "new" -> scrNew(step.args)
                     "del" -> scrDel(step.args)
                     "set" -> scrSet(step.args)
+                    "nav" -> scrNav(step.args)
                 }
                 VirtelSystem.renderFunction()
             }
