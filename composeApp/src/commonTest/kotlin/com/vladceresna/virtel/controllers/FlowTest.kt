@@ -63,6 +63,23 @@ class FlowTest {
         assertEquals(ScreenModel.root,"view")
     }
 
+    @Test
+    fun testSrvNew(){
+        flow.srvNew(mutableListOf("\"8080\"","server"))
+        assertEquals(DataStore.find("testAppId",DataType.SERVER,"server"),
+            Data("testAppId",DataType.SERVER,"server",EmbeddedServer("8080"),DataType.SERVER))
+    }
+    @Test
+    fun testSrvAdd(){
+        flow.srvNew(mutableListOf("\"8080\"","server2"))
+        flow.srvAdd(mutableListOf("\"get\"","\"/ping\"","\"/ping.steps\"","resVar","server2"))//?
+        assertEquals(DataStore.find("testAppId",DataType.SERVER,"server2"),
+            Data("testAppId",DataType.SERVER,"server2",
+                EmbeddedServer("8080", mutableSetOf(
+                    Route("/ping","get","/ping.steps","resVar")
+                )),DataType.SERVER))
+    }
+
 
 
 

@@ -1,6 +1,17 @@
 package com.vladceresna.virtel.controllers
 
+import com.vladceresna.virtel.getHttpClient
 import com.vladceresna.virtel.other.VirtelException
+import io.ktor.server.cio.CIO
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.RoutingCall
+import io.ktor.server.routing.RoutingContext
+import io.ktor.server.routing.RoutingHandler
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -178,7 +189,57 @@ class Flow (
     fun runFlow(args: MutableList<String>){
         CoroutineScope(Job()).launch { runOne(args) }
     }
+    /** srv new (port) (newVarName)
+     * */
+    fun srvNew(args: MutableList<String>){
+        var port = DataStore.tryGet(appId,DataType.VAR,args.get(0)).value.toString()
+        DataStore.put(appId,DataType.SERVER,args.get(1),EmbeddedServer(port))
+    }
+    /** srv add (method) (route) (file) (resVarName) (newVarName)
+     * */
+    fun srvAdd(args: MutableList<String>){
+        var method = DataStore.tryGet(appId,DataType.VAR,args.get(0)).value.toString()
+        var route = DataStore.tryGet(appId,DataType.VAR,args.get(1)).value.toString()
+        var file = DataStore.tryGet(appId,DataType.VAR,args.get(2)).value.toString()
+        var server = DataStore.tryGet(appId,DataType.SERVER,args.get(4)).value as EmbeddedServer
+        server.routes.add(Route(route, method, file,args.get(3)))
+        DataStore.put(appId,DataType.SERVER,args.get(4),server)
+    }
+    /** srv run (newVarName)
+     * */
+    fun srvRun(args: MutableList<String>){
+        var server = DataStore.tryGet(appId,DataType.SERVER,args.get(0)).value as EmbeddedServer
 
+        embeddedServer(CIO, server.port.toInt()) {
+            routing {
+                server.routes.forEach {
+                    when(it.method){
+                        "get" -> get(it.route) {
+                            runFile(it.file)
+                            var response = stgGet(mutableListOf(it.resVar)).value.toString()
+                            call.respondText {
+                                response
+                            }
+                        }
+                        "post" -> post(it.route) {
+                            runFile(it.file)
+                            var response = stgGet(mutableListOf(it.resVar)).value.toString()
+                            call.respondText {
+                                response
+                            }
+                        }
+                        "delete" -> delete(it.route) {
+                            runFile(it.file)
+                            var response = stgGet(mutableListOf(it.resVar)).value.toString()
+                            call.respondText {
+                                response
+                            }
+                        }
+                    }
+                }
+            }
+        }.start()
+    }
 
 
 
@@ -218,6 +279,17 @@ class Flow (
                 "if" -> runIf(step.args)
                 "while" -> runWhile(step.args)
                 "flow" -> runFlow(step.args)
+            }
+            "srv" -> when(step.cmd){
+                "new" -> srvNew(step.args)
+                "add" -> srvAdd(step.args)
+                "run" -> srvRun(step.args)
+            }
+            "clt" -> when(step.cmd){
+                "get" -> runOne(step.args)
+                "post" -> runIf(step.args)
+                "put" -> runWhile(step.args)
+                "delete" -> runFlow(step.args)
             }
         }
     }
