@@ -1,7 +1,5 @@
 package com.vladceresna.virtel.controllers
 
-import com.vladceresna.virtel.runner.Program
-import com.vladceresna.virtel.runner.ProgramStatus
 import com.vladceresna.virtel.other.VirtelException
 import okio.Path
 import okio.Path.Companion.toPath

@@ -1,10 +1,8 @@
-package com.vladceresna.virtel.runner
+package com.vladceresna.virtel.controllers
 
-import com.vladceresna.virtel.controllers.Data
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
-import kotlin.test.asserter
 
 class FlowTest {
 

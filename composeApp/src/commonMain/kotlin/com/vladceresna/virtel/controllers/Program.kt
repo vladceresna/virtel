@@ -1,12 +1,9 @@
-package com.vladceresna.virtel.runner
+package com.vladceresna.virtel.controllers
 
-import com.vladceresna.virtel.controllers.FileSystem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import okio.Path
 import okio.Path.Companion.toPath
-import okio.SYSTEM
 
 
 data class Program(var path: String){
@@ -14,7 +11,7 @@ data class Program(var path: String){
     lateinit var status: ProgramStatus
     lateinit var appId: String
 
-    var flows:MutableMap<String,Flow> = mutableMapOf()
+    var flows:MutableMap<String, Flow> = mutableMapOf()
 
     /*lateinit var config: String
     lateinit var cache: String*/

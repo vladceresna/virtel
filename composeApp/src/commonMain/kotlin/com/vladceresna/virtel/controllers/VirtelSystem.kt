@@ -1,7 +1,6 @@
 package com.vladceresna.virtel.controllers
 
 import com.vladceresna.virtel.getHomePath
-import com.vladceresna.virtel.runner.Program
 import com.vladceresna.virtel.other.VirtelException
 import kotlinx.coroutines.delay
 
