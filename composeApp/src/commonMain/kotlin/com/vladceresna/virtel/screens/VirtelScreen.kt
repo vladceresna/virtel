@@ -99,7 +99,6 @@ fun VirtelScreen(rd:Boolean) {
                     else -> {}
                 }
                 println("$rootData $root $isView")
-                log("Enrend", Log.DEBUG)
                 if (isView) {
                     root = root as WidgetModel
                     log("Render", Log.DEBUG)

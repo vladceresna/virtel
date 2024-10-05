@@ -26,21 +26,15 @@ fun App(theme: Boolean = isSystemInDarkTheme()) {
             virtelSystem.start()
             rd = !rd
         }
-
     }
     LaunchedEffect(rd) {
         //after recomposition
-        CoroutineScope(Job()).launch {
-            rd = !rd
-            log("RenderFunc $rd", Log.DEBUG)
-        }
+        CoroutineScope(Job()).launch { rd = !rd }
     }
     AppTheme(rd){
         if (virtelSystem.isLoading) {
-            println("rrend")
             LoadingScreen(rd)
         } else {
-            println("rrend")
             VirtelScreen(rd)
         }
     }

@@ -36,6 +36,16 @@ class FlowTest {
         init()
     }
     @Test
+    fun testStr(){
+        flow.strAdd(mutableListOf("\"first\"","\"second\"","fsresult"))
+        flow.strLen(mutableListOf("fsresult","lenresult"))
+        assertEquals("11",flow.stgGet(mutableListOf("lenresult")).value.toString())
+        flow.strCut(mutableListOf("\"0\"","\"5\"","fsresult","first"))
+        assertEquals("first", flow.stgGet(mutableListOf("first")).value.toString())
+        flow.strGet(mutableListOf("\"5\"","fsresult","five"))
+        assertEquals("s", flow.stgGet(mutableListOf("five")).value.toString())
+    }
+    @Test
     fun testMatPlus(){
         flow.matPlus(mutableListOf("\"5\"", "\"5\"", "testPlusVar"))
         assertEquals(flow.stgGet(mutableListOf("testPlusVar")).value.toString(), "10.0")

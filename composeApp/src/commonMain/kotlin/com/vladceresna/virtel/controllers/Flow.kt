@@ -2,6 +2,12 @@ package com.vladceresna.virtel.controllers
 
 import com.vladceresna.virtel.getHttpClient
 import com.vladceresna.virtel.other.VirtelException
+import io.ktor.client.request.get
+import io.ktor.client.request.request
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpMethod
+import io.ktor.http.Url
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.response.respondText
@@ -14,7 +20,11 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import okio.IOException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
 
@@ -28,6 +38,8 @@ class Flow (
     var appId: String,
     var flowName: String
 ) {
+
+
     /** csl write (text)
      * */
     fun cslWrite(args: MutableList<String>){
@@ -55,6 +67,42 @@ class Flow (
     fun stgDel(args: MutableList<String>) {
         DataStore.data.remove(DataStore.tryGet(appId, DataType.VAR, args.get(0)))
     }
+    /** str cut (first) (last) (value) (newVarName)
+     * */
+    fun strCut(args: MutableList<String>){
+        var first = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toInt()
+        var second = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toInt()
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(2)).value.toString()
+        DataStore.put(appId,DataType.VAR, args.get(3), value.substring(first,second))
+    }
+    /** str add (firstStr) (secondStr) (newVarName)
+     * */
+    fun strAdd(args: MutableList<String>){
+        var firstStr = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var secondStr = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        DataStore.put(appId,DataType.VAR, args.get(2), firstStr+secondStr)
+    }
+    /** str len (value) (newVarName)
+     * */
+    fun strLen(args: MutableList<String>){
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().length.toString()
+        DataStore.put(appId,DataType.VAR, args.get(1), value)
+    }
+    /** str get (index) (value) (newVarName)
+     * */
+    fun strGet(args: MutableList<String>){
+        var index = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toInt()
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        DataStore.put(appId,DataType.VAR, args.get(2), value.get(index).toString())
+    }
+    /** str eqs (first) (second) (newVarName)
+     * */
+    fun strEqs(args: MutableList<String>){
+        var firstStr = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var secondStr = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        DataStore.put(appId,DataType.VAR, args.get(2), firstStr.equals(secondStr).toString())
+    }
+
     /** mat plus (a) (b) (newVarName)
      * */
     fun matPlus(args: MutableList<String>) {
@@ -83,6 +131,97 @@ class Flow (
         var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toDouble()
         DataStore.put(appId,DataType.VAR, args.get(2), a/b)
     }
+    /** mat eqs (a) (b) (newVarName)
+     * */
+    fun matEqs(args: MutableList<String>) {
+        var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toDouble()
+        var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toDouble()
+        DataStore.put(appId,DataType.VAR, args.get(2), a.equals(b).toString())
+    }
+
+    /** bln and (a) (b) (newVarName)
+     * */
+    fun blnAnd(args: MutableList<String>) {
+        var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toBoolean()
+        var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toBoolean()
+        DataStore.put(appId,DataType.VAR, args.get(2), a.and(b).toString())
+    }
+    /** bln or (a) (b) (newVarName)
+     * */
+    fun blnOr(args: MutableList<String>) {
+        var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toBoolean()
+        var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toBoolean()
+        DataStore.put(appId,DataType.VAR, args.get(2), a.or(b).toString())
+    }
+    /** bln xor (a) (b) (newVarName)
+     * */
+    fun blnXor(args: MutableList<String>) {
+        var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toBoolean()
+        var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toBoolean()
+        DataStore.put(appId,DataType.VAR, args.get(2), a.xor(b).toString())
+    }
+    /** bln not (a) (newVarName)
+     * */
+    fun blnNot(args: MutableList<String>) {
+        var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toBoolean()
+        DataStore.put(appId,DataType.VAR, args.get(1), a.not().toString())
+    }
+
+    /** fls read (path) (newVarName)
+     * */
+    fun flsRead(args: MutableList<String>){
+        var path = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+            .replace("$",FileSystem.systemPath)//$/path and pa/th
+        var content = (okio.FileSystem.SYSTEM.read(path.toPath()){readUtf8()}).toString()
+        DataStore.put(appId,DataType.VAR, args.get(1), content)
+    }
+    /** fls write (path) (value)
+     * */
+    fun flsWrite(args: MutableList<String>){
+        var path = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+            .replace("$",FileSystem.systemPath)//$/path and pa/th
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        okio.FileSystem.SYSTEM.write(path.toPath()){writeUtf8(value)}
+    }
+    /** fls del (path)
+     * */
+    fun flsDel(args: MutableList<String>){
+        var path = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+            .replace("$",FileSystem.systemPath)//$/path and pa/th
+        try {
+            okio.FileSystem.SYSTEM.deleteRecursively(path.toPath())
+        } catch(e:IOException){
+            runBlocking {
+                delay(10)
+                okio.FileSystem.SYSTEM.deleteRecursively(path.toPath())
+            }
+        }
+    }
+    /** fls dirs (path)
+     * */
+    fun flsDir(args: MutableList<String>){
+        var path = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+            .replace("$",FileSystem.systemPath)//$/path and pa/th
+        okio.FileSystem.SYSTEM.createDirectories(path.toPath())
+    }
+    /** fls list (path) (newVarName)
+     * */
+    fun flsList(args: MutableList<String>){
+        var path = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+            .replace("$",FileSystem.systemPath)//$/path and pa/th
+        DataStore.put(appId, DataType.VAR,args.get(1),okio.FileSystem.SYSTEM.list(path.toPath()).toString())
+    }
+    /** fls xst (path) (newVarName)
+     * */
+    fun flsXst(args: MutableList<String>){
+        var path = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+            .replace("$",FileSystem.systemPath)//$/path and pa/th
+        DataStore.put(appId, DataType.VAR,args.get(1),okio.FileSystem.SYSTEM.exists(path.toPath()))
+    }
+
+
+
+
 
     /** scr new (viewType) (newVarName)
      * */
@@ -241,10 +380,32 @@ class Flow (
         }.start()
     }
 
+    /** clt req (method) (url) (body) (newVarName) (newVarName)
+     * */
+    fun cltReq(args: MutableList<String>){
+        var method = DataStore.tryGet(appId,DataType.VAR,args.get(0)).value.toString()
+        var url = DataStore.tryGet(appId,DataType.VAR,args.get(1)).value.toString()
+        var body = DataStore.tryGet(appId,DataType.VAR,args.get(2)).value.toString()
+        runBlocking {
+            var response = getHttpClient().request(url) {
+                when(method){
+                    "post" -> HttpMethod.Post
+                    "delete" -> HttpMethod.Delete
+                    "put" -> HttpMethod.Put
+                    else -> HttpMethod.Get
+                }
+                setBody(body)
+            }
+            DataStore.put(appId,DataType.VAR,args.get(4),response.bodyAsText())
+            DataStore.put(appId,DataType.VAR,args.get(3),response.status.toString())
+        }
+
+    }
 
 
 
 
+    /**parser**/
     fun runStep(step: Step){
         if(Programs.findProgram(appId).debugMode) {
             log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
@@ -259,11 +420,33 @@ class Flow (
                 "get" -> stgGet(step.args)
                 "del" -> stgDel(step.args)
             }
+            "str" -> when(step.cmd){
+                "cut" -> strCut(step.args)
+                "add" -> strAdd(step.args)
+                "len" -> strLen(step.args)
+                "get" -> strGet(step.args)
+                "eqs" -> strEqs(step.args)
+            }
             "mat" -> when(step.cmd){
                 "plus" -> matPlus(step.args)
                 "minus" -> matMinus(step.args)
                 "mult" -> matMult(step.args)
                 "div" -> matDiv(step.args)
+                "eqs" -> matEqs(step.args)
+            }
+            "bln" -> when(step.cmd){
+                "and" -> blnAnd(step.args)
+                "or"  -> blnOr(step.args)
+                "xor" -> blnXor(step.args)
+                "not" -> blnNot(step.args)
+            }
+            "fls" -> when(step.cmd){
+                "read" -> flsRead(step.args)
+                "write" -> flsWrite(step.args)
+                "del" -> flsDel(step.args)
+                "dir" -> flsDir(step.args)
+                "list" -> flsList(step.args)
+                "xst" -> flsXst(step.args)
             }
             "scr" -> {
                 when (step.cmd) {
@@ -286,14 +469,11 @@ class Flow (
                 "run" -> srvRun(step.args)
             }
             "clt" -> when(step.cmd){
-                "get" -> runOne(step.args)
-                "post" -> runIf(step.args)
-                "put" -> runWhile(step.args)
-                "delete" -> runFlow(step.args)
+                "req" -> cltReq(step.args)
             }
         }
     }
-
+    /**lexer**/
     fun runFile(fileName:String){
         val code = okio.FileSystem.SYSTEM.read(
             "${FileSystem.programsPath}/${appId}${FileSystem.srCode}$fileName".toPath())

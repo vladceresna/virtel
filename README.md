@@ -93,18 +93,18 @@ Outputs:
 
 ---------
 ### List of currently implemented modules:
-- [x] csl (Command line)
+- [x] csl (Console, command line)
 - [x] stg (Storage objects store (vars))
-- [ ] mat (Math operations)
-- [ ] str (String operations (ex. cut))
-- [ ] bln (Boolean operations)
-- [ ] run (if, while)
+- [x] mat (Math operations)
+- [x] str (String operations (ex. cut))
+- [x] bln (Boolean operations)
+- [x] run (if, while)
 - [ ] sys (System data (ex. all programs))
-- [ ] fls (Files)
+- [x] fls (Files)
 - [ ] scr (Operate screen components)
 - [ ] dgm (Diagrams)
-- [ ] srv (Server on selected ports) srv new "8080" "operator.steps" 
-- [ ] clt (Client for urls)
+- [x] srv (Server on selected ports) srv new "8080" "operator.steps" 
+- [x] clt (Client for urls)
 - [ ] wss (WebSockets)
 - [ ] blt (Bluetooth)
 - [ ] ppt (Perspective projection (3D in ui))
