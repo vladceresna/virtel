@@ -46,31 +46,15 @@ fun VirtelScreen(rd:Boolean) {
                 )
             },
             bottomBar = {
-                /*BottomAppBar(
-                    actions = {
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(Icons.Filled.Check, contentDescription = "Localized description")
-                        }
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(Icons.Filled.Edit, contentDescription = "Localized description")
-                        }
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(Icons.Filled.Add, contentDescription = "Localized description")
-                        }
-                    },
-                    floatingActionButton = {
-                        Column {
-                            FloatingActionButton(
-                                onClick = { /* do something */ },
-                                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
-                            ) {
-                                Icon(Icons.Filled.Menu, "Localized description")
-                            }
-                        }
+                rd
+                //todo:rendering
+                var bottomData = DataStore.tryGet(
+                    virtelSystem.getCurrentRunnedProgram().appId,DataType.VIEW, ScreenModel.bottom)
 
-                    }
-                )*/
+                if(bottomData.returnType == DataType.VIEW) {
+                    var model = bottomData.value as WidgetModel
+                    Widget(rd, model, Modifier)
+                }
             }
         ) {
             Column(

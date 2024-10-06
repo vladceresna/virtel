@@ -40,6 +40,7 @@ data class Program(var path: String){
         var flow = Flow(appId, flowName)
         flows.put(flowName, flow)
         CoroutineScope(Job()).launch {
+            status = ProgramStatus.SCREEN
             flow.runFile(fileName)
         }
     }

@@ -100,9 +100,9 @@ Outputs:
 - [x] str (String operations (ex. cut))
 - [x] bln (Boolean operations)
 - [x] run (if, while)
-- [ ] sys (System data (ex. all programs))
+- [x] sys (System data (ex. all programs))
 - [x] fls (Files)
-- [ ] scr (Operate screen components)
+- [x] scr (Operate screen components)
 - [ ] dgm (Diagrams)
 - [x] srv (Server on selected ports) srv new "8080" "operator.steps" 
 - [x] clt (Client for urls)

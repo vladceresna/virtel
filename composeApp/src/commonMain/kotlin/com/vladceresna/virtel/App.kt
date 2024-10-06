@@ -21,17 +21,19 @@ fun App(theme: Boolean = isSystemInDarkTheme()) {
     val virtelSystem = VirtelSystem
     virtelSystem.renderFunction = { rd = !rd }
     LaunchedEffect(Unit){
+        virtelSystem.renderFunction()
         //after first recomposition only
         CoroutineScope(Job()).launch {
             virtelSystem.start()
-            rd = !rd
+            virtelSystem.renderFunction()
         }
     }
     LaunchedEffect(rd) {
+        virtelSystem.renderFunction()
         //after recomposition
-        CoroutineScope(Job()).launch { rd = !rd }
     }
     AppTheme(rd){
+        rd
         if (virtelSystem.isLoading) {
             LoadingScreen(rd)
         } else {

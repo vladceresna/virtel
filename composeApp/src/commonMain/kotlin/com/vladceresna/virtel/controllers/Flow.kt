@@ -2,6 +2,7 @@ package com.vladceresna.virtel.controllers
 
 import com.vladceresna.virtel.getHttpClient
 import com.vladceresna.virtel.other.VirtelException
+import com.vladceresna.virtel.screens.VirtelScreen
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -50,6 +51,15 @@ class Flow (
      * */
     fun sysStart(args: MutableList<String>){
         var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var mutableSetOf = mutableSetOf<Data>()
+        DataStore.data.forEach {
+            if (it.type != DataType.VIEW && it.scopeAppId != appId) {
+                mutableSetOf.add(it)
+            }
+        }
+        DataStore.data = mutableSetOf
+        ScreenModel.root = ""
+
         Programs.startProgram(value)
     }
 
@@ -316,7 +326,9 @@ class Flow (
             "bottomBar" -> WidgetType.BOTTOM_BAR
             else -> WidgetType.VIEW
         }
-        DataStore.put(appId,DataType.VIEW, args.get(1), WidgetModel(widgetType = widgetType))
+        DataStore.put(appId,DataType.VIEW, args.get(1),
+            WidgetModel(widgetType = widgetType,appId).also { it.name = args.get(1) }
+        )
     }
     /** scr del (newVarName)
      * */
@@ -356,14 +368,14 @@ class Flow (
             "title" -> widget.title = value
             "value" -> widget.value = value
             "onclick" -> widget.onclick = value
-            "child" -> widget.childs.add(value)
-            "root" -> ScreenModel.root = when(value){
-                "true" -> args.get(2)
-                "false" -> ""
+            "child" -> widget.childs.add(args.get(0))
+            "node" -> when(value){
+                "root" -> ScreenModel.root = args.get(2)
+                "bottom" -> ScreenModel.bottom = args.get(2)
+                "top" -> ScreenModel.top = args.get(2)
                 else -> throw VirtelException()
             }
         }
-        DataStore.data.remove(DataStore.tryGet(appId, DataType.VIEW, args.get(2)))
         DataStore.put(appId,DataType.VIEW,args.get(2),widget)
     }
     /** scr nav (file) (navName)
@@ -372,9 +384,12 @@ class Flow (
         var file = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
         var navName = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
         when(navName){
-            "settings" -> ScreenModel.settingsClick = { CoroutineScope(Job()).launch { runFile(file) }}
-            "home" -> ScreenModel.homeClick = { CoroutineScope(Job()).launch { runFile(file) }}
-            "back" -> ScreenModel.backClick = { CoroutineScope(Job()).launch { runFile(file) }}
+            "settings" -> ScreenModel.settingsClick = { CoroutineScope(Job()).launch { runFile(file)
+                VirtelSystem.renderFunction() }}
+            "home" -> ScreenModel.homeClick = { CoroutineScope(Job()).launch { runFile(file)
+                VirtelSystem.renderFunction() }}
+            "back" -> ScreenModel.backClick = { CoroutineScope(Job()).launch { runFile(file)
+                VirtelSystem.renderFunction() }}
             else -> throw VirtelException()
         }
     }

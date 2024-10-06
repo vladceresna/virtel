@@ -1,9 +1,9 @@
 package com.vladceresna.virtel.controllers
 
 data object ScreenModel {
-    var root:String = ""
-    var bottomAppBar: WidgetModel = WidgetModel()
-    var topAppBar: WidgetModel = WidgetModel()
+    var root = ""
+    var bottom = ""
+    var top = ""
 
     var settingsClick:() -> Unit = {
 
@@ -18,8 +18,9 @@ data object ScreenModel {
 
 }
 
-data class WidgetModel(var widgetType: WidgetType = WidgetType.VIEW) {
+data class WidgetModel(var widgetType: WidgetType = WidgetType.VIEW, var appId:String) {
     var childs: MutableList<String> = mutableListOf()//names/ids
+    var name:String = ""
 
     var width = 50//fill/wrap/fixed
     var height = 50
@@ -29,6 +30,11 @@ data class WidgetModel(var widgetType: WidgetType = WidgetType.VIEW) {
     var value = ""
     var onclick = "noclick.steps"
     var isRoot = false
+
+    var icon = ""
+
+    var actions: MutableList<String> = mutableListOf()
+
 }
 
 enum class WidgetType{
