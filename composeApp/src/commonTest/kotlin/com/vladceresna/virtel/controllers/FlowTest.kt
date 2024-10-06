@@ -12,7 +12,7 @@ class FlowTest {
         init()
     }
     fun init(){
-        flow.stgPut(mutableListOf("\"testValue\"", "testVar"))
+        flow.varSet(mutableListOf("\"testValue\"", "testVar"))
     }
 
 
@@ -29,41 +29,53 @@ class FlowTest {
         assertFails { flow.cslRead(mutableListOf("\"testVar\"")) }
     }
     @Test
-    fun testStg(){
-        flow.stgPut(mutableListOf("\"testValue\"", "testVar"))
-        assertEquals(flow.stgGet(mutableListOf("testVar")).value.toString(), "testValue")
-        flow.stgDel(mutableListOf("testVar"))
+    fun testVar(){
+        flow.varSet(mutableListOf("\"testValue\"", "testVar"))
+        assertEquals(flow.varGet(mutableListOf("testVar")).value.toString(), "testValue")
+        flow.varDel(mutableListOf("testVar"))
         init()
+    }
+    @Test
+    fun testLst() {
+        flow.lstSet(mutableListOf("newList","\"0\"","\"hello\""))
+        flow.lstGet(mutableListOf("newList","\"0\"","newVarHello"))
+        assertEquals("hello",flow.varGet(mutableListOf("newVarHello")).value.toString())
+        flow.lstLen(mutableListOf("newList","newListLength"))
+        assertEquals("1",flow.varGet(mutableListOf("newListLength")).value.toString())
+        flow.lstDel(mutableListOf("newList","\"0\""))
+        flow.lstLen(mutableListOf("newList","newListLength2"))
+        assertEquals("0",flow.varGet(mutableListOf("newListLength2")).value.toString())
+        assertFails { flow.lstGet(mutableListOf("newList","\"0\"","newVarHello")) }
     }
     @Test
     fun testStr(){
         flow.strAdd(mutableListOf("\"first\"","\"second\"","fsresult"))
         flow.strLen(mutableListOf("fsresult","lenresult"))
-        assertEquals("11",flow.stgGet(mutableListOf("lenresult")).value.toString())
+        assertEquals("11",flow.varGet(mutableListOf("lenresult")).value.toString())
         flow.strCut(mutableListOf("\"0\"","\"5\"","fsresult","first"))
-        assertEquals("first", flow.stgGet(mutableListOf("first")).value.toString())
+        assertEquals("first", flow.varGet(mutableListOf("first")).value.toString())
         flow.strGet(mutableListOf("\"5\"","fsresult","five"))
-        assertEquals("s", flow.stgGet(mutableListOf("five")).value.toString())
+        assertEquals("s", flow.varGet(mutableListOf("five")).value.toString())
     }
     @Test
     fun testMatPlus(){
         flow.matPlus(mutableListOf("\"5\"", "\"5\"", "testPlusVar"))
-        assertEquals(flow.stgGet(mutableListOf("testPlusVar")).value.toString(), "10.0")
+        assertEquals(flow.varGet(mutableListOf("testPlusVar")).value.toString(), "10.0")
     }
     @Test
     fun testMatMinus(){
         flow.matMinus(mutableListOf("\"5\"", "\"5\"", "testMinusVar"))
-        assertEquals(flow.stgGet(mutableListOf("testMinusVar")).value.toString(), "0.0")
+        assertEquals(flow.varGet(mutableListOf("testMinusVar")).value.toString(), "0.0")
     }
     @Test
     fun testMatMult(){
         flow.matMult(mutableListOf("\"5\"", "\"5\"", "testMultVar"))
-        assertEquals(flow.stgGet(mutableListOf("testMultVar")).value.toString(), "25.0")
+        assertEquals(flow.varGet(mutableListOf("testMultVar")).value.toString(), "25.0")
     }
     @Test
     fun testMatDiv(){
         flow.matDiv(mutableListOf("\"5\"", "\"5\"", "testDivVar"))
-        assertEquals(flow.stgGet(mutableListOf("testDivVar")).value.toString(), "1.0")
+        assertEquals(flow.varGet(mutableListOf("testDivVar")).value.toString(), "1.0")
     }
 
     @Test

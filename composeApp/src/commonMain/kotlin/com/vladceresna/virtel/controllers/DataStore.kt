@@ -13,7 +13,7 @@ data object DataStore {
         } ?: throw VirtelException()
     }
     fun tryGet(scopeAppId: String, type: DataType, name: String): Data {
-        log("Data: $data \n $scopeAppId $type $name",Log.DEBUG)
+        //log("Data: $data \n $scopeAppId $type $name",Log.DEBUG)
         var name = name
         try {
             return (find(scopeAppId, type, name).also { it.returnType = it.type })
@@ -43,10 +43,9 @@ data class Data(
         return scopeAppId.equals(other.scopeAppId)
             .and(type.equals(other.type))
             .and(name.equals(other.name))
-            .and(value.equals(other.value))
     }
 }
 
 enum class DataType{
-    FLOW,VAR,VIEW,SERVER,CLIENT
+    VAR,LIST,VIEW,SERVER
 }

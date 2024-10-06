@@ -2,25 +2,19 @@ package com.vladceresna.virtel.controllers
 
 import com.vladceresna.virtel.getHttpClient
 import com.vladceresna.virtel.other.VirtelException
-import io.ktor.client.request.get
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpMethod
-import io.ktor.http.Url
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.response.respondText
-import io.ktor.server.routing.RoutingCall
-import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.RoutingHandler
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -51,22 +45,65 @@ class Flow (
     fun cslRead(args: MutableList<String>){
         DataStore.put(appId, DataType.VAR, args.get(0), readln()!!)
     }
-    /** stg put (value) (newVarName)
+    /** var set (value) (newVarName)
      * */
-    fun stgPut(args: MutableList<String>){
+    fun varSet(args: MutableList<String>){
         var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value
         DataStore.put(appId,DataType.VAR, args.get(1), value)
     }
-    /** stg get (newVarName)
+    /** var get (newVarName)
      * */
-    fun stgGet(args: MutableList<String>): Data{
+    fun varGet(args: MutableList<String>): Data{
         return DataStore.tryGet(appId,DataType.VAR, args.get(0))
     }
-    /** stg del (newVarName)
+    /** var del (newVarName)
      * */
-    fun stgDel(args: MutableList<String>) {
+    fun varDel(args: MutableList<String>) {
         DataStore.data.remove(DataStore.tryGet(appId, DataType.VAR, args.get(0)))
     }
+    /** lst set (lstName) (index) (value)
+     * */
+    fun lstSet(args: MutableList<String>){
+        var data:Data
+        try{
+            data = DataStore.find(appId,DataType.LIST,args.get(0))
+        } catch (e:VirtelException){
+            DataStore.put(appId,DataType.LIST,args.get(0), mutableListOf<Any>())
+            data = DataStore.find(appId,DataType.LIST,args.get(0))
+        }
+        var list = data.value as MutableList<Any>
+        var index = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toInt()
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(2)).value.toString()
+        list.add(index, value)
+        DataStore.put(appId,DataType.LIST, args.get(0), list)
+    }
+    /** lst get (lstName) (index) (newVarName)
+     * */
+    fun lstGet(args: MutableList<String>) {
+        var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
+        var index = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toInt()
+        DataStore.put(appId,DataType.VAR, args.get(2), list.get(index))
+    }
+    /** lst del (lstName) (index)
+     * */
+    fun lstDel(args: MutableList<String>) {
+        var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
+        var index = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toInt()
+        DataStore.data.remove(Data(appId,DataType.LIST,args.get(0),list))
+        list.remove(list.get(index))
+        DataStore.put(appId,DataType.LIST, args.get(0), list)
+    }
+    /** lst len (lstName) (newVarName)
+     * */
+    fun lstLen(args: MutableList<String>) {
+        var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
+        if (list.isEmpty()){
+            DataStore.put(appId, DataType.VAR, args.get(1), 0)
+        } else {
+            DataStore.put(appId, DataType.VAR, args.get(1), list.lastIndex + 1)
+        }
+    }
+
     /** str cut (first) (last) (value) (newVarName)
      * */
     fun strCut(args: MutableList<String>){
@@ -138,6 +175,21 @@ class Flow (
         var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toDouble()
         DataStore.put(appId,DataType.VAR, args.get(2), a.equals(b).toString())
     }
+    /** mat grtr (a) (b) (newVarName)
+     * */
+    fun matGrtr(args: MutableList<String>) {
+        var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toDouble()
+        var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toDouble()
+        DataStore.put(appId,DataType.VAR, args.get(2), (a>b).toString())
+    }
+    /** mat less (a) (b) (newVarName)
+     * */
+    fun matLess(args: MutableList<String>) {
+        var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toDouble()
+        var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toDouble()
+        DataStore.put(appId,DataType.VAR, args.get(2), (a<b).toString())
+    }
+
 
     /** bln and (a) (b) (newVarName)
      * */
@@ -355,21 +407,21 @@ class Flow (
                     when(it.method){
                         "get" -> get(it.route) {
                             runFile(it.file)
-                            var response = stgGet(mutableListOf(it.resVar)).value.toString()
+                            var response = varGet(mutableListOf(it.resVar)).value.toString()
                             call.respondText {
                                 response
                             }
                         }
                         "post" -> post(it.route) {
                             runFile(it.file)
-                            var response = stgGet(mutableListOf(it.resVar)).value.toString()
+                            var response = varGet(mutableListOf(it.resVar)).value.toString()
                             call.respondText {
                                 response
                             }
                         }
                         "delete" -> delete(it.route) {
                             runFile(it.file)
-                            var response = stgGet(mutableListOf(it.resVar)).value.toString()
+                            var response = varGet(mutableListOf(it.resVar)).value.toString()
                             call.respondText {
                                 response
                             }
@@ -415,10 +467,16 @@ class Flow (
                 "write" -> cslWrite(step.args)
                 "read" -> cslRead(step.args)
             }
-            "stg" -> when(step.cmd){
-                "put" -> stgPut(step.args)
-                "get" -> stgGet(step.args)
-                "del" -> stgDel(step.args)
+            "var" -> when(step.cmd){
+                "set" -> varSet(step.args)
+                "get" -> varGet(step.args)
+                "del" -> varDel(step.args)
+            }
+            "lst" -> when(step.cmd){
+                "set" -> lstSet(step.args)
+                "get" -> lstGet(step.args)
+                "del" -> lstDel(step.args)
+                "len" -> lstLen(step.args)
             }
             "str" -> when(step.cmd){
                 "cut" -> strCut(step.args)
@@ -433,6 +491,8 @@ class Flow (
                 "mult" -> matMult(step.args)
                 "div" -> matDiv(step.args)
                 "eqs" -> matEqs(step.args)
+                "grtr" -> matGrtr(step.args)
+                "less" -> matLess(step.args)
             }
             "bln" -> when(step.cmd){
                 "and" -> blnAnd(step.args)
