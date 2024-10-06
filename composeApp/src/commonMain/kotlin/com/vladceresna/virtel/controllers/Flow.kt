@@ -26,19 +26,39 @@ import okio.SYSTEM
 /**
  * In exectime:
  * - value/var (or variable with it): tryGet: any name
- * - varName (var need to write/save in): clear using: newVarName
+ * - varName (var need to write/save in): clear using: newVarName, newListName
  * **/
 class Flow (
     var appId: String,
     var flowName: String
 ) {
 
+    /** sys apps (newListName)
+     * */
+    fun sysApps(args: MutableList<String>){
+        val list = okio.FileSystem.SYSTEM.list(FileSystem.programsPath.toPath())
+        var programsIds:MutableList<String> = mutableListOf()
+        list.forEach { programsIds.add(it.name) }
+        DataStore.put(appId,DataType.LIST,args.get(0),programsIds)
+    }
+    /** sys files (newListName)
+     * */
+    fun sysFiles(args: MutableList<String>){
+        DataStore.put(appId,DataType.VAR,args.get(0),FileSystem.userFilesPath)
+    }
+    /** sys start (appId)
+     * */
+    fun sysStart(args: MutableList<String>){
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        Programs.startProgram(value)
+    }
+
 
     /** csl write (text)
      * */
     fun cslWrite(args: MutableList<String>){
-        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value
-        log(value.toString(),Log.PROGRAM)
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        log(value,Log.PROGRAM)
     }
     /** csl read (newVarName)
      * */
@@ -102,6 +122,12 @@ class Flow (
         } else {
             DataStore.put(appId, DataType.VAR, args.get(1), list.lastIndex + 1)
         }
+    }
+    /** lst var (lstName) (newVarName)
+     * */
+    fun lstVar(args: MutableList<String>) {
+        var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
+        DataStore.put(appId,DataType.VAR, args.get(1), list.toString())
     }
 
     /** str cut (first) (last) (value) (newVarName)
@@ -380,6 +406,12 @@ class Flow (
     fun runFlow(args: MutableList<String>){
         CoroutineScope(Job()).launch { runOne(args) }
     }
+    /** run pause (time)
+     * */
+    fun runPause(args: MutableList<String>){
+        var time = DataStore.tryGet(appId,DataType.VAR, args.get(0)).value.toString().toInt()
+        runBlocking { delay(time.toLong()) }
+    }
     /** srv new (port) (newVarName)
      * */
     fun srvNew(args: MutableList<String>){
@@ -432,7 +464,7 @@ class Flow (
         }.start()
     }
 
-    /** clt req (method) (url) (body) (newVarName) (newVarName)
+    /** clt req (method) (url) (body) (newVarNameStatus) (newVarNameBody)
      * */
     fun cltReq(args: MutableList<String>){
         var method = DataStore.tryGet(appId,DataType.VAR,args.get(0)).value.toString()
@@ -463,6 +495,11 @@ class Flow (
             log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
         }
         when(step.mod){
+            "sys" -> when(step.cmd){
+                "apps" -> sysApps(step.args)
+                "files" -> sysFiles(step.args)
+                "start" -> sysStart(step.args)
+            }
             "csl" -> when(step.cmd){
                 "write" -> cslWrite(step.args)
                 "read" -> cslRead(step.args)
@@ -477,6 +514,7 @@ class Flow (
                 "get" -> lstGet(step.args)
                 "del" -> lstDel(step.args)
                 "len" -> lstLen(step.args)
+                "var" -> lstVar(step.args)
             }
             "str" -> when(step.cmd){
                 "cut" -> strCut(step.args)
@@ -522,6 +560,7 @@ class Flow (
                 "if" -> runIf(step.args)
                 "while" -> runWhile(step.args)
                 "flow" -> runFlow(step.args)
+                "pause" -> runPause(step.args)
             }
             "srv" -> when(step.cmd){
                 "new" -> srvNew(step.args)

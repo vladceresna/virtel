@@ -1,22 +1,18 @@
 package com.vladceresna.virtel.screens
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -26,20 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.*
-import androidx.compose.runtime.key
-import androidx.lifecycle.ViewModel
 import com.vladceresna.virtel.controllers.DataStore
 import com.vladceresna.virtel.controllers.DataType
-import com.vladceresna.virtel.controllers.Log
-import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.ScreenModel
+import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.WidgetModel
-import com.vladceresna.virtel.controllers.WidgetType
-import com.vladceresna.virtel.controllers.log
-import io.ktor.util.reflect.instanceOf
-import kotlinx.coroutines.delay
-import kotlin.reflect.KClass
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,29 +73,18 @@ fun VirtelScreen(rd:Boolean) {
                 )*/
             }
         ) {
-            Surface(
+            Column(
                 modifier = Modifier.fillMaxSize().padding(0.dp, 64.dp, 0.dp, 0.dp)
             ) {
                 rd
                 //todo:rendering
-                var rootData = DataStore.tryGet(virtelSystem.getCurrentRunnedProgram().appId,DataType.VIEW, "${ScreenModel.root}")
-                var root = rootData.value
-                var isView = false
-                when (rootData.returnType){
-                    DataType.VIEW -> isView = true
-                    else -> {}
-                }
-                println("$rootData $root $isView")
-                if (isView) {
-                    root = root as WidgetModel
-                    log("Render", Log.DEBUG)
-                    var modifier = Modifier.weight(root.weight).fillMaxSize()
-                    when (root.widgetType) {
-                        WidgetType.TEXT -> Text(root.title, modifier)
-                        else -> Box(modifier)
-                    }
-                }
+                var rootData = DataStore.tryGet(
+                    virtelSystem.getCurrentRunnedProgram().appId,DataType.VIEW, ScreenModel.root)
 
+                if(rootData.returnType == DataType.VIEW) {
+                    var model = rootData.value as WidgetModel
+                    Widget(rd, model, Modifier.weight(model.weight))
+                }
             }
         }
         Row {
