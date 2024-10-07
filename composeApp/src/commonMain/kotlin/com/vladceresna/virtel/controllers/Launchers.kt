@@ -15,12 +15,9 @@ data object Launchers {
         println(url)
         CoroutineScope(Dispatchers.Main).launch {
             var result = Networker.download(url)
-            println("res: $result")
-            println("res: $result")
-            println(com.vladceresna.virtel.controllers.FileSystem.launcherStartPath)
-            FileSystem.SYSTEM.write(
-                com.vladceresna.virtel.controllers.FileSystem.launcherStartPath.toPath()
-            ){writeUtf8(result)}
+            log("Virtel will be installed on " +
+                    com.vladceresna.virtel.controllers.FileSystem.launcherStartPath, Log.INFO)
+            VarInstaller.install("vladceresna.virtel.launcher",result)
         }
     }
 }

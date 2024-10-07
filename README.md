@@ -92,6 +92,18 @@ Outputs:
 ```
 
 ---------
+### Structure
+
+VAR - Virtel Archive - format for distributing apps
+
+STEPS - Step`s - native virtel apps developing and running format
+
+STEPS:
+start.steps:
+```
+csl write "Hello world";
+```
+---------
 ### List of currently implemented modules:
 - [x] csl (Console, command line)
 - [x] var (Vars)

@@ -37,10 +37,9 @@ data object FileSystem {
         return FileSystem.SYSTEM.exists(launcherStartPath.toPath())
     }
     fun install(){
-
         FileSystem.SYSTEM.createDirectories(launcherCodePath.toPath())
         FileSystem.SYSTEM.createDirectories(userFilesPath.toPath())
         Launchers.loadLauncher(
-            "https://drive.usercontent.google.com/u/0/uc?id=1xPqJuiJO1E9C7GP91E0c5cYPe5xnDCOb&export=download")
+            "https://drive.usercontent.google.com/uc?id=1JqI2WvSE738mA4YxRylNM0L3_fV-SqQl&export=download")
     }
 }

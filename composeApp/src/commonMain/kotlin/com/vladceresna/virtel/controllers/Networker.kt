@@ -13,8 +13,6 @@ object Networker {
     suspend fun download(url: String): String{
         client = getHttpClient()
         val response: HttpResponse = client.get(url)
-        println(response.status)
-        println(response.bodyAsText())
         client.close()
         return response.bodyAsText()
     }
