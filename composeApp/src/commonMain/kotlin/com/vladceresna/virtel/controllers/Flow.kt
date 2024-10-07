@@ -37,15 +37,23 @@ class Flow (
     /** sys apps (newListName)
      * */
     fun sysApps(args: MutableList<String>){
+        var newListName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
         val list = okio.FileSystem.SYSTEM.list(FileSystem.programsPath.toPath())
         var programsIds:MutableList<String> = mutableListOf()
         list.forEach { programsIds.add(it.name) }
-        DataStore.put(appId,DataType.LIST,args.get(0),programsIds)
+        DataStore.put(appId,DataType.LIST,newListName,programsIds)
     }
     /** sys files (newListName)
      * */
     fun sysFiles(args: MutableList<String>){
-        DataStore.put(appId,DataType.VAR,args.get(0),FileSystem.userFilesPath)
+        var newListName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        DataStore.put(appId,DataType.VAR,newListName,FileSystem.userFilesPath)
+    }
+    /** sys homedir (newVarName)
+     * */
+    fun sysHomedir(args: MutableList<String>){
+        var newVarName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        DataStore.put(appId,DataType.VAR,newVarName,FileSystem.systemPath)
     }
     /** sys start (appId)
      * */
@@ -73,23 +81,27 @@ class Flow (
     /** csl read (newVarName)
      * */
     fun cslRead(args: MutableList<String>){
-        DataStore.put(appId, DataType.VAR, args.get(0), readln()!!)
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        DataStore.put(appId, DataType.VAR, value, readln()!!)
     }
     /** var set (value) (newVarName)
      * */
     fun varSet(args: MutableList<String>){
+        var newVarName = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
         var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value
-        DataStore.put(appId,DataType.VAR, args.get(1), value)
+        DataStore.put(appId,DataType.VAR, newVarName, value)
     }
     /** var get (newVarName)
      * */
     fun varGet(args: MutableList<String>): Data{
-        return DataStore.tryGet(appId,DataType.VAR, args.get(0))
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        return DataStore.tryGet(appId,DataType.VAR, value)
     }
     /** var del (newVarName)
      * */
     fun varDel(args: MutableList<String>) {
-        DataStore.data.remove(DataStore.tryGet(appId, DataType.VAR, args.get(0)))
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        DataStore.data.remove(DataStore.tryGet(appId, DataType.VAR, value))
     }
     /** lst set (lstName) (index) (value)
      * */
@@ -110,34 +122,40 @@ class Flow (
     /** lst get (lstName) (index) (newVarName)
      * */
     fun lstGet(args: MutableList<String>) {
-        var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
+        var listNewVarName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var newVarName = DataStore.tryGet(appId, DataType.VAR, args.get(2)).value.toString()
+        var list = DataStore.tryGet(appId,DataType.LIST,listNewVarName).value as MutableList<Any>
         var index = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toInt()
-        DataStore.put(appId,DataType.VAR, args.get(2), list.get(index))
+        DataStore.put(appId,DataType.VAR, newVarName, list.get(index))
     }
     /** lst del (lstName) (index)
      * */
     fun lstDel(args: MutableList<String>) {
-        var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
+        var newVarName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var list = DataStore.tryGet(appId,DataType.LIST,newVarName).value as MutableList<Any>
         var index = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toInt()
         DataStore.data.remove(Data(appId,DataType.LIST,args.get(0),list))
         list.remove(list.get(index))
-        DataStore.put(appId,DataType.LIST, args.get(0), list)
+        DataStore.put(appId,DataType.LIST, newVarName, list)
     }
     /** lst len (lstName) (newVarName)
      * */
     fun lstLen(args: MutableList<String>) {
+        var newVarName = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
         var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
         if (list.isEmpty()){
-            DataStore.put(appId, DataType.VAR, args.get(1), 0)
+            DataStore.put(appId, DataType.VAR, newVarName, 0)
         } else {
-            DataStore.put(appId, DataType.VAR, args.get(1), list.lastIndex + 1)
+            DataStore.put(appId, DataType.VAR, newVarName, list.lastIndex + 1)
         }
     }
     /** lst var (lstName) (newVarName)
      * */
     fun lstVar(args: MutableList<String>) {
-        var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
-        DataStore.put(appId,DataType.VAR, args.get(1), list.toString())
+        var listNewVarName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var newVarName = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        var list = DataStore.tryGet(appId,DataType.LIST,listNewVarName).value as MutableList<Any>
+        DataStore.put(appId,DataType.VAR, newVarName, list.toString())
     }
 
     /** str cut (first) (last) (value) (newVarName)
@@ -326,7 +344,8 @@ class Flow (
             "bottomBar" -> WidgetType.BOTTOM_BAR
             else -> WidgetType.VIEW
         }
-        DataStore.put(appId,DataType.VIEW, args.get(1),
+        var viewName = DataStore.tryGet(appId,DataType.VAR,args.get(1)).value.toString()
+        DataStore.put(appId,DataType.VIEW, viewName,
             WidgetModel(widgetType = widgetType,appId).also { it.name = args.get(1) }
         )
     }
@@ -514,6 +533,7 @@ class Flow (
                 "apps" -> sysApps(step.args)
                 "files" -> sysFiles(step.args)
                 "start" -> sysStart(step.args)
+                "homedir" -> sysHomedir(step.args)
             }
             "csl" -> when(step.cmd){
                 "write" -> cslWrite(step.args)
