@@ -6,7 +6,7 @@ data object ScreenModel {
     var top = ""
 
     var settingsClick:() -> Unit = {
-
+        VirtelSystem.renderFunction()
     }
     var homeClick:() -> Unit = {
 

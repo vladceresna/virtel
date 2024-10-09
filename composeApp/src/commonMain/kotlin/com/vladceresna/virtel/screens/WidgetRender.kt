@@ -43,7 +43,7 @@ import com.vladceresna.virtel.controllers.log
 @Composable
 fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
     rd
-    log("Render Widget $model", Log.DEBUG)
+    //log("Render Widget $model", Log.DEBUG)
     var arrangement = Arrangement.Center
     var alignmentVertical = Alignment.CenterVertically
     var alignmentHorizontal = Alignment.CenterHorizontally
@@ -69,7 +69,7 @@ fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
             rd
             var value by remember { mutableStateOf(model.value) }
             OutlinedTextField(
-                label = { Text("Hello") },
+                label = { Text(model.title) },
                 modifier = modifier,
                 value = value,
                 onValueChange = {

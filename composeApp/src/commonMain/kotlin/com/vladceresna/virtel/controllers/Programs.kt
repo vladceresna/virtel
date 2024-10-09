@@ -14,6 +14,7 @@ data object Programs {
     fun scanPrograms(){
         log("Programs scanning",Log.INFO)
         var tempres:List<Path> = okio.FileSystem.SYSTEM.list(fileSystem.programsPath.toPath())
+        programs = mutableListOf()
         tempres.forEach {
             programs.add(Program(it.toString()).also { it.scan() })
         }

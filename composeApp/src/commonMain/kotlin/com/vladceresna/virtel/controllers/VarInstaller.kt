@@ -33,7 +33,7 @@ object VarInstaller {
                 else if (readFileContent) fileContent+=char
             }
         }
-
+        Programs.scanPrograms()
     }
     fun toVar(appId:String):String{
         return ""

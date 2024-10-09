@@ -22,6 +22,7 @@ import kotlinx.coroutines.runBlocking
 import okio.IOException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
+import kotlin.math.roundToInt
 
 
 /**
@@ -67,8 +68,13 @@ class Flow (
     fun sysHomedir(args: MutableList<String>){
         DataStore.put(appId,DataType.VAR,args.get(0),FileSystem.systemPath)
     }
-
-
+    /** sys install (appId) (contentVAR)
+     * */
+    fun sysInstall(args: MutableList<String>){
+        var installAppId = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var contentVAR = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        VarInstaller.install(installAppId,contentVAR)
+    }
     /** csl write (text)
      * */
     fun cslWrite(args: MutableList<String>){
@@ -80,6 +86,31 @@ class Flow (
     fun cslRead(args: MutableList<String>){
         DataStore.put(appId, DataType.VAR, args.get(0), readln()!!)
     }
+
+
+    //references
+    /** ref set (varName) (newRefName)
+     * */
+    fun refSet(args: MutableList<String>){
+        DataStore.put(appId,DataType.REF, args.get(1), args.get(0))
+    }
+    /** ref name (valueVarName) (newRefName)
+     * */
+    fun refName(args: MutableList<String>){
+        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        DataStore.put(appId,DataType.REF, args.get(1), value)
+    }
+    /** ref get (newRefName)
+     * */
+    fun refGet(args: MutableList<String>): Data{
+        return DataStore.tryGet(appId,DataType.REF, args.get(0))
+    }
+    /** ref del (newRefName)
+     * */
+    fun refDel(args: MutableList<String>) {
+        DataStore.data.remove(DataStore.tryGet(appId, DataType.REF, args.get(0)))
+    }
+
     /** var set (value) (newVarName)
      * */
     fun varSet(args: MutableList<String>){
@@ -116,8 +147,8 @@ class Flow (
      * */
     fun lstGet(args: MutableList<String>) {
         var list = DataStore.tryGet(appId,DataType.LIST,args.get(0)).value as MutableList<Any>
-        var index = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toInt()
-        DataStore.put(appId,DataType.VAR, args.get(2), list.get(index))
+        var index = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toDouble()
+        DataStore.put(appId,DataType.VAR, args.get(2), list.get(index.roundToInt()))
     }
     /** lst del (lstName) (index)
      * */
@@ -173,7 +204,7 @@ class Flow (
         var value = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
         DataStore.put(appId,DataType.VAR, args.get(2), value.get(index).toString())
     }
-    /** str eqs (first) (second) (newVarName)
+    /** str eqs (first) (second) (newVarName)IEW
      * */
     fun strEqs(args: MutableList<String>){
         var firstStr = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
@@ -186,7 +217,7 @@ class Flow (
     fun matPlus(args: MutableList<String>) {
         var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toDouble()
         var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toDouble()
-        DataStore.put(appId,DataType.VAR, args.get(2), a+b)
+        DataStore.put(appId,DataType.VAR, args.get(2), (a+b).toString())
     }
     /** mat minus (a) (b) (newVarName)
      * */
@@ -346,11 +377,7 @@ class Flow (
     fun scrSet(args: MutableList<String>) {
         var property = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
         var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
-        /*try {
-
-        } catch (e:Exception){ }*/
         var widget = DataStore.tryGet(appId, DataType.VIEW, args.get(2)).value as WidgetModel
-        println("$value,$property,$widget")
         when(property){
             "width" -> widget.width = when(value){
                 "wrap" -> -1
@@ -383,6 +410,23 @@ class Flow (
         }
         DataStore.put(appId,DataType.VIEW,args.get(2),widget)
     }
+    /** scr get (viewVarName) (property) (newVarName)
+     * */
+    fun scrGet(args: MutableList<String>) {
+        var property = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        var widget = DataStore.tryGet(appId, DataType.VIEW, args.get(0)).value as WidgetModel
+        DataStore.put(appId,DataType.VAR,args.get(2), when(property){
+            "width" -> widget.width
+            "height" -> widget.height
+            "weight" -> widget.weight
+            "variant" -> widget.variant
+            "title" -> widget.title
+            "value" -> widget.value
+            "onclick" -> widget.onclick
+            else -> widget.title
+        })
+    }
+
     /** scr nav (file) (navName)
      * */
     fun scrNav(args: MutableList<String>) {
@@ -514,16 +558,31 @@ class Flow (
         if(Programs.findProgram(appId).debugMode) {
             log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
         }
+
+        var fromRefsArgs = mutableListOf<String>()
+        step.args.forEach {
+            fromRefsArgs.add(
+                DataStore.tryGet(appId,DataType.REF,it).value.toString()
+            )
+        }
+
         when(step.mod){
             "sys" -> when(step.cmd){
                 "apps" -> sysApps(step.args)
                 "files" -> sysFiles(step.args)
                 "start" -> sysStart(step.args)
                 "homedir" -> sysHomedir(step.args)
+                "install" -> sysInstall(step.args)
             }
             "csl" -> when(step.cmd){
                 "write" -> cslWrite(step.args)
                 "read" -> cslRead(step.args)
+            }
+            "ref" -> when(step.cmd){
+                "set" -> refSet(step.args)
+                "name" -> refName(step.args)
+                "get" -> refGet(step.args)
+                "del" -> refDel(step.args)
             }
             "var" -> when(step.cmd){
                 "set" -> varSet(step.args)
@@ -572,6 +631,7 @@ class Flow (
                     "new" -> scrNew(step.args)
                     "del" -> scrDel(step.args)
                     "set" -> scrSet(step.args)
+                    "get" -> scrGet(step.args)
                     "nav" -> scrNav(step.args)
                 }
                 VirtelSystem.renderFunction()

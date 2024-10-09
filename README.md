@@ -33,16 +33,16 @@ If you know the programming language **Rust**, you can help us to develop Virtel
 * `var get {var name}`
 * `var del {name of the variable}`
 * `bin run {name of the .steps script}`
-* `math plus {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `math min {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `math mult {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `math div {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `math exp {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `math root {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `math mod {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `math floor {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `math incr {name of the var to increment}`
-* `math decr {name of the var to decrement}`
+* `mat plus {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* `mat min {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* `mat mult {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* `mat div {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* `mat exp {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* `mat root {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* `mat mod {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* `mat floor {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* `mat incr {name of the var to increment}`
+* `mat decr {name of the var to decrement}`
 
 ### Different code examples:
 #### Basic example, working with `bin run`:
@@ -52,18 +52,18 @@ Path of the file (may depend on the system): `C:/Virtel/apps/vladceresna.virtel.
 
 Script in `start.steps`:
 ```
-var set greet "Hello!";
-sys out greet;
-var set greet "Hi!";
-sys out greet;
+var set "Hello!" greet;
+csl write greet;
+var set "Hi!" greet;
+csl write greet;
 var del greet;
-sys out greet;
-bin run run.steps;
+csl write greet;
+run one "/run.steps";
 ```
 Script in `run.steps`:
 ```
-sys out "Hello from run";
-sys out "This is run";
+csl write "Hello from run";
+csl write "This is run";
 ```
 
 #### Another example, working with math commmands:
@@ -73,8 +73,8 @@ Steps Code:
 ```
 var set a 5;
 var set b 5;
-math plus a b c;
-sys out c;
+mat plus a b c;
+csl write c;
 ```
 Output of the code:
 ```
@@ -84,7 +84,7 @@ Output of the code:
 #### Here's another mathematical example showing the root command:
 ```
 math root "27" "3" c;
-sys out c;
+csl write c;
 ```
 Outputs:
 ```
@@ -106,6 +106,7 @@ csl write "Hello world";
 ---------
 ### List of currently implemented modules:
 - [x] csl (Console, command line)
+- [x] ref (References on vars)
 - [x] var (Vars)
 - [x] lst (Lists)
 - [x] mat (Math operations)
@@ -116,7 +117,7 @@ csl write "Hello world";
 - [x] fls (Files)
 - [x] scr (Operate screen components)
 - [ ] dgm (Diagrams)
-- [x] srv (Server on selected ports) srv new "8080" "operator.steps" 
+- [x] srv (Server on selected ports)
 - [x] clt (Client for urls)
 - [ ] wss (WebSockets)
 - [ ] blt (Bluetooth)

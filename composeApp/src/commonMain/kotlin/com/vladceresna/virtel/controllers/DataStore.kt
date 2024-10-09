@@ -27,6 +27,9 @@ data object DataStore {
         }
     }
     fun put(scopeAppId: String, type: DataType, name: String, value: Any){
+        try {
+            data.remove(find(scopeAppId, type, name))
+        } catch (e: Exception){}
         data.add(Data(scopeAppId, type, name, value))
     }
 }
@@ -47,5 +50,5 @@ data class Data(
 }
 
 enum class DataType{
-    VAR,LIST,VIEW,SERVER
+    REF,VAR,LIST,VIEW,SERVER
 }

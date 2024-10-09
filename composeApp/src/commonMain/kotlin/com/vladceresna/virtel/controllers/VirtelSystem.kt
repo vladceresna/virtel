@@ -11,9 +11,8 @@ data object VirtelSystem {
     val programs = Programs
     val fileSystem = FileSystem
 
-    suspend fun start() {
+    fun start() {
         log("Virtel Platform starting...", Log.INFO)
-        delay(1000)
         val homePath = getHomePath()
         if(homePath == null) throw VirtelException()//TODO:Fix iOS and JVM
         else fileSystem.scan(homePath)

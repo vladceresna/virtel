@@ -59,7 +59,8 @@ class FlowTest {
     }
     @Test
     fun testMatPlus(){
-        flow.matPlus(mutableListOf("\"5\"", "\"5\"", "testPlusVar"))
+        flow.varSet(mutableListOf("\"5\"", "number"))
+        flow.matPlus(mutableListOf("\"5\"", "number", "testPlusVar"))
         assertEquals(flow.varGet(mutableListOf("testPlusVar")).value.toString(), "10.0")
     }
     @Test
