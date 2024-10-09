@@ -213,12 +213,7 @@ class Flow (
      * */
     fun matEqs(args: MutableList<String>) {
         var a = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString().toDouble()
-        var b = DataStore.tryGet(appId, DataType.VAR, args.get(1))./** sys homedir (newVarName)
-     * */
-    fun sysHomedir(args: MutableList<String>){
-        var newVarName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
-        DataStore.put(appId,DataType.VAR,newVarName,FileSystem.systemPath)
-    }value.toString().toDouble()
+        var b = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString().toDouble()
         DataStore.put(appId,DataType.VAR, args.get(2), a.equals(b).toString())
     }
     /** mat grtr (a) (b) (newVarName)
@@ -524,7 +519,7 @@ class Flow (
                 "apps" -> sysApps(step.args)
                 "files" -> sysFiles(step.args)
                 "start" -> sysStart(step.args)
-                "homdir" -> sysHomedir(step.args)
+                "homedir" -> sysHomedir(step.args)
             }
             "csl" -> when(step.cmd){
                 "write" -> cslWrite(step.args)

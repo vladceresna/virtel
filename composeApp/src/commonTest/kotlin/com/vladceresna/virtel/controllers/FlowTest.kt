@@ -81,7 +81,7 @@ class FlowTest {
     @Test
     fun testScr(){
         flow.scrNew(mutableListOf("\"text\"", "view"))
-        flow.scrSet(mutableListOf("\"true\"","\"root\"","view"))
+        flow.scrSet(mutableListOf("\"root\"","\"node\"","view"))
         assertEquals(ScreenModel.root,"view")
     }
 
