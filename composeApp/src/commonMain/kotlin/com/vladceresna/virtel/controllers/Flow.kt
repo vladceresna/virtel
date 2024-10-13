@@ -44,10 +44,15 @@ class Flow (
         list.forEach { programsIds.add(it.name) }
         DataStore.put(appId,DataType.LIST,args.get(0),programsIds)
     }
-    /** sys files (newListName)
+    /** sys files (newVarName)
      * */
     fun sysFiles(args: MutableList<String>){
         DataStore.put(appId,DataType.VAR,args.get(0),FileSystem.userFilesPath)
+    }
+    /** sys log (newVarName)
+     * */
+    fun sysLog(args: MutableList<String>){
+        DataStore.put(appId,DataType.VAR,args.get(0),getLog())
     }
     /** sys start (appId)
      * */
@@ -75,6 +80,12 @@ class Flow (
         var installAppId = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
         var contentVAR = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
         VarInstaller.install(installAppId,contentVAR)
+    }
+    /** sys pack (appId) (contentVARNewVarName)
+     * */
+    fun sysPack(args: MutableList<String>){
+        var packAppId = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        DataStore.put(appId,DataType.VAR,args.get(1),VarInstaller.toVar(packAppId))
     }
     /** csl write (text)
      * */
@@ -205,7 +216,7 @@ class Flow (
         var value = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
         DataStore.put(appId,DataType.VAR, args.get(2), value.get(index).toString())
     }
-    /** str eqs (first) (second) (newVarName)IEW
+    /** str eqs (first) (second) (newVarName) file:///
      * */
     fun strEqs(args: MutableList<String>){
         var firstStr = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
@@ -574,6 +585,8 @@ class Flow (
                 "start" -> sysStart(step.args)
                 "homedir" -> sysHomedir(step.args)
                 "install" -> sysInstall(step.args)
+                "pack" -> sysPack(step.args)
+                "log" -> sysLog(step.args)
             }
             "csl" -> when(step.cmd){
                 "write" -> cslWrite(step.args)
@@ -627,15 +640,12 @@ class Flow (
                 "list" -> flsList(step.args)
                 "xst" -> flsXst(step.args)
             }
-            "scr" -> {
-                when (step.cmd) {
-                    "new" -> scrNew(step.args)
-                    "del" -> scrDel(step.args)
-                    "set" -> scrSet(step.args)
-                    "get" -> scrGet(step.args)
-                    "nav" -> scrNav(step.args)
-                }
-                VirtelSystem.renderFunction()
+            "scr" -> when (step.cmd) {
+                "new" -> scrNew(step.args)
+                "del" -> scrDel(step.args)
+                "set" -> scrSet(step.args)
+                "get" -> scrGet(step.args)
+                "nav" -> scrNav(step.args)
             }
             "run" -> when(step.cmd){
                 "one" -> runOne(step.args)
@@ -653,6 +663,7 @@ class Flow (
                 "req" -> cltReq(step.args)
             }
         }
+        VirtelSystem.renderFunction()
     }
     /**lexer**/
     fun runFile(fileName:String){

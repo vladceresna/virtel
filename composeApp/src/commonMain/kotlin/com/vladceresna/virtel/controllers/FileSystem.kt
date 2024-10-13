@@ -1,6 +1,7 @@
 package com.vladceresna.virtel.controllers
 
 import okio.FileSystem
+import okio.Path
 import okio.Path.Companion.toPath
 import okio.SYSTEM
 
@@ -44,5 +45,8 @@ data object FileSystem {
         FileSystem.SYSTEM.createDirectories(userFilesPath.toPath())
         Launchers.loadLauncher(
             "https://drive.usercontent.google.com/uc?id=1JqI2WvSE738mA4YxRylNM0L3_fV-SqQl&export=download")
+    }
+    fun getListPaths(path: String): List<Path> {
+        return okio.FileSystem.SYSTEM.listRecursively(path.toPath()).toList()
     }
 }

@@ -36,6 +36,12 @@ object VarInstaller {
         Programs.scanPrograms()
     }
     fun toVar(appId:String):String{
-        return ""
+        var varContent = ""
+        FileSystem.getListPaths("${FileSystem.programsPath}/$appId${FileSystem.srCode}/").forEach {
+            varContent+="\n[${it.toString().split("$appId/code").get(1)}]\n"
+            varContent+= okio.FileSystem.SYSTEM.read(it){readUtf8()}
+        }
+        varContent+="\n[end]"
+        return varContent
     }
 }
