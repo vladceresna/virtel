@@ -29,6 +29,7 @@ import kotlin.math.roundToInt
  * In exectime:
  * - value/var (or variable with it): tryGet: any name
  * - varName (var need to write/save in): clear using: newVarName, newListName
+ * https://drive.usercontent.google.com/u/0/uc?id=1XlS0Xzvwdu47yenGLgh0KyHH7urqeTxs&export=download
  * **/
 class Flow (
     var appId: String,

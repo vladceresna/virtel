@@ -36,6 +36,7 @@ fun VirtelScreen(rd:Boolean) {
 
     var screen = ScreenModel
 
+    var bottomBar by remember { mutableStateOf(false) }
 
     Column {
         Scaffold(
@@ -52,13 +53,16 @@ fun VirtelScreen(rd:Boolean) {
                     virtelSystem.getCurrentRunnedProgram().appId,DataType.VIEW, ScreenModel.bottom)
 
                 if(bottomData.returnType == DataType.VIEW) {
+                    bottomBar = true
                     var model = bottomData.value as WidgetModel
                     Widget(rd, model, Modifier)
+                } else {
+                    bottomBar = false
                 }
             }
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(0.dp, 64.dp, 0.dp, 0.dp)
+                modifier = Modifier.fillMaxSize().padding(10.dp, 64.dp, 10.dp, if(bottomBar) 90.dp else 10.dp)
             ) {
                 rd
                 //todo:rendering
@@ -85,5 +89,4 @@ fun VirtelScreen(rd:Boolean) {
             Text("",Modifier.weight(1f))
         }
     }
-
 }

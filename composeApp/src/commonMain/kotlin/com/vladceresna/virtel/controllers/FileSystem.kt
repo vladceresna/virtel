@@ -7,6 +7,7 @@ import okio.SYSTEM
 data object FileSystem {
     val srSystem = "/virtel/0"
     val srPrograms = "/programs"
+    val srLog = "/log.txt"
     val srUserFiles = "/files"
     val srLauncher = "/vladceresna.virtel.launcher"
     val srCode = "/code"
@@ -22,6 +23,7 @@ data object FileSystem {
     lateinit var launcherStartPath: String
     lateinit var userFilesPath: String
     lateinit var systemConfigPath: String
+    lateinit var systemLogPath: String
 
     fun scan(osHomeDir: String){
         this.osHomeDir = osHomeDir
@@ -32,6 +34,7 @@ data object FileSystem {
         launcherStartPath = "$launcherCodePath$srStart"
         userFilesPath = "$systemPath$srUserFiles"
         systemConfigPath = "$systemPath$srConfig"
+        systemLogPath = "$systemPath$srLog"
     }
     fun isInstalled():Boolean{
         return FileSystem.SYSTEM.exists(launcherStartPath.toPath())

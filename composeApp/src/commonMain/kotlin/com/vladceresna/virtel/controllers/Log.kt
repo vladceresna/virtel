@@ -5,6 +5,8 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import okio.Path.Companion.toPath
+import okio.SYSTEM
 
 data object Logger{
     var logs: MutableList<String> = mutableListOf()
@@ -24,6 +26,17 @@ fun log(message: String, type: Log){
     }
     logAny(messageRes)
     Logger.logs.add(messageRes)
+    try {
+        okio.FileSystem.SYSTEM.write(FileSystem.systemLogPath.toPath()){
+            writeUtf8(getLog()+messageRes+"\n")}
+    } catch (e:Exception){}
+}
+fun getLog(): String {
+    try {
+        return okio.FileSystem.SYSTEM.read(FileSystem.systemLogPath.toPath()){readUtf8()}
+    } catch (e:Exception) {
+        return ""
+    }
 }
 expect fun logAny(message: String)
 

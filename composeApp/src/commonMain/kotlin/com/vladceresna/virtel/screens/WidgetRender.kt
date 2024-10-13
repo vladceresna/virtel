@@ -5,22 +5,36 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +44,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.unit.dp
+import com.example.compose.errorContainerDark
 import com.vladceresna.virtel.controllers.DataStore
 import com.vladceresna.virtel.controllers.DataType
 import com.vladceresna.virtel.controllers.Log
@@ -38,8 +54,8 @@ import com.vladceresna.virtel.controllers.ScreenModel
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.WidgetModel
 import com.vladceresna.virtel.controllers.WidgetType
-import com.vladceresna.virtel.controllers.log
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
     rd
@@ -49,20 +65,29 @@ fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
     var alignmentHorizontal = Alignment.CenterHorizontally
     var alignment = Alignment.Center
 
-    var modifierClickable = modifier.clickable {
-        Programs.findProgram(model.appId).runFlow(model.onclick,model.onclick)
-    }
-    var onClick: () -> Unit = {
-        Programs.findProgram(model.appId).runFlow(model.onclick,model.onclick)
+    var modifierClickable = modifier
+    var onClick: () -> Unit = {}
+    if (!model.onclick.equals("noclick.steps")){
+        modifierClickable = modifier.clickable {
+            Programs.findProgram(model.appId).runFlow(model.onclick, model.onclick) }
+        onClick = {
+            Programs.findProgram(model.appId).runFlow(model.onclick, model.onclick) }
     }
     when (model.widgetType) {
-        WidgetType.TEXT -> Box(modifierClickable, contentAlignment = alignment){Text(model.title)}
-        WidgetType.BUTTON -> Button(onClick = onClick, modifier = modifier){
-            var data = DataStore.tryGet(VirtelSystem.getCurrentRunnedProgram().appId,
-                DataType.VIEW, model.childs.get(0))
-            if (data.returnType == DataType.VIEW) {
-                var model = data.value as WidgetModel
-                Widget(rd, model, Modifier.weight(model.weight))
+        WidgetType.TEXT -> Box(modifierClickable){
+            Text(modifier = Modifier, text = model.title)}
+        WidgetType.BUTTON -> when(model.variant) {
+            0 -> Row {
+                Button(onClick = onClick, modifier = modifier.wrapContentSize()) {
+                    var data = DataStore.tryGet(
+                        VirtelSystem.getCurrentRunnedProgram().appId,
+                        DataType.VIEW, model.childs.get(0)
+                    )
+                    if (data.returnType == DataType.VIEW) {
+                        var model = data.value as WidgetModel
+                        Widget(rd, model, Modifier.weight(model.weight))
+                    }
+                }
             }
         }
         WidgetType.INPUT -> {
@@ -89,7 +114,7 @@ fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
                     DataType.VIEW, child)
                 if (data.returnType == DataType.VIEW) {
                     var model = data.value as WidgetModel
-                    Widget(rd, model, Modifier.weight(model.weight))
+                    Widget(rd, model, Modifier.weight(model.weight).fillMaxHeight())
                 }
             }
         }
@@ -103,10 +128,31 @@ fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
                     DataType.VIEW, child)
                 if (data.returnType == DataType.VIEW) {
                     var model = data.value as WidgetModel
-                    Widget(rd, model, Modifier.weight(model.weight))
+                    var inmodifier = Modifier.weight(model.weight).fillMaxWidth()
+                    when(inmodifier){
+
+                    }
+                    Widget(rd, model, inmodifier)
                 }
             }
         }
+        WidgetType.TOP_BAR -> TopAppBar(
+            title = {
+                Text("I'm a TopAppBar")
+            },
+            navigationIcon = {
+                IconButton(onClick = {/* Do Something*/ }) {
+                    Icon(Icons.Filled.ArrowBack, null)
+                }
+            }, actions = {
+                IconButton(onClick = {/* Do Something*/ }) {
+                    Icon(Icons.Filled.Share, null)
+                }
+                IconButton(onClick = {/* Do Something*/ }) {
+                    Icon(Icons.Filled.Settings, null)
+                }
+            }
+        )
         WidgetType.BOTTOM_BAR -> BottomAppBar (
             actions = {
                 for (action in model.actions) {
@@ -119,12 +165,11 @@ fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
                         }
                     }
                 }
-
             },
             floatingActionButton = {
                 Column {
                     FloatingActionButton(
-                        onClick = { /* do something */ },
+                        onClick = {  },
                         containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                         elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                     ) {
