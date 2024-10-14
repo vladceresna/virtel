@@ -340,12 +340,12 @@ class Flow (
             .replace("$",FileSystem.systemPath)//$/path and pa/th
         okio.FileSystem.SYSTEM.createDirectories(path.toPath())
     }
-    /** fls list (path) (newVarName)
+    /** fls list (path) (newListName)
      * */
     fun flsList(args: MutableList<String>){
         var path = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
             .replace("$",FileSystem.systemPath)//$/path and pa/th
-        DataStore.put(appId, DataType.VAR,args.get(1),okio.FileSystem.SYSTEM.list(path.toPath()).toString())
+        DataStore.put(appId, DataType.LIST,args.get(1),okio.FileSystem.SYSTEM.list(path.toPath()).toMutableList())
     }
     /** fls xst (path) (newVarName)
      * */

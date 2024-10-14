@@ -36,6 +36,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,10 @@ import com.vladceresna.virtel.controllers.ScreenModel
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.WidgetModel
 import com.vladceresna.virtel.controllers.WidgetType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,6 +108,16 @@ fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
                     DataStore.put(model.appId,DataType.VIEW,model.name,model)
                 }
             )
+            LaunchedEffect(Unit){
+                CoroutineScope(Job()).launch{
+                    while(true){
+                        delay(10)
+                        if (model.value != value){
+                            value = model.value
+                        }
+                    }
+                }
+            }
         }
         WidgetType.ROW -> Row(
             modifier = modifier,
