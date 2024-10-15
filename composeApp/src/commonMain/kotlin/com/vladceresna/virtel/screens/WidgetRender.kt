@@ -105,6 +105,8 @@ fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
                 onValueChange = {
                     model.value = it
                     value = it
+                    model.value = value
+                    value = model.value
                     DataStore.put(model.appId,DataType.VIEW,model.name,model)
                 }
             )
@@ -114,6 +116,8 @@ fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
                         delay(10)
                         if (model.value != value){
                             value = model.value
+                            model.value = value
+                            DataStore.put(model.appId,DataType.VIEW,model.name,model)
                         }
                     }
                 }
