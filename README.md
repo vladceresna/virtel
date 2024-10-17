@@ -133,7 +133,6 @@ csl write "Hello world";
 - [ ] nnt (Neuronets)
 - [ ] cmr (Camera)
 - [ ] snr (Sensors of device)
-- [ ] arh (Archive)
 - [ ] cnt (Connect&Sync with Virtel`s on other machines)
 
 
