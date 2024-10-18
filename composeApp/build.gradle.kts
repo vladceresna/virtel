@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+var version = "1.2.0"
+
 kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -81,7 +83,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.1.0"
+        versionName = version
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     packaging {
@@ -114,7 +116,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "com.vladceresna.virtel"
-            packageVersion = "1.1.0"
+            packageVersion = version
         }
     }
 }
