@@ -17,7 +17,7 @@ Please see last releases on Releases page and join our Discord server: https://d
 ### We need help!
 `🫂` Virtel is currently in the stage of early development, which means that as for now, most of the desired functionality is not here yet. For that reason, we need **your help** to develop Virtel.
 
-If you know the programming language **Rust**, you can help us to develop Virtel itself. At current stage we lack an **IDE to write programs that will run on Virtel**, and there aren't any programming languages **that would compile into <u>Steps</u>**.
+If you know **Compose Multiplatform**, you can help us to develop Virtel itself. At current stage we lack an **IDE to write programs that will run on Virtel**, and there aren't any programming languages **that would compile into <u>Steps</u>**.
 
 -----------
 ### What is "Steps"?
@@ -37,12 +37,6 @@ If you know the programming language **Rust**, you can help us to develop Virtel
 * `mat min {num as text or var name} {num as text or var name} {name of the var to store the result}`
 * `mat mult {num as text or var name} {num as text or var name} {name of the var to store the result}`
 * `mat div {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `mat exp {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `mat root {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `mat mod {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `mat floor {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `mat incr {name of the var to increment}`
-* `mat decr {name of the var to decrement}`
 
 ### Different code examples:
 #### Basic example, working with `bin run`:
@@ -66,7 +60,7 @@ csl write "Hello from run";
 csl write "This is run";
 ```
 
-#### Another example, working with math commmands:
+#### Another example, working with math commands:
 This example briefly shows how you can use mathematics in Steps.
 
 Steps Code:
@@ -79,16 +73,6 @@ csl write c;
 Output of the code:
 ```
 10
-```
-
-#### Here's another mathematical example showing the root command:
-```
-math root "27" "3" c;
-csl write c;
-```
-Outputs:
-```
-3
 ```
 
 ---------
@@ -126,10 +110,10 @@ csl write "Hello world";
 - [ ] ard (AR)
 - [ ] vrd (VR)
 - [ ] anm (Interface animations)
-- [ ] tts (Text To Speech)
-- [ ] stt (Speech To Text)
-- [ ] mcr (Microphone)
-- [ ] spr (Speaker)
+- [x] tts (Text To Speech)
+- [x] stt (Speech To Text)
+- [x] mcr (Microphone)
+- [x] spr (Speaker)
 - [ ] nnt (Neuronets)
 - [ ] cmr (Camera)
 - [ ] snr (Sensors of device)

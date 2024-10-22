@@ -41,8 +41,12 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.okhttp)
             implementation(libs.kotlinx.coroutines.android)
+            implementation("javazoom:jlayer:1.0.1")
+
+            implementation("net.java.dev.jna:jna:5.13.0@aar")
+            implementation("com.alphacephei:vosk-android:0.3.47@aar")
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -58,6 +62,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation("io.ktor:ktor-server-cio:3.0.0-rc-1")
             implementation("com.squareup.okio:okio:3.9.1")
+
+            implementation(libs.ktor.client.okhttp)
+
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -65,7 +72,10 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.okhttp)
+
+            implementation("javazoom:jlayer:1.0.1")
+            implementation("com.alphacephei:vosk:0.3.45")
+
         }
     }
 }

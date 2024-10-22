@@ -1,8 +1,11 @@
 package com.vladceresna.virtel.controllers
 
+import com.vladceresna.virtel.controllers.VirtelSystem.labs
+import com.vladceresna.virtel.controllers.VirtelSystem.readConfig
 import com.vladceresna.virtel.getHttpClient
+import com.vladceresna.virtel.getPlatform
+import com.vladceresna.virtel.openai.toSpeech
 import com.vladceresna.virtel.other.VirtelException
-import com.vladceresna.virtel.screens.VirtelScreen
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -562,6 +565,63 @@ class Flow (
 
     }
 
+    /** tts say (text)
+     * */
+    fun ttsSay(args: MutableList<String>) {
+        var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+
+        readConfig()
+        var ttsFile = FileSystem.userFilesPath+"/virtel/$text.mp3"
+        if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
+            toSpeech(text, labs, ttsFile)
+        }
+        playMP3(ttsFile)
+    }
+
+    /** stt start
+     * */
+    fun sttStart(args: MutableList<String>) {
+
+    }
+    /** stt stop
+     * */
+    fun sttStop(args: MutableList<String>) {
+
+    }
+    /** stt wake (text) (fileName)
+     * */
+    fun sttWake(args: MutableList<String>) {
+        var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var fileName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+
+    }
+    /** stt res (newVarName)
+     * */
+    fun sttRes(args: MutableList<String>) {
+
+    }
+    /** stt lastres (newVarName)
+     * */
+    fun sttLastres(args: MutableList<String>) {
+
+    }
+
+
+
+
+    /** sprPlay (type) (path)
+     * */
+    fun sprPlay(args: MutableList<String>) {
+        var path = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+            .replace("$",FileSystem.systemPath)//$/path and pa/th
+        var type = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        when(type){
+            "mp3" -> playMP3(path)
+            "wav" -> playWAV(path)
+        }
+    }
+
+
 
 
 
@@ -661,6 +721,19 @@ class Flow (
             }
             "clt" -> when(step.cmd){
                 "req" -> cltReq(step.args)
+            }
+            "tts" -> when(step.cmd){
+                "say" -> ttsSay(step.args)
+            }
+            "stt" -> when(step.cmd){
+                "start" -> sttStart(step.args)
+                "stop" -> sttStop(step.args)
+                "wake" -> sttWake(step.args)
+                "res" -> sttRes(step.args)
+                "lastres" -> sttLastres(step.args)
+            }
+            "spr" -> when(step.cmd){
+                "play" -> sprPlay(step.args)
             }
         }
         VirtelSystem.renderFunction()
