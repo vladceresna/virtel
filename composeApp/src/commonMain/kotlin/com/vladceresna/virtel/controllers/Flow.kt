@@ -3,8 +3,7 @@ package com.vladceresna.virtel.controllers
 import com.vladceresna.virtel.controllers.VirtelSystem.labs
 import com.vladceresna.virtel.controllers.VirtelSystem.readConfig
 import com.vladceresna.virtel.getHttpClient
-import com.vladceresna.virtel.getPlatform
-import com.vladceresna.virtel.openai.toSpeech
+import com.vladceresna.virtel.ai.toSpeech
 import com.vladceresna.virtel.other.VirtelException
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
@@ -569,9 +568,8 @@ class Flow (
      * */
     fun ttsSay(args: MutableList<String>) {
         var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
-
         readConfig()
-        var ttsFile = FileSystem.userFilesPath+"/virtel/$text.mp3"
+        var ttsFile = FileSystem.userFilesPath+"/virtel/tts-cache/$text.mp3"
         if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
             toSpeech(text, labs, ttsFile)
         }
@@ -581,33 +579,38 @@ class Flow (
     /** stt start
      * */
     fun sttStart(args: MutableList<String>) {
-
+        CoroutineScope(Job()).launch {
+            runSTT()
+        }
     }
     /** stt stop
      * */
     fun sttStop(args: MutableList<String>) {
-
+        MediaSystem.isWorks = false
     }
     /** stt wake (text) (fileName)
      * */
     fun sttWake(args: MutableList<String>) {
         var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
         var fileName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
-
+        MediaSystem.wakes.put(text, Pair(fileName, appId))
+    }
+    /** stt unwake (text)
+     * */
+    fun sttUnwake(args: MutableList<String>) {
+        var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        MediaSystem.wakes.remove(text)
     }
     /** stt res (newVarName)
      * */
     fun sttRes(args: MutableList<String>) {
-
+        DataStore.put(appId,DataType.VAR,args.get(0),MediaSystem.allResult)
     }
     /** stt lastres (newVarName)
      * */
     fun sttLastres(args: MutableList<String>) {
-
+        DataStore.put(appId,DataType.VAR,args.get(0),MediaSystem.allResult)
     }
-
-
-
 
     /** sprPlay (type) (path)
      * */
@@ -620,10 +623,6 @@ class Flow (
             "wav" -> playWAV(path)
         }
     }
-
-
-
-
 
     /**parser**/
     fun runStep(step: Step){
@@ -729,6 +728,7 @@ class Flow (
                 "start" -> sttStart(step.args)
                 "stop" -> sttStop(step.args)
                 "wake" -> sttWake(step.args)
+                "unwake" -> sttUnwake(step.args)
                 "res" -> sttRes(step.args)
                 "lastres" -> sttLastres(step.args)
             }

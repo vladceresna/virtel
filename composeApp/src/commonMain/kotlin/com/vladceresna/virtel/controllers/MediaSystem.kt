@@ -4,11 +4,19 @@ import kotlin.math.sqrt
 
 
 object MediaSystem {
-    var countHello: Int = 0
+    var countScanned: Int = 0
     var numBytesRead: Int = 0
 
     var loudRMS = 18000
+    var rmsEnabled = true
+    var loudLevel = 20000
 
+    var allResult = ""
+    var lastResult = ""
+
+    var wakes: MutableMap<String, Pair<String, String>> = mutableMapOf() //word:(file:appId)
+
+    var isWorks = true
 
 }
 
@@ -19,7 +27,7 @@ expect fun runSTT()
 fun calculateRMS(audioData: ByteArray, numBytes: Int): Double {
     // set audiodata value as audiodata last 100 bytes
     var audioData = audioData
-    if (audioData.size > 15000) {
+    if (audioData.size > MediaSystem.loudLevel) {
         audioData = audioData.copyOfRange(audioData.size - 10000, audioData.size)
     }
 

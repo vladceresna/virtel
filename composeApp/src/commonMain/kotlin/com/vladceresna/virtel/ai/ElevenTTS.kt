@@ -1,4 +1,4 @@
-package com.vladceresna.virtel.openai
+package com.vladceresna.virtel.ai
 
 import com.vladceresna.virtel.getHttpClient
 import io.ktor.client.request.headers

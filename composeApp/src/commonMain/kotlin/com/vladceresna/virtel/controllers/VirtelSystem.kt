@@ -1,7 +1,7 @@
 package com.vladceresna.virtel.controllers
 
 import com.vladceresna.virtel.getHomePath
-import com.vladceresna.virtel.openai.toSpeech
+import com.vladceresna.virtel.ai.toSpeech
 import com.vladceresna.virtel.other.VirtelException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
@@ -14,6 +14,10 @@ data object VirtelSystem {
     val fileSystem = FileSystem
 
     var labs = ""
+    var pico = ""
+    var llm = ""
+    var vosk = ""
+    var native = ""//android stt/tts
 
 
     fun start() {
@@ -28,8 +32,8 @@ data object VirtelSystem {
         }
         readConfig()
 
-        val text = "Привет, ярды в кедрах! Я тут чтобы автоматизировать твою рутину!"
-        var ttsFile = FileSystem.userFilesPath+"/virtel/$text.mp3"
+        val text = "Привет, ярды в кедрах! Я тут чтобы автоматизировать твою рутину."
+        var ttsFile = FileSystem.userFilesPath+"/virtel/tts-cache/$text.mp3"
         if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
             toSpeech(text, labs, ttsFile)
         }
@@ -59,9 +63,13 @@ data object VirtelSystem {
         if(okio.FileSystem.SYSTEM.exists(path)){
             val content = okio.FileSystem.SYSTEM.read(path){readUtf8()}
             content.split(";").forEach {
-                var pair = it.split("=")
+                var pair = it.split( "=", limit = 2)
                 when(pair.get(0).trim()){
                     "labs" -> {labs = pair.get(1).trim()}
+                    "pico" -> {pico = pair.get(1).trim()}
+                    "llm" -> {llm = pair.get(1).trim()}
+                    "vosk" -> {vosk = pair.get(1).trim()}
+                    "native" -> {native = pair.get(1).trim()}
                     else -> {}
                 }
             }

@@ -1,7 +1,7 @@
 package com.vladceresna.virtel.controllers
 
 import android.media.AudioFormat
-import com.vladceresna.virtel.controllers.MediaSystem.countHello
+import com.vladceresna.virtel.controllers.MediaSystem.countScanned
 import org.vosk.LibVosk
 import org.vosk.LogLevel
 import org.vosk.Model
@@ -50,7 +50,7 @@ actual fun runSTT() {
                         print("$result ")
                         if (result.contains("ласк")) {
                             print(" SPEAKING - HELLO ")
-                            countHello++
+                            countScanned++
                             Thread {
                                 try {
                                     AudioSystem.getAudioInputStream(File("src/main/java/com/vladceresna/lask/alarm.wav"))
@@ -80,7 +80,7 @@ actual fun runSTT() {
 
 
 
-                    System.out.print(" $countHello ")
+                    System.out.print(" $countScanned ")
                     val rms = calculateRMS(b, numBytesRead)
                     print("$rms ")
                     if (rms > 18000) {

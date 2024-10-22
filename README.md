@@ -114,6 +114,7 @@ csl write "Hello world";
 - [x] stt (Speech To Text)
 - [x] mcr (Microphone)
 - [x] spr (Speaker)
+- [x] llm (Pino helper)
 - [ ] nnt (Neuronets)
 - [ ] cmr (Camera)
 - [ ] snr (Sensors of device)

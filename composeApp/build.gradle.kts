@@ -47,6 +47,8 @@ kotlin {
             implementation("net.java.dev.jna:jna:5.13.0@aar")
             implementation("com.alphacephei:vosk-android:0.3.47@aar")
 
+            implementation("ai.picovoice:picollm-android:1.1.0")
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -75,6 +77,9 @@ kotlin {
 
             implementation("javazoom:jlayer:1.0.1")
             implementation("com.alphacephei:vosk:0.3.45")
+
+
+            implementation("ai.picovoice:picollm-android:1.1.0")
 
         }
     }
