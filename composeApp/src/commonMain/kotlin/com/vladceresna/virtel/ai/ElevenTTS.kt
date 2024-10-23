@@ -5,6 +5,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsBytes
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
@@ -33,6 +34,7 @@ fun toSpeech(text: String, key: String, filePath: String): String {
             """.trimIndent())
         }
         println(response.status.toString())
+
         if (response.status == HttpStatusCode.OK) {
             okio.FileSystem.SYSTEM.createDirectories(filePath.toPath().parent!!)
 
@@ -40,6 +42,8 @@ fun toSpeech(text: String, key: String, filePath: String): String {
 
             okio.FileSystem.SYSTEM.write(filePath.toPath()) { write(source = body) }
 
+        } else {
+            println(response.bodyAsText())
         }
     }
     return filePath

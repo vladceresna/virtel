@@ -1,12 +1,9 @@
 package com.vladceresna.virtel.controllers
 
+import ai.picovoice.picovoice.Picovoice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.vosk.LibVosk
-import org.vosk.LogLevel
-import org.vosk.Model
-import org.vosk.Recognizer
 import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.sound.sampled.AudioFormat
@@ -25,91 +22,96 @@ data object DesktopMediaSystem {
     lateinit var speakers: SourceDataLine
 
     fun start() {
+
         try {
-            LibVosk.setLogLevel(LogLevel.INFO)
 
             MediaSystem.allResult = ""
             MediaSystem.lastResult = ""
 
-            format = AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 60000f, 16, 2, 4, 44100f, false)
-            info = DataLine.Info(TargetDataLine::class.java, format)
-            microphone = AudioSystem.getLine(info) as TargetDataLine
-            val dataLineInfo =
-                DataLine.Info(SourceDataLine::class.java, format)
-            speakers = AudioSystem.getLine(dataLineInfo) as SourceDataLine
+            var format =
+                AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 60000f, 16, 2, 4, 44100f, false)
+            var info = Info(TargetDataLine::class.java, format)
+            var microphone: TargetDataLine
+            var speakers: SourceDataLine
 
-            Model(FileSystem.userFilesPath + VirtelSystem.vosk).use { model ->
-                Recognizer(model, 120000f).use { recognizer ->
-                    try {
-                        microphone = AudioSystem.getLine(info) as TargetDataLine
-                        microphone.open(format)
-                        microphone.start()
-                        val out = ByteArrayOutputStream()
+            println("Starting model")
 
-                        val CHUNK_SIZE = 1024
-                        var bytesRead = 0
+            try {
+                var path = VirtelSystem.vosk
+                println(path)
+                println("3")
+                try {
 
-                        val dataLineInfo =
-                            DataLine.Info(SourceDataLine::class.java, format)
-                        speakers = AudioSystem.getLine(dataLineInfo) as SourceDataLine
-                        speakers.open(format)
-                        speakers.start()
-                        val b = ByteArray(4096)
+                    microphone = AudioSystem.getLine(info) as TargetDataLine
+                    microphone.open(format)
+                    microphone.start()
+                    val out = ByteArrayOutputStream()
 
-                        while (true) {
-                            if (MediaSystem.isWorks) {
-                                var numBytesRead = microphone.read(b, 0, CHUNK_SIZE)
-                                bytesRead += numBytesRead
+                    val CHUNK_SIZE = 1024
+                    var bytesRead = 0
 
-                                out.write(b, 0, numBytesRead)
-                                if (VirtelSystem.echo) speakers.write(b, 0, numBytesRead)
+                    val dataLineInfo =
+                        DataLine.Info(SourceDataLine::class.java, format)
+                    speakers = AudioSystem.getLine(dataLineInfo) as SourceDataLine
+                    speakers.open(format)
+                    speakers.start()
+                    val b = ByteArray(4096)
 
-                                if (recognizer.acceptWaveForm(b, numBytesRead)) {
-                                    MediaSystem.countScanned++
-                                    val result = recognizer.result
-                                    log("Currently recognised result: $result", Log.INFO)
-                                    MediaSystem.allResult += result
-                                    MediaSystem.lastResult += result
-                                    MediaSystem.wakes.forEach {
-                                        if (result.contains(it.key)) {
-                                            MediaSystem.lastResult = ""
-                                            val file = it.value.first
-                                            val appId = it.value.second
-                                            CoroutineScope(Job()).launch {
-                                                Programs.findProgram(appId)
-                                                    .runFlow(file, file + "-flow")
-                                            }
+                    while (bytesRead <= 100000000) {
+                        if (MediaSystem.isWorks) {
+                            var numBytesRead = microphone.read(b, 0, CHUNK_SIZE)
+                            bytesRead += numBytesRead
+
+                            out.write(b, 0, numBytesRead)
+                            if (VirtelSystem.echo) speakers.write(b, 0, numBytesRead)
+
+                            if (true) {
+                                MediaSystem.countScanned++
+                                val result = ""
+                                log("Currently recognised result: $result", Log.INFO)
+                                MediaSystem.allResult += result
+                                MediaSystem.lastResult += result
+                                MediaSystem.wakes.forEach {
+                                    if (result.contains(it.key)) {
+                                        MediaSystem.lastResult = ""
+                                        val file = it.value.first
+                                        val appId = it.value.second
+                                        CoroutineScope(Job()).launch {
+                                            Programs.findProgram(appId)
+                                                .runFlow(file, file + "-flow")
                                         }
-                                    }
-                                } else {
-                                    log(
-                                        "Partially recognised currently: " + recognizer.partialResult,
-                                        Log.DEBUG
-                                    )
-                                }
-
-                                if (MediaSystem.rmsEnabled) {
-                                    val rms = calculateRMS(b, numBytesRead)
-                                    if (rms > MediaSystem.loudRMS) {
-                                        log("RMS level (Loud): $rms", Log.DEBUG)
-                                        playWAV(FileSystem.userFilesPath + "/virtel/ringtones/alarm.wav")
-                                    } else {
-                                        log("RMS level (Normal): $rms", Log.DEBUG)
                                     }
                                 }
                             } else {
-                                break
+                                log(
+                                    "Partially recognised currently: " + "",
+                                    Log.DEBUG
+                                )
                             }
+
+                            if (MediaSystem.rmsEnabled) {
+                                val rms = calculateRMS(b, numBytesRead)
+                                if (rms > MediaSystem.loudRMS) {
+                                    log("RMS level (Loud): $rms", Log.DEBUG)
+                                    playWAV(FileSystem.userFilesPath + "/virtel/ringtones/alarm.wav")
+                                } else {
+                                    log("RMS level (Normal): $rms", Log.DEBUG)
+                                }
+                            }
+                        } else {
+                            break
                         }
-                        speakers.drain()
-                        speakers.close()
-                        microphone.close()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
                     }
+                    speakers.drain()
+                    speakers.close()
+                    microphone.close()
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
+            } catch (e:Exception) {
+                e.printStackTrace();
             }
-        } catch (e:Throwable){
+        } catch (e: Exception){
             e.printStackTrace()
         }
     }

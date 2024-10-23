@@ -24,6 +24,8 @@ data object VirtelSystem {
 
     lateinit var applicationContext:Any
 
+    lateinit var recognizeMicrophone:() -> Unit
+
     fun start() {
 
 
@@ -71,8 +73,8 @@ data object VirtelSystem {
                 when(pair.get(0).trim()){
                     "labs" -> {labs = pair.get(1).trim()}
                     "pico" -> {pico = pair.get(1).trim()}
-                    "llm" -> {llm = pair.get(1).trim()}
-                    "vosk" -> {vosk = pair.get(1).trim()}
+                    "llm" -> {llm = pair.get(1).trim().replace("$",FileSystem.systemPath)}
+                    "vosk" -> {vosk = pair.get(1).trim().replace("$",FileSystem.systemPath)}
                     "native" -> {native = pair.get(1).trim()}
                     else -> {}
                 }

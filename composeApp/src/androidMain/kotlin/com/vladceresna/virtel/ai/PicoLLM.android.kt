@@ -5,6 +5,7 @@ import ai.picovoice.picollm.PicoLLMCompletion
 import ai.picovoice.picollm.PicoLLMException
 import ai.picovoice.picollm.PicoLLMGenerateParams
 import com.vladceresna.virtel.controllers.VirtelSystem
+import kotlinx.coroutines.runBlocking
 
 
 data object PicoLLMOperator {
@@ -13,6 +14,8 @@ data object PicoLLMOperator {
     var messages: MutableList<String> = mutableListOf()
 
     fun setupPicoLLM(){
+        println(VirtelSystem.pico)
+        println(VirtelSystem.llm)
         messages = mutableListOf()
         pllm = PicoLLM.Builder()
             .setAccessKey(VirtelSystem.pico)
@@ -25,23 +28,31 @@ data object PicoLLMOperator {
 
 
 actual fun giveAnswer(message: String): String {
-    val res: PicoLLMCompletion
-    try {
-        PicoLLMOperator.setupPicoLLM()
-        PicoLLMOperator.messages.add(message)
+    var completed = false
+    var result = ""
+    runBlocking {
+        val res: PicoLLMCompletion
+        try {
 
-        var prompt = ""
-        PicoLLMOperator.messages.forEach {
-            prompt+=it+"\n\n\n"
+            PicoLLMOperator.setupPicoLLM()
+            PicoLLMOperator.messages.add(message)
+
+            var prompt = ""
+            PicoLLMOperator.messages.forEach {
+                prompt += it + "\n"
+            }
+
+            res = PicoLLMOperator.pllm.generate(
+                prompt,
+                PicoLLMGenerateParams.Builder().build()
+            )
+            PicoLLMOperator.pllm.delete()
+            result = res.completion
+            if (res.completion.length>5) completed = true
+        } catch (e: PicoLLMException) {
+            e.printStackTrace()
         }
-
-        res = PicoLLMOperator.pllm.generate(
-            prompt,
-            PicoLLMGenerateParams.Builder().build()
-        )
-        PicoLLMOperator.pllm.delete()
-        return res.completion
-    } catch (e: PicoLLMException) {
     }
-    return ""
+    while (!completed) {}
+    return result.replace("<eos>","").replace("\\n","").replace("\n","")
 }

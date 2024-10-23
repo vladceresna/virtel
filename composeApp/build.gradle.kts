@@ -14,8 +14,6 @@ var version = "1.2.0"
 
 
 
-
-
 kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -49,9 +47,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.android)
             implementation("javazoom:jlayer:1.0.1")
 
-            implementation("net.java.dev.jna:jna:5.13.0@aar")
-            implementation("com.alphacephei:vosk-android:0.3.47@aar")
-
             implementation("ai.picovoice:picollm-android:1.1.0")
 
         }
@@ -72,6 +67,13 @@ kotlin {
 
             implementation(libs.ktor.client.okhttp)
 
+
+
+            implementation(libs.lifecycle.viewmodel)
+            implementation(libs.lifecycle.viewmodel.compose)
+            api(libs.moko.permissions)
+            api(libs.moko.permissions.compose)
+
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -81,10 +83,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
 
             implementation("javazoom:jlayer:1.0.1")
-            implementation("com.alphacephei:vosk:0.3.45")
 
 
-            implementation("ai.picovoice:picollm-android:1.1.0")
+            implementation("ai.picovoice:picovoice-java:3.0.3")
 
         }
     }
