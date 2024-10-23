@@ -32,7 +32,7 @@ actual fun giveAnswer(message: String): String {
 
         var prompt = ""
         PicoLLMOperator.messages.forEach {
-            prompt+=it+"\n\n"
+            prompt+=it+"\n\n\n"
         }
 
         res = PicoLLMOperator.pllm.generate(

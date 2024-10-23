@@ -25,86 +25,92 @@ data object DesktopMediaSystem {
     lateinit var speakers: SourceDataLine
 
     fun start() {
-        LibVosk.setLogLevel(LogLevel.INFO)
+        try {
+            LibVosk.setLogLevel(LogLevel.INFO)
 
-        MediaSystem.allResult = ""
-        MediaSystem.lastResult = ""
+            MediaSystem.allResult = ""
+            MediaSystem.lastResult = ""
 
-        format = AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 60000f, 16, 2, 4, 44100f, false)
-        info = DataLine.Info(TargetDataLine::class.java, format)
-        microphone = AudioSystem.getLine(info) as TargetDataLine
-        speakers = AudioSystem.getLine(info) as SourceDataLine
+            format = AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 60000f, 16, 2, 4, 44100f, false)
+            info = DataLine.Info(TargetDataLine::class.java, format)
+            microphone = AudioSystem.getLine(info) as TargetDataLine
+            val dataLineInfo =
+                DataLine.Info(SourceDataLine::class.java, format)
+            speakers = AudioSystem.getLine(dataLineInfo) as SourceDataLine
 
-        Model(FileSystem.userFilesPath+VirtelSystem.vosk).use { model ->
-            Recognizer(model, 120000f).use { recognizer ->
-                try {
-                    microphone = AudioSystem.getLine(info) as TargetDataLine
-                    microphone.open(format)
-                    microphone.start()
-                    val out = ByteArrayOutputStream()
+            Model(FileSystem.userFilesPath + VirtelSystem.vosk).use { model ->
+                Recognizer(model, 120000f).use { recognizer ->
+                    try {
+                        microphone = AudioSystem.getLine(info) as TargetDataLine
+                        microphone.open(format)
+                        microphone.start()
+                        val out = ByteArrayOutputStream()
 
-                    val CHUNK_SIZE = 1024
-                    var bytesRead = 0
+                        val CHUNK_SIZE = 1024
+                        var bytesRead = 0
 
-                    val dataLineInfo =
-                        DataLine.Info(SourceDataLine::class.java, format)
-                    speakers = AudioSystem.getLine(dataLineInfo) as SourceDataLine
-                    speakers.open(format)
-                    speakers.start()
-                    val b = ByteArray(4096)
+                        val dataLineInfo =
+                            DataLine.Info(SourceDataLine::class.java, format)
+                        speakers = AudioSystem.getLine(dataLineInfo) as SourceDataLine
+                        speakers.open(format)
+                        speakers.start()
+                        val b = ByteArray(4096)
 
-                    while (true) {
-                        if (MediaSystem.isWorks) {
-                            var numBytesRead = microphone.read(b, 0, CHUNK_SIZE)
-                            bytesRead += numBytesRead
+                        while (true) {
+                            if (MediaSystem.isWorks) {
+                                var numBytesRead = microphone.read(b, 0, CHUNK_SIZE)
+                                bytesRead += numBytesRead
 
-                            out.write(b, 0, numBytesRead)
-                            speakers.write(b, 0, numBytesRead)
+                                out.write(b, 0, numBytesRead)
+                                if (VirtelSystem.echo) speakers.write(b, 0, numBytesRead)
 
-                            if (recognizer.acceptWaveForm(b, numBytesRead)) {
-                                MediaSystem.countScanned++
-                                val result = recognizer.result
-                                log("Currently recognised result: $result", Log.INFO)
-                                MediaSystem.allResult += result
-                                MediaSystem.lastResult += result
-                                MediaSystem.wakes.forEach {
-                                    if (result.contains(it.key)) {
-                                        MediaSystem.lastResult = ""
-                                        val file = it.value.first
-                                        val appId = it.value.second
-                                        CoroutineScope(Job()).launch {
-                                            Programs.findProgram(appId)
-                                                .runFlow(file, file + "-flow")
+                                if (recognizer.acceptWaveForm(b, numBytesRead)) {
+                                    MediaSystem.countScanned++
+                                    val result = recognizer.result
+                                    log("Currently recognised result: $result", Log.INFO)
+                                    MediaSystem.allResult += result
+                                    MediaSystem.lastResult += result
+                                    MediaSystem.wakes.forEach {
+                                        if (result.contains(it.key)) {
+                                            MediaSystem.lastResult = ""
+                                            val file = it.value.first
+                                            val appId = it.value.second
+                                            CoroutineScope(Job()).launch {
+                                                Programs.findProgram(appId)
+                                                    .runFlow(file, file + "-flow")
+                                            }
                                         }
+                                    }
+                                } else {
+                                    log(
+                                        "Partially recognised currently: " + recognizer.partialResult,
+                                        Log.DEBUG
+                                    )
+                                }
+
+                                if (MediaSystem.rmsEnabled) {
+                                    val rms = calculateRMS(b, numBytesRead)
+                                    if (rms > MediaSystem.loudRMS) {
+                                        log("RMS level (Loud): $rms", Log.DEBUG)
+                                        playWAV(FileSystem.userFilesPath + "/virtel/ringtones/alarm.wav")
+                                    } else {
+                                        log("RMS level (Normal): $rms", Log.DEBUG)
                                     }
                                 }
                             } else {
-                                log(
-                                    "Partially recognised currently: " + recognizer.partialResult,
-                                    Log.DEBUG
-                                )
+                                break
                             }
-
-                            if (MediaSystem.rmsEnabled) {
-                                val rms = calculateRMS(b, numBytesRead)
-                                if (rms > MediaSystem.loudRMS) {
-                                    log("RMS level (Loud): $rms", Log.DEBUG)
-                                    playWAV(FileSystem.userFilesPath + "/virtel/ringtones/alarm.wav")
-                                } else {
-                                    log("RMS level (Normal): $rms", Log.DEBUG)
-                                }
-                            }
-                        } else {
-                            break
                         }
+                        speakers.drain()
+                        speakers.close()
+                        microphone.close()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                    speakers.drain()
-                    speakers.close()
-                    microphone.close()
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
             }
+        } catch (e:Throwable){
+            e.printStackTrace()
         }
     }
     fun playWAV(path:String){
@@ -121,7 +127,7 @@ data object DesktopMediaSystem {
                     }
                 }
         } catch (e: Exception) {
-            print(e.message)
+            log(e.message.toString(), Log.ERROR)
         }
     }
 }

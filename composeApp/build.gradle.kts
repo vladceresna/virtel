@@ -9,7 +9,12 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+
 var version = "1.2.0"
+
+
+
+
 
 kotlin {
     androidTarget {

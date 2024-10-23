@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.controllers
 
+import com.vladceresna.virtel.ai.giveAnswer
 import com.vladceresna.virtel.controllers.VirtelSystem.labs
 import com.vladceresna.virtel.controllers.VirtelSystem.readConfig
 import com.vladceresna.virtel.getHttpClient
@@ -624,6 +625,17 @@ class Flow (
         }
     }
 
+    /** llm ask (text) (newResVarName)
+     * */
+    fun llmAsk(args: MutableList<String>) {
+        var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        DataStore.put(appId,DataType.VAR, args.get(1), giveAnswer(text))
+    }
+
+
+
+
+
     /**parser**/
     fun runStep(step: Step){
         if(Programs.findProgram(appId).debugMode) {
@@ -734,6 +746,9 @@ class Flow (
             }
             "spr" -> when(step.cmd){
                 "play" -> sprPlay(step.args)
+            }
+            "llm" -> when(step.cmd){
+                "ask" -> llmAsk(step.args)
             }
         }
         VirtelSystem.renderFunction()

@@ -19,6 +19,10 @@ data object VirtelSystem {
     var vosk = ""
     var native = ""//android stt/tts
 
+    var echo = false
+
+
+    lateinit var applicationContext:Any
 
     fun start() {
 
