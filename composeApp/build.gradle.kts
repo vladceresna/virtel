@@ -133,6 +133,7 @@ android {
 }
 
 compose.desktop {
+
     application {
         mainClass = "com.vladceresna.virtel.MainKt"
 
@@ -140,6 +141,17 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "com.vladceresna.virtel"
             packageVersion = version
+
+            macOS {
+                iconFile.set(project.file("res/logo.icns"))
+            }
+            windows {
+                iconFile.set(project.file("res/logo.ico"))
+            }
+            linux {
+                iconFile.set(project.file("res/logo.png"))
+            }
+
         }
     }
 }
