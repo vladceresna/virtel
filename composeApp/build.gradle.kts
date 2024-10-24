@@ -9,7 +9,10 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+
 var version = "1.2.0"
+
+
 
 kotlin {
     androidTarget {
@@ -41,8 +44,18 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.okhttp)
             implementation(libs.kotlinx.coroutines.android)
+            implementation("javazoom:jlayer:1.0.1")
+
+            implementation("ai.picovoice:picollm-android:1.1.0")
+
+
+
+            implementation(libs.lifecycle.viewmodel)
+            implementation(libs.lifecycle.viewmodel.compose)
+            api(libs.moko.permissions)
+            api(libs.moko.permissions.compose)
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -58,6 +71,11 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation("io.ktor:ktor-server-cio:3.0.0-rc-1")
             implementation("com.squareup.okio:okio:3.9.1")
+
+            implementation(libs.ktor.client.okhttp)
+
+
+
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -65,7 +83,12 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.okhttp)
+
+            implementation("javazoom:jlayer:1.0.1")
+
+
+            implementation("ai.picovoice:picovoice-java:3.0.3")
+
         }
     }
 }
@@ -110,6 +133,7 @@ android {
 }
 
 compose.desktop {
+
     application {
         mainClass = "com.vladceresna.virtel.MainKt"
 
@@ -117,6 +141,17 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "com.vladceresna.virtel"
             packageVersion = version
+
+            macOS {
+                iconFile.set(project.file("res/logo.icns"))
+            }
+            windows {
+                iconFile.set(project.file("res/logo.ico"))
+            }
+            linux {
+                iconFile.set(project.file("res/logo.png"))
+            }
+
         }
     }
 }

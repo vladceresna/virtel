@@ -1,8 +1,11 @@
 package com.vladceresna.virtel.controllers
 
+import com.vladceresna.virtel.ai.giveAnswer
+import com.vladceresna.virtel.controllers.VirtelSystem.labs
+import com.vladceresna.virtel.controllers.VirtelSystem.readConfig
 import com.vladceresna.virtel.getHttpClient
+import com.vladceresna.virtel.ai.toSpeech
 import com.vladceresna.virtel.other.VirtelException
-import com.vladceresna.virtel.screens.VirtelScreen
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -29,7 +32,6 @@ import kotlin.math.roundToInt
  * In exectime:
  * - value/var (or variable with it): tryGet: any name
  * - varName (var need to write/save in): clear using: newVarName, newListName
- * https://drive.usercontent.google.com/u/0/uc?id=1XlS0Xzvwdu47yenGLgh0KyHH7urqeTxs&export=download
  * **/
 class Flow (
     var appId: String,
@@ -216,7 +218,7 @@ class Flow (
         var value = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
         DataStore.put(appId,DataType.VAR, args.get(2), value.get(index).toString())
     }
-    /** str eqs (first) (second) (newVarName) file:///
+    /** str eqs (first) (second) (newVarName)
      * */
     fun strEqs(args: MutableList<String>){
         var firstStr = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
@@ -562,6 +564,73 @@ class Flow (
 
     }
 
+    /** tts say (text)
+     * */
+    fun ttsSay(args: MutableList<String>) {
+        var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var ttsFile = FileSystem.userFilesPath+"/virtel/tts-cache/$text.mp3"
+        if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
+            toSpeech(text, labs, ttsFile)
+        }
+        playMP3(ttsFile)
+    }
+
+    /** stt start
+     * */
+    fun sttStart(args: MutableList<String>) {
+        CoroutineScope(Job()).launch {
+            runSTT()
+        }
+    }
+    /** stt stop
+     * */
+    fun sttStop(args: MutableList<String>) {
+        MediaSystem.isWorks = false
+    }
+    /** stt wake (text) (fileName)
+     * */
+    fun sttWake(args: MutableList<String>) {
+        var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var fileName = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        MediaSystem.wakes.put(text, Pair(fileName, appId))
+    }
+    /** stt unwake (text)
+     * */
+    fun sttUnwake(args: MutableList<String>) {
+        var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        MediaSystem.wakes.remove(text)
+    }
+    /** stt res (newVarName)
+     * */
+    fun sttRes(args: MutableList<String>) {
+        DataStore.put(appId,DataType.VAR,args.get(0),MediaSystem.allResult)
+    }
+    /** stt lastres (newVarName)
+     * */
+    fun sttLastres(args: MutableList<String>) {
+        DataStore.put(appId,DataType.VAR,args.get(0),MediaSystem.allResult)
+    }
+
+    /** sprPlay (type) (path)
+     * */
+    fun sprPlay(args: MutableList<String>) {
+        var path = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+            .replace("$",FileSystem.systemPath)//$/path and pa/th
+        var type = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        when(type){
+            "mp3" -> playMP3(path)
+            "wav" -> playWAV(path)
+        }
+    }
+
+    /** llm ask (text) (newResVarName)
+     * */
+    fun llmAsk(args: MutableList<String>) {
+        var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        DataStore.put(appId,DataType.VAR, args.get(1), giveAnswer(text))
+    }
+
+
 
 
 
@@ -661,6 +730,23 @@ class Flow (
             }
             "clt" -> when(step.cmd){
                 "req" -> cltReq(step.args)
+            }
+            "tts" -> when(step.cmd){
+                "say" -> ttsSay(step.args)
+            }
+            "stt" -> when(step.cmd){
+                "start" -> sttStart(step.args)
+                "stop" -> sttStop(step.args)
+                "wake" -> sttWake(step.args)
+                "unwake" -> sttUnwake(step.args)
+                "res" -> sttRes(step.args)
+                "lastres" -> sttLastres(step.args)
+            }
+            "spr" -> when(step.cmd){
+                "play" -> sprPlay(step.args)
+            }
+            "llm" -> when(step.cmd){
+                "ask" -> llmAsk(step.args)
             }
         }
         VirtelSystem.renderFunction()
