@@ -568,7 +568,6 @@ class Flow (
      * */
     fun ttsSay(args: MutableList<String>) {
         var text = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
-        readConfig()
         var ttsFile = FileSystem.userFilesPath+"/virtel/tts-cache/$text.mp3"
         if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
             toSpeech(text, labs, ttsFile)

@@ -54,5 +54,8 @@ actual fun giveAnswer(message: String): String {
         }
     }
     while (!completed) {}
-    return result.replace("<eos>","").replace("\\n","").replace("\n","")
+    return result.replace("<eos>","")
+        .replace("\\n"," ")
+        .replace("\n"," ")
+        .replace(":",",")
 }

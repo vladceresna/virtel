@@ -26,6 +26,9 @@ data object VirtelSystem {
 
     lateinit var recognizeMicrophone:() -> Unit
 
+
+    var isSaying = false
+
     fun start() {
 
 

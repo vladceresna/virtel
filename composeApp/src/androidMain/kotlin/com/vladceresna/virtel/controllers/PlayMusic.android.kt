@@ -1,6 +1,14 @@
 package com.vladceresna.virtel.controllers
 
+import android.content.Context
+import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.net.Uri
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.io.File
 
 
 actual fun playMP3(filePath: String) {
@@ -8,17 +16,26 @@ actual fun playMP3(filePath: String) {
 }
 
 actual fun playWAV(filePath: String) {
-    var mp = MediaPlayer()
-
-    try {
+    runBlocking {
         log("Playing $filePath", Log.INFO)
-        mp.setDataSource(filePath)
-        mp.prepare()
-        mp.setOnCompletionListener {
-            mp.release()
+        val myUri: Uri = Uri.fromFile(File(filePath)) // initialize Uri here
+
+
+        while(VirtelSystem.isSaying){}
+        VirtelSystem.isSaying = true
+        val mediaPlayer = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .build()
+            )
+            setDataSource(VirtelSystem.applicationContext as Context, myUri)
+            prepare()
+            start()
         }
-        mp.start()
-    } catch (e: Exception) {
-        e.printStackTrace()
+        while(mediaPlayer.isPlaying){}
+        VirtelSystem.isSaying = false
+
     }
 }

@@ -49,6 +49,13 @@ kotlin {
 
             implementation("ai.picovoice:picollm-android:1.1.0")
 
+
+
+            implementation(libs.lifecycle.viewmodel)
+            implementation(libs.lifecycle.viewmodel.compose)
+            api(libs.moko.permissions)
+            api(libs.moko.permissions.compose)
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -68,11 +75,6 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
 
 
-
-            implementation(libs.lifecycle.viewmodel)
-            implementation(libs.lifecycle.viewmodel.compose)
-            api(libs.moko.permissions)
-            api(libs.moko.permissions.compose)
 
         }
         commonTest.dependencies {
