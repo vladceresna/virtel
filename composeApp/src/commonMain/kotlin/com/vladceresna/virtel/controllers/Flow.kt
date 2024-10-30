@@ -62,7 +62,7 @@ class Flow (
         var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
         var mutableSetOf = mutableSetOf<Data>()
         DataStore.data.forEach {
-            if (it.type != DataType.VIEW && it.scopeAppId != appId) {
+            if (it.scopeAppId != appId) {
                 mutableSetOf.add(it)
             }
         }
@@ -636,118 +636,138 @@ class Flow (
 
     /**parser**/
     fun runStep(step: Step){
-        if(Programs.findProgram(appId).debugMode) {
-            log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
-        }
+        try {
+            if (Programs.findProgram(appId).debugMode) {
+                log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
+            }
 
-        var fromRefsArgs = mutableListOf<String>()
-        step.args.forEach {
-            fromRefsArgs.add(
-                DataStore.tryGet(appId,DataType.REF,it).value.toString()
-            )
-        }
+            var fromRefsArgs = mutableListOf<String>()
+            step.args.forEach {
+                fromRefsArgs.add(
+                    DataStore.tryGet(appId, DataType.REF, it).value.toString()
+                )
+            }
 
-        when(step.mod){
-            "sys" -> when(step.cmd){
-                "apps" -> sysApps(step.args)
-                "files" -> sysFiles(step.args)
-                "start" -> sysStart(step.args)
-                "homedir" -> sysHomedir(step.args)
-                "install" -> sysInstall(step.args)
-                "pack" -> sysPack(step.args)
-                "log" -> sysLog(step.args)
+            when (step.mod) {
+                "sys" -> when (step.cmd) {
+                    "apps" -> sysApps(step.args)
+                    "files" -> sysFiles(step.args)
+                    "start" -> sysStart(step.args)
+                    "homedir" -> sysHomedir(step.args)
+                    "install" -> sysInstall(step.args)
+                    "pack" -> sysPack(step.args)
+                    "log" -> sysLog(step.args)
+                }
+
+                "csl" -> when (step.cmd) {
+                    "write" -> cslWrite(step.args)
+                    "read" -> cslRead(step.args)
+                }
+
+                "ref" -> when (step.cmd) {
+                    "set" -> refSet(step.args)
+                    "name" -> refName(step.args)
+                    "get" -> refGet(step.args)
+                    "del" -> refDel(step.args)
+                }
+
+                "var" -> when (step.cmd) {
+                    "set" -> varSet(step.args)
+                    "get" -> varGet(step.args)
+                    "del" -> varDel(step.args)
+                }
+
+                "lst" -> when (step.cmd) {
+                    "set" -> lstSet(step.args)
+                    "get" -> lstGet(step.args)
+                    "del" -> lstDel(step.args)
+                    "len" -> lstLen(step.args)
+                    "var" -> lstVar(step.args)
+                }
+
+                "str" -> when (step.cmd) {
+                    "cut" -> strCut(step.args)
+                    "add" -> strAdd(step.args)
+                    "len" -> strLen(step.args)
+                    "get" -> strGet(step.args)
+                    "eqs" -> strEqs(step.args)
+                }
+
+                "mat" -> when (step.cmd) {
+                    "plus" -> matPlus(step.args)
+                    "minus" -> matMinus(step.args)
+                    "mult" -> matMult(step.args)
+                    "div" -> matDiv(step.args)
+                    "eqs" -> matEqs(step.args)
+                    "grtr" -> matGrtr(step.args)
+                    "less" -> matLess(step.args)
+                }
+
+                "bln" -> when (step.cmd) {
+                    "and" -> blnAnd(step.args)
+                    "or" -> blnOr(step.args)
+                    "xor" -> blnXor(step.args)
+                    "not" -> blnNot(step.args)
+                }
+
+                "fls" -> when (step.cmd) {
+                    "read" -> flsRead(step.args)
+                    "write" -> flsWrite(step.args)
+                    "del" -> flsDel(step.args)
+                    "dir" -> flsDir(step.args)
+                    "list" -> flsList(step.args)
+                    "xst" -> flsXst(step.args)
+                }
+
+                "scr" -> when (step.cmd) {
+                    "new" -> scrNew(step.args)
+                    "del" -> scrDel(step.args)
+                    "set" -> scrSet(step.args)
+                    "get" -> scrGet(step.args)
+                    "nav" -> scrNav(step.args)
+                }
+
+                "run" -> when (step.cmd) {
+                    "one" -> runOne(step.args)
+                    "if" -> runIf(step.args)
+                    "while" -> runWhile(step.args)
+                    "flow" -> runFlow(step.args)
+                    "pause" -> runPause(step.args)
+                }
+
+                "srv" -> when (step.cmd) {
+                    "new" -> srvNew(step.args)
+                    "add" -> srvAdd(step.args)
+                    "run" -> srvRun(step.args)
+                }
+
+                "clt" -> when (step.cmd) {
+                    "req" -> cltReq(step.args)
+                }
+
+                "tts" -> when (step.cmd) {
+                    "say" -> ttsSay(step.args)
+                }
+
+                "stt" -> when (step.cmd) {
+                    "start" -> sttStart(step.args)
+                    "stop" -> sttStop(step.args)
+                    "wake" -> sttWake(step.args)
+                    "unwake" -> sttUnwake(step.args)
+                    "res" -> sttRes(step.args)
+                    "lastres" -> sttLastres(step.args)
+                }
+
+                "spr" -> when (step.cmd) {
+                    "play" -> sprPlay(step.args)
+                }
+
+                "llm" -> when (step.cmd) {
+                    "ask" -> llmAsk(step.args)
+                }
             }
-            "csl" -> when(step.cmd){
-                "write" -> cslWrite(step.args)
-                "read" -> cslRead(step.args)
-            }
-            "ref" -> when(step.cmd){
-                "set" -> refSet(step.args)
-                "name" -> refName(step.args)
-                "get" -> refGet(step.args)
-                "del" -> refDel(step.args)
-            }
-            "var" -> when(step.cmd){
-                "set" -> varSet(step.args)
-                "get" -> varGet(step.args)
-                "del" -> varDel(step.args)
-            }
-            "lst" -> when(step.cmd){
-                "set" -> lstSet(step.args)
-                "get" -> lstGet(step.args)
-                "del" -> lstDel(step.args)
-                "len" -> lstLen(step.args)
-                "var" -> lstVar(step.args)
-            }
-            "str" -> when(step.cmd){
-                "cut" -> strCut(step.args)
-                "add" -> strAdd(step.args)
-                "len" -> strLen(step.args)
-                "get" -> strGet(step.args)
-                "eqs" -> strEqs(step.args)
-            }
-            "mat" -> when(step.cmd){
-                "plus" -> matPlus(step.args)
-                "minus" -> matMinus(step.args)
-                "mult" -> matMult(step.args)
-                "div" -> matDiv(step.args)
-                "eqs" -> matEqs(step.args)
-                "grtr" -> matGrtr(step.args)
-                "less" -> matLess(step.args)
-            }
-            "bln" -> when(step.cmd){
-                "and" -> blnAnd(step.args)
-                "or"  -> blnOr(step.args)
-                "xor" -> blnXor(step.args)
-                "not" -> blnNot(step.args)
-            }
-            "fls" -> when(step.cmd){
-                "read" -> flsRead(step.args)
-                "write" -> flsWrite(step.args)
-                "del" -> flsDel(step.args)
-                "dir" -> flsDir(step.args)
-                "list" -> flsList(step.args)
-                "xst" -> flsXst(step.args)
-            }
-            "scr" -> when (step.cmd) {
-                "new" -> scrNew(step.args)
-                "del" -> scrDel(step.args)
-                "set" -> scrSet(step.args)
-                "get" -> scrGet(step.args)
-                "nav" -> scrNav(step.args)
-            }
-            "run" -> when(step.cmd){
-                "one" -> runOne(step.args)
-                "if" -> runIf(step.args)
-                "while" -> runWhile(step.args)
-                "flow" -> runFlow(step.args)
-                "pause" -> runPause(step.args)
-            }
-            "srv" -> when(step.cmd){
-                "new" -> srvNew(step.args)
-                "add" -> srvAdd(step.args)
-                "run" -> srvRun(step.args)
-            }
-            "clt" -> when(step.cmd){
-                "req" -> cltReq(step.args)
-            }
-            "tts" -> when(step.cmd){
-                "say" -> ttsSay(step.args)
-            }
-            "stt" -> when(step.cmd){
-                "start" -> sttStart(step.args)
-                "stop" -> sttStop(step.args)
-                "wake" -> sttWake(step.args)
-                "unwake" -> sttUnwake(step.args)
-                "res" -> sttRes(step.args)
-                "lastres" -> sttLastres(step.args)
-            }
-            "spr" -> when(step.cmd){
-                "play" -> sprPlay(step.args)
-            }
-            "llm" -> when(step.cmd){
-                "ask" -> llmAsk(step.args)
-            }
+        } catch (e:Exception){
+            e.printStackTrace()
         }
         VirtelSystem.renderFunction()
     }

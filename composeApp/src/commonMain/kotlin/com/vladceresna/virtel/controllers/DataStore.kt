@@ -6,23 +6,32 @@ data object DataStore {
     var data: MutableSet<Data> = mutableSetOf()
 
     fun find(scopeAppId: String, type: DataType, name: String): Data {
-        return data.find {
-            it.type.equals(type)
-            .and(it.scopeAppId.equals(scopeAppId))
-            .and(it.name.equals(name))
-        } ?: throw VirtelException()
+        return try {
+            data.find {
+                it.type.equals(type)
+                    .and(it.scopeAppId.equals(scopeAppId))
+                    .and(it.name.equals(name))
+            }
+        } catch (e:ConcurrentModificationException) {throw Exception()}?: throw VirtelException()
     }
     fun tryGet(scopeAppId: String, type: DataType, name: String): Data {
         //log("Data: $data \n $scopeAppId $type $name",Log.DEBUG)
         var name = name
         try {
-            return (find(scopeAppId, type, name).also { it.returnType = it.type })
+            return (find(scopeAppId, type, name).also { try {
+                it.returnType = it.type
+            } catch (e:Throwable){
+                e.printStackTrace()
+            } })
         } catch (e:VirtelException){
             if (name.startsWith("\"").and(name.endsWith("\""))){
                 name = name.replace("\"","")
                 return Data(scopeAppId,type,name,name)
             }
             //throw VirtelException()
+            return Data(scopeAppId,type,name,"Error")
+        } catch (e:Exception){
+            e.printStackTrace()
             return Data(scopeAppId,type,name,"Error")
         }
     }

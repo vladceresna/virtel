@@ -34,7 +34,6 @@ fun VirtelScreen(rd:Boolean) {
     var text by remember { mutableStateOf("") }
     var virtelSystem = VirtelSystem
 
-    var screen = ScreenModel
 
     var bottomBar by remember { mutableStateOf(false) }
 
@@ -77,13 +76,13 @@ fun VirtelScreen(rd:Boolean) {
         }
         Row {
             Text("",Modifier.weight(1f))
-            IconButton(onClick = { screen.settingsClick() },Modifier.weight(1f)) {
+            IconButton(onClick = { try{ScreenModel.settingsClick()}catch (e:Exception){e.printStackTrace()} },Modifier.weight(1f)) {
                 Icon(Icons.Filled.Settings, contentDescription = "Localized description")
             }
-            IconButton(onClick = { screen.homeClick() },Modifier.weight(1f)) {
+            IconButton(onClick = { try{ScreenModel.homeClick()}catch (e:Exception){e.printStackTrace()} },Modifier.weight(1f)) {
                 Icon(Icons.Filled.Home, contentDescription = "Localized description")
             }
-            IconButton(onClick = { screen.backClick() },Modifier.weight(1f)) {
+            IconButton(onClick = { try{ScreenModel.backClick()}catch (e:Exception){e.printStackTrace()} },Modifier.weight(1f)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Localized description")
             }
             Text("",Modifier.weight(1f))

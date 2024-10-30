@@ -41,12 +41,14 @@ data object VirtelSystem {
         }
         readConfig()
 
-        val text = "Привет, ярды в кедрах! Я тут чтобы автоматизировать твою рутину."
-        var ttsFile = FileSystem.userFilesPath+"/virtel/tts-cache/$text.mp3"
-        if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
-            toSpeech(text, labs, ttsFile)
-        }
-        playMP3(ttsFile)
+        try {
+            val text = "Привіт, ярди в кедрах! Я тут щоб автоматизувати твою рутину."
+            var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
+            if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
+                toSpeech(text, labs, ttsFile)
+            }
+            playMP3(ttsFile)
+        } catch (e: Exception) {}
 
         Programs.scanPrograms()
         log("Virtel Launcher starting...", Log.INFO)
