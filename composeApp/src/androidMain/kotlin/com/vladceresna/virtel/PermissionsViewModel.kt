@@ -25,7 +25,11 @@ class PermissionsViewModel(
 
     init {
         viewModelScope.launch {
-            recordAudioState = controller.getPermissionState(Permission.RECORD_AUDIO)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                recordAudioState = PermissionState.Granted
+            } else {
+                recordAudioState = controller.getPermissionState(Permission.RECORD_AUDIO)
+            }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 storageState = PermissionState.Granted
             } else {
@@ -36,15 +40,19 @@ class PermissionsViewModel(
 
     fun provideOrRequestPermissions() {
         viewModelScope.launch {
-            try {
-                controller.providePermission(Permission.RECORD_AUDIO)
-                recordAudioState = PermissionState.Granted
-            } catch(e: DeniedAlwaysException) {
-                recordAudioState = PermissionState.DeniedAlways
-            } catch(e: DeniedException) {
-                recordAudioState = PermissionState.Denied
-            } catch(e: RequestCanceledException) {
-                e.printStackTrace()
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q){
+                storageState = PermissionState.Granted
+            } else {
+                try {
+                    controller.providePermission(Permission.RECORD_AUDIO)
+                    recordAudioState = PermissionState.Granted
+                } catch (e: DeniedAlwaysException) {
+                    recordAudioState = PermissionState.DeniedAlways
+                } catch (e: DeniedException) {
+                    recordAudioState = PermissionState.Denied
+                } catch (e: RequestCanceledException) {
+                    e.printStackTrace()
+                }
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q){
                 storageState = PermissionState.Granted
