@@ -41,6 +41,7 @@ data object FileSystem {
         return FileSystem.SYSTEM.exists(launcherStartPath.toPath())
     }
     fun install(){
+        println(userFilesPath)
         FileSystem.SYSTEM.createDirectories(launcherCodePath.toPath())
         FileSystem.SYSTEM.createDirectories(userFilesPath.toPath())
         Launchers.loadLauncher(
