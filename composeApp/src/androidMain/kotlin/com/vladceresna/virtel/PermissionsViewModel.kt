@@ -25,24 +25,15 @@ class PermissionsViewModel(
 
     init {
         viewModelScope.launch {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                recordAudioState = PermissionState.Granted
-            } else {
-                recordAudioState = controller.getPermissionState(Permission.RECORD_AUDIO)
-            }
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                storageState = PermissionState.Granted
-            } else {
-                storageState = controller.getPermissionState(Permission.WRITE_STORAGE)
-            }
+            recordAudioState = controller.getPermissionState(Permission.RECORD_AUDIO)
+            storageState = controller.getPermissionState(Permission.WRITE_STORAGE)
+
         }
     }
 
     fun provideOrRequestPermissions() {
         viewModelScope.launch {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q){
-                storageState = PermissionState.Granted
-            } else {
+
                 try {
                     controller.providePermission(Permission.RECORD_AUDIO)
                     recordAudioState = PermissionState.Granted
@@ -53,10 +44,7 @@ class PermissionsViewModel(
                 } catch (e: RequestCanceledException) {
                     e.printStackTrace()
                 }
-            }
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q){
-                storageState = PermissionState.Granted
-            } else{
+
                 try {
                     controller.providePermission(Permission.WRITE_STORAGE)
                     storageState = PermissionState.Granted
@@ -67,7 +55,7 @@ class PermissionsViewModel(
                 } catch(e: RequestCanceledException) {
                     e.printStackTrace()
                 }
-            }
+
 
         }
     }
