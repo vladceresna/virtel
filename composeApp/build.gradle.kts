@@ -56,6 +56,20 @@ kotlin {
             api(libs.moko.permissions)
             api(libs.moko.permissions.compose)
 
+
+
+            val editorVersion = "0.23.2"
+            implementation("io.github.Rosemoe.sora-editor:editor:$editorVersion")
+            implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
+            implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
+
+
+
+
+
+
+
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -76,6 +90,7 @@ kotlin {
 
 
 
+
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -86,6 +101,7 @@ kotlin {
 
             implementation("javazoom:jlayer:1.0.1")
 
+            implementation("com.fifesoft:rsyntaxtextarea:3.1.3")
 
             implementation("ai.picovoice:picovoice-java:3.0.3")
 
@@ -122,6 +138,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+
+        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -129,6 +147,8 @@ android {
     dependencies {
         debugImplementation(compose.uiTooling)
         implementation(libs.kotlinx.coroutines.android)
+
+        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
     }
 }
 

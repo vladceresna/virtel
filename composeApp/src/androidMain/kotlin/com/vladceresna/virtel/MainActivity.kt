@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,8 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladceresna.virtel.controllers.VirtelSystem
+import com.vladceresna.virtel.lib.CodeEditor
+import com.vladceresna.virtel.lib.CodeEditorState
 import dev.icerock.moko.permissions.PermissionState
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
@@ -40,7 +45,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-@org.jetbrains.compose.ui.tooling.preview.Preview
+@Preview
 fun VirtelApp() {
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) {
@@ -110,4 +115,26 @@ fun VirtelApp() {
 @Composable
 fun AppAndroidPreview() {
     VirtelApp()
+}
+
+
+
+@Preview
+@Composable
+fun SoraPreview(
+    viewModel: SoraViewModel = viewModel()
+){
+    Column {
+        CodeEditor(
+            modifier = Modifier
+                .fillMaxSize(),
+            state = viewModel.editorState
+        )
+    }
+}
+
+class SoraViewModel : ViewModel() {
+    val editorState by mutableStateOf(
+        CodeEditorState()
+    )
 }
