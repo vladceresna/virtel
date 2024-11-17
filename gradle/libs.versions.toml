@@ -20,7 +20,7 @@ kotlinx-coroutines = "1.8.1"
 material3 = "1.8.0"
 moko = "0.18.0"
 lifecycleViewModel = "2.8.3"
-lifecycleViewModelCompose = "2.8.0"
+lifecycleViewModelCompose = "2.8.2"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }

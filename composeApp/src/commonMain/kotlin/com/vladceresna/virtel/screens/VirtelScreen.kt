@@ -12,7 +12,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -22,20 +21,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladceresna.virtel.controllers.DataStore
 import com.vladceresna.virtel.controllers.DataType
 import com.vladceresna.virtel.controllers.ScreenModel
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.WidgetModel
+import com.vladceresna.virtel.screens.model.VirtelScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VirtelScreen(rd:Boolean) {
-    var text by remember { mutableStateOf("") }
+fun VirtelScreen(
+    rd:Boolean,
+    screenModel: VirtelScreenViewModel = viewModel<VirtelScreenViewModel>()
+) {
     var virtelSystem = VirtelSystem
 
-
     var bottomBar by remember { mutableStateOf(false) }
+
 
     Column {
         Scaffold(

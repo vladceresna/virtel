@@ -6,29 +6,29 @@ package com.vladceresna.virtel.lib
  * **/
 class MutexQueue<T> {
     var isLocked = false
-    var lastItem: Item<T>? = null
+    var lastQueueItem: QueueItem<T>? = null
     fun push(value:T){
         while(isLocked){}
         isLocked = true
-        lastItem = Item(value,lastItem)
+        lastQueueItem = QueueItem(value,lastQueueItem)
         isLocked = false
     }
     fun take():T?{
         while(isLocked){}
         isLocked = true
-        var currentItem:Item<T> = lastItem ?: return null
-        var newFirstItem:Item<T>? = null
-        while(currentItem.parent != null){
-            newFirstItem = currentItem
-            currentItem = currentItem.parent!!
+        var currentQueueItem:QueueItem<T> = lastQueueItem ?: return null
+        var newFirstQueueItem:QueueItem<T>? = null
+        while(currentQueueItem.parent != null){
+            newFirstQueueItem = currentQueueItem
+            currentQueueItem = currentQueueItem.parent!!
         }
-        if(newFirstItem == null) lastItem = null
-        else newFirstItem.parent = null
+        if(newFirstQueueItem == null) lastQueueItem = null
+        else newFirstQueueItem.parent = null
         isLocked = false
-        return currentItem.value
+        return currentQueueItem.value
     }
 }
-data class Item<T>(
+data class QueueItem<T>(
     var value:T,
-    var parent:Item<T>?
+    var parent:QueueItem<T>?
 )
