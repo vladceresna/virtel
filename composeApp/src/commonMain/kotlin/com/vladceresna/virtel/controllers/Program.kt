@@ -7,6 +7,10 @@ import okio.Path.Companion.toPath
 
 
 data class Program(var path: String){
+    var store:DataStore = DataStore(this)
+
+
+
     var debugMode:Boolean = true
     lateinit var status: ProgramStatus
     lateinit var appId: String

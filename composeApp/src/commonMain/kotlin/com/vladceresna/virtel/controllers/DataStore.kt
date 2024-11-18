@@ -1,20 +1,29 @@
 package com.vladceresna.virtel.controllers
 
 
-data object DataStore {
+class DataStore(
+    var program: Program,
+) {
     var data: MutableSet<Data> = mutableSetOf()
 
-    fun find(type: DataType, name: String): Data {
-
+    fun get(name: String,type: DataType): Data? {
+        return data.find {
+            it.type == type && it.name == name
+        }
     }
-    fun tryGet(type: DataType, name: String): Data? {
-
+    fun unwrap(varName:String):String{
+        return if (varName.startsWith("\"") && varName.endsWith("\""))
+            varName.substring(1,varName.length-1)
+        else varName
     }
-    fun put(type: DataType, name: String, value: Any){
-
+    fun getVar(name:String, type: DataType):Any? {
+        return get(unwrap(name), type)?.value
+    }
+    fun putVar(type: DataType, name: String, value: Any){
+        var newData = Data(type,name,value)
+        data.add(newData)
     }
 }
-
 
 
 data class Data(
