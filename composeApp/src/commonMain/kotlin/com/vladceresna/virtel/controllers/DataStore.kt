@@ -1,12 +1,14 @@
 package com.vladceresna.virtel.controllers
 
+import com.vladceresna.virtel.lib.MutexHashSet
+
 
 class DataStore(
     var program: Program,
 ) {
-    var data: MutableSet<Data> = mutableSetOf()
+    var data: MutexHashSet<Data> = MutexHashSet()
 
-    fun get(name: String,type: DataType): Data? {
+    fun get(name: String, type: DataType): Data? {
         return data.find {
             it.type == type && it.name == name
         }
@@ -19,9 +21,9 @@ class DataStore(
     fun getVar(name:String, type: DataType):Any? {
         return get(unwrap(name), type)?.value
     }
-    fun putVar(type: DataType, name: String, value: Any){
+    fun putVar(name: String, type: DataType, value: Any){
         var newData = Data(type,name,value)
-        data.add(newData)
+        data.put(newData)
     }
 }
 

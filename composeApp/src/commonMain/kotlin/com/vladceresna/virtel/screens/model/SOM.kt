@@ -1,5 +1,31 @@
 package com.vladceresna.virtel.screens.model
 
+import com.vladceresna.virtel.controllers.Program
+
+
+data class ScreenModel(
+    var pageModels: MutableList<PageModel> = mutableListOf(),
+)
+data class PageModel(
+    var programViewModels: MutableList<ProgramViewModel> = mutableListOf(),
+    var settingsClick:() -> Unit = {
+
+    },
+    var homeClick:() -> Unit = {
+
+    },
+    var backClick:() -> Unit = {
+
+    }
+)
+data class ProgramViewModel(
+    var program: Program,
+    var root:WidgetModel = WidgetModel(),
+    var topAppBar:WidgetModel = WidgetModel(),
+    var bottomAppBar:WidgetModel = WidgetModel()
+)
+
+
 
 data class WidgetModel(
     var widgetType: WidgetType = WidgetType.VIEW,

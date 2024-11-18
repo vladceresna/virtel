@@ -1,43 +1,45 @@
 package com.vladceresna.virtel.lib
 
-import io.ktor.util.Hash
+import kotlinx.coroutines.sync.Mutex
 
 /**
  * HashSet for Multithreading
- * {firstItem}<->{}<->{}<->null
+ * {}<->{}<->{}
  * **/
 class MutexHashSet<T> {
-    var isLocked = false
-    var firstHashSetItem: HashSetItem<T>? = null
+    var lock:Mutex = Mutex(false)
+    var items = mutableListOf<T>()
     
-    fun push(value:T){
-        while(isLocked){}
-        isLocked = true
+    fun put(value:T):T{
+        while(!lock.tryLock()){}
 
-        firstHashSetItem = HashSetItem(value, value)
+        items.remove(value)
+        items.add(value)
 
-        isLocked = false
+        lock.unlock()
+        return value
     }
-    fun take():T?{
-        while(isLocked){}
-        isLocked = true
+    fun get(index:Int):T?{
+        while(!lock.tryLock()){}
 
-        var currentHashSetItem:HashSetItem<T> = firstHashSetItem ?: return null
-        var newFirstHashSetItem:HashSetItem<T>? = null
-        while(currentHashSetItem.parent != null){
-            newFirstHashSetItem = currentHashSetItem
-            currentHashSetItem = currentHashSetItem.parent!!
-        }
-        if(newFirstHashSetItem == null) firstHashSetItem = null
-        else newFirstHashSetItem.parent = null
+        var item = items.get(index)
 
-        isLocked = false
-        return currentHashSetItem.value
+        lock.unlock()
+        return item
+    }
+    fun find(predicate: (T) -> Boolean):T?{
+        while(!lock.tryLock()){}
+
+        var item = items.find(predicate)
+
+        lock.unlock()
+        return item
+    }
+    fun remove(index:Int){
+        while(!lock.tryLock()){}
+
+        items.removeAt(index)
+
+        lock.unlock()
     }
 }
-data class HashSetItem<T>(
-    var value:T,
-    var left:HashSetItem<T>?,
-    var right:HashSetItem<T>?,
-    var hash:String
-)

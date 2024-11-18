@@ -1,21 +1,24 @@
 package com.vladceresna.virtel.lib
 
+import kotlinx.coroutines.sync.Mutex
+
 /**
  * FIFO Queue for Multithreading
  * null<-{}<-{}<-{lastItem}
  * **/
 class MutexQueue<T> {
-    var isLocked = false
+    var lock: Mutex = Mutex(false)
     var lastQueueItem: QueueItem<T>? = null
     fun push(value:T){
-        while(isLocked){}
-        isLocked = true
+        while(!lock.tryLock()){}
+
         lastQueueItem = QueueItem(value,lastQueueItem)
-        isLocked = false
+
+        lock.unlock()
     }
     fun take():T?{
-        while(isLocked){}
-        isLocked = true
+        while(!lock.tryLock()){}
+
         var currentQueueItem:QueueItem<T> = lastQueueItem ?: return null
         var newFirstQueueItem:QueueItem<T>? = null
         while(currentQueueItem.parent != null){
@@ -24,7 +27,8 @@ class MutexQueue<T> {
         }
         if(newFirstQueueItem == null) lastQueueItem = null
         else newFirstQueueItem.parent = null
-        isLocked = false
+
+        lock.unlock()
         return currentQueueItem.value
     }
 }

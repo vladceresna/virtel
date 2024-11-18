@@ -38,6 +38,7 @@ class Flow (
     var flowName: String
 ) {
 
+    /*
     /** sys apps (newListName)
      * */
     fun sysApps(args: MutableList<String>){
@@ -771,8 +772,11 @@ class Flow (
         }
         VirtelSystem.renderFunction()
     }
+
+     */
     /**lexer**/
     fun runFile(fileName:String){
+        /*
         val code = okio.FileSystem.SYSTEM.read(
             "${FileSystem.programsPath}/${appId}${FileSystem.srCode}$fileName".toPath())
         { readUtf8() }
@@ -839,7 +843,9 @@ class Flow (
         } catch (e: Exception) {
             e.printStackTrace()
         }
+        */
     }
+
 }
 
 data class Step(
@@ -849,5 +855,3 @@ data class Step(
     lateinit var cmd: String
     var args: MutableList<String> = mutableListOf()
 }
-
-

@@ -15,27 +15,18 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun App(theme: Boolean = isSystemInDarkTheme()){
     var darkTheme by remember { mutableStateOf(theme) }
-    var rd by remember { mutableStateOf(true) }
     val virtelSystem = VirtelSystem
-    virtelSystem.renderFunction = { rd = !rd }
     LaunchedEffect(Unit){
-        virtelSystem.renderFunction()
         //after first recomposition only
         CoroutineScope(Job()).launch {
             virtelSystem.start()
-            virtelSystem.renderFunction()
         }
     }
-    LaunchedEffect(rd) {
-        virtelSystem.renderFunction()
-        //after recomposition
-    }
-    AppTheme(rd){
-        rd
+    AppTheme {
         if (virtelSystem.isLoading) {
-            LoadingScreen(rd)
+            LoadingScreen()
         } else {
-            VirtelScreen(rd)
+            VirtelScreen()
         }
     }
 }

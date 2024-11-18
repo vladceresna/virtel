@@ -63,8 +63,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Widget(rd:Boolean, model: WidgetModel, modifier: Modifier){
-    rd
+fun Widget(model: WidgetModel, modifier: Modifier){
     //log("Render Widget $model", Log.DEBUG)
     var arrangement = Arrangement.Center
     var alignmentVertical = Alignment.CenterVertically

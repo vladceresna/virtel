@@ -6,10 +6,9 @@ import kotlin.test.assertEquals
 class DataStoreTest {
     @Test
     fun testFindData(){
-        var data: Data = Data("appId",DataType.VIEW,"view",WidgetModel(appId = "appId"))
-        DataStore.data.add(data)
-
-        assertEquals(data,
-            DataStore.find("appId",DataType.VIEW,"view"))
+        var store = DataStore(Program(""))
+        store.putVar("var", DataType.VAR,"val")
+        store.putVar("var", DataType.VAR,"value")
+        assertEquals("value", store.getVar("var",DataType.VAR))
     }
 }
