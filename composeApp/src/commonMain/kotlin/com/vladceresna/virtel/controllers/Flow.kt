@@ -34,11 +34,11 @@ import kotlin.math.roundToInt
  * - varName (var need to write/save in): clear using: newVarName, newListName
  * **/
 class Flow (
-    var appId: String,
+    var program: Program
     var flowName: String
 ) {
 
-    /*
+
     /** sys apps (newListName)
      * */
     fun sysApps(args: MutableList<String>){
@@ -75,32 +75,41 @@ class Flow (
     /** sys homedir (newVarName)
      * */
     fun sysHomedir(args: MutableList<String>){
-        DataStore.put(appId,DataType.VAR,args.get(0),FileSystem.systemPath)
+        nPutVar(args.get(0), DataType.VAR, FileSystem.systemPath)
     }
     /** sys install (appId) (contentVAR)
      * */
     fun sysInstall(args: MutableList<String>){
-        var installAppId = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
-        var contentVAR = DataStore.tryGet(appId, DataType.VAR, args.get(1)).value.toString()
+        var installAppId = nGetVar(args.get(0), DataType.VAR).toString()
+        var contentVAR = nGetVar(args.get(1), DataType.VAR).toString()
         VarInstaller.install(installAppId,contentVAR)
     }
     /** sys pack (appId) (contentVARNewVarName)
      * */
     fun sysPack(args: MutableList<String>){
-        var packAppId = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
-        DataStore.put(appId,DataType.VAR,args.get(1),VarInstaller.toVar(packAppId))
+        var packAppId = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR, VarInstaller.toVar(packAppId))
     }
+
+
+
+
+
     /** csl write (text)
      * */
     fun cslWrite(args: MutableList<String>){
-        var value = DataStore.tryGet(appId, DataType.VAR, args.get(0)).value.toString()
+        var value = nGetVar(args.get(0), DataType.VAR).toString()
         log(value,Log.PROGRAM)
     }
     /** csl read (newVarName)
      * */
     fun cslRead(args: MutableList<String>){
-        DataStore.put(appId, DataType.VAR, args.get(0), readln()!!)
+        nPutVar(args.get(0), DataType.VAR, readln()!!)
     }
+
+
+
+
 
 
     //references
@@ -638,14 +647,14 @@ class Flow (
     /**parser**/
     fun runStep(step: Step){
         try {
-            if (Programs.findProgram(appId).debugMode) {
+            if (program.debugMode) {
                 log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
             }
 
             var fromRefsArgs = mutableListOf<String>()
             step.args.forEach {
                 fromRefsArgs.add(
-                    DataStore.tryGet(appId, DataType.REF, it).value.toString()
+                    nGetVar(it, DataType.REF).toString()
                 )
             }
 
@@ -770,15 +779,14 @@ class Flow (
         } catch (e:Exception){
             e.printStackTrace()
         }
-        VirtelSystem.renderFunction()
     }
 
-     */
+
     /**lexer**/
     fun runFile(fileName:String){
-        /*
+
         val code = okio.FileSystem.SYSTEM.read(
-            "${FileSystem.programsPath}/${appId}${FileSystem.srCode}$fileName".toPath())
+            "${FileSystem.programsPath}/${program.appId}${FileSystem.srCode}$fileName".toPath())
         { readUtf8() }
 
         try {
@@ -843,8 +851,13 @@ class Flow (
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        */
+
     }
+
+
+
+    fun nGetVar(name: String, type: DataType): Any? = program.store.getVar(name,type)
+    fun nPutVar(name: String, type: DataType, value: Any) = program.store.putVar(name,type, value)
 
 }
 

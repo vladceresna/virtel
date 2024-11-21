@@ -8,7 +8,6 @@ import okio.SYSTEM
 
 data object VirtelSystem {
     var isLoading: Boolean = true
-    lateinit var renderFunction: () -> Unit
 
     val programs = Programs
     val fileSystem = FileSystem
@@ -55,7 +54,6 @@ data object VirtelSystem {
         Programs.startProgram("vladceresna.virtel.launcher")
 
         isLoading = false
-        renderFunction()
         log("Virtel Platform started", Log.SUCCESS)
     }
 

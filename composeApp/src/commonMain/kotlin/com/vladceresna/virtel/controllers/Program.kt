@@ -41,7 +41,7 @@ data class Program(var path: String){
 
     }
     fun runFlow(fileName:String, flowName:String){
-        var flow = Flow(appId, flowName)
+        var flow = Flow(this, flowName)
         flows.put(flowName, flow)
         CoroutineScope(Job()).launch {
             status = ProgramStatus.SCREEN
