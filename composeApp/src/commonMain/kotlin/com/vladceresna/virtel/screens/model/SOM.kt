@@ -1,13 +1,14 @@
 package com.vladceresna.virtel.screens.model
 
 import com.vladceresna.virtel.controllers.Program
+import com.vladceresna.virtel.controllers.Programs
 
 
 data class ScreenModel(
-    var pageModels: MutableList<PageModel> = mutableListOf(),
+    var pageModels: MutableList<PageModel> = mutableListOf(PageModel()),
+    var currentPageIndex:Int = 0
 )
 data class PageModel(
-    var programViewModels: MutableList<ProgramViewModel> = mutableListOf(),
     var settingsClick:() -> Unit = {
 
     },
@@ -17,10 +18,17 @@ data class PageModel(
     var backClick:() -> Unit = {
 
     }
-)
+){
+    var programViewModels: MutableList<ProgramViewModel> =
+        mutableListOf(ProgramViewModel(this))
+}
 data class ProgramViewModel(
-    var program: Program
+    var pageModel: PageModel,
+    var program: Program = Programs.findProgram("vladceresna.virtel.launcher")
 ) {
+    var isErrorHappened = false
+    var errorMessage = ""
+
     var root:WidgetModel = WidgetModel(this)
     var topAppBar:WidgetModel = WidgetModel(this)
     var bottomAppBar:WidgetModel = WidgetModel(this)

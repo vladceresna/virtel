@@ -19,7 +19,10 @@ class DataStore(
         else varName
     }
     fun getVar(name:String, type: DataType):Any? {
-        return get(unwrap(name), type)?.value
+        var unwrappedName = unwrap(name)
+        return if(unwrappedName.equals(name)){
+            get(unwrappedName, type)?.value
+        } else unwrappedName // text
     }
     fun putVar(name: String, type: DataType, value: Any){
         var newData = Data(type,name,value)

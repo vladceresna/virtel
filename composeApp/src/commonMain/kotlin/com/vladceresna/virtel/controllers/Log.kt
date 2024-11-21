@@ -14,7 +14,6 @@ data object Logger{
 
 fun log(message: String, type: Log){
     val currentMoment: Instant = Clock.System.now()
-    val datetimeInUtc: LocalDateTime = currentMoment.toLocalDateTime(TimeZone.UTC)
     val datetimeInSystemZone: LocalDateTime = currentMoment.toLocalDateTime(TimeZone.currentSystemDefault())
     val messageRes = when(type){
         Log.SUCCESS -> "\u001B[32m[SUCCESS] : ${datetimeInSystemZone} : $message\u001B[0m"

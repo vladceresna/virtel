@@ -27,7 +27,7 @@ data object Programs {
                 return program
             }
         }
-        throw VirtelException()//TODO:Fix
+        throw VirtelException("Not found program: "+appId)//TODO:Fix
     }
 
     fun startProgram(appId: String){

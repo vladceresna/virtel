@@ -1,3 +1,3 @@
 package com.vladceresna.virtel.other
 
-class VirtelException : Exception() {}
+class VirtelException(override val message: String?) : Exception()

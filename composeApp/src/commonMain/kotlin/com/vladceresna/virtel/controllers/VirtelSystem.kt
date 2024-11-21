@@ -3,10 +3,16 @@ package com.vladceresna.virtel.controllers
 import com.vladceresna.virtel.getHomePath
 import com.vladceresna.virtel.ai.toSpeech
 import com.vladceresna.virtel.other.VirtelException
+import com.vladceresna.virtel.screens.model.ScreenModel
+import com.vladceresna.virtel.screens.model.VirtelScreenViewModel
 import okio.Path.Companion.toPath
 import okio.SYSTEM
 
 data object VirtelSystem {
+
+    var screenModel:ScreenModel = ScreenModel()
+
+
     var isLoading: Boolean = true
 
     val programs = Programs
@@ -33,7 +39,8 @@ data object VirtelSystem {
 
         log("Virtel Platform starting...", Log.INFO)
         val homePath = getHomePath()
-        if(homePath == null) throw VirtelException()//TODO:Fix iOS and JVM
+        if(homePath == null) throw VirtelException("Home path not found, " +
+                "maybe your device is not supported by Virtel") //TODO:Fix iOS
         else fileSystem.scan(homePath)
         if(fileSystem.isInstalled().not()){
             install()
