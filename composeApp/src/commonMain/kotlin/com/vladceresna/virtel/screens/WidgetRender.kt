@@ -36,11 +36,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -51,15 +46,9 @@ import com.vladceresna.virtel.controllers.DataStore
 import com.vladceresna.virtel.controllers.DataType
 import com.vladceresna.virtel.controllers.Log
 import com.vladceresna.virtel.controllers.Programs
-import com.vladceresna.virtel.controllers.ScreenModel
 import com.vladceresna.virtel.controllers.VirtelSystem
-import com.vladceresna.virtel.controllers.WidgetModel
-import com.vladceresna.virtel.controllers.WidgetType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.vladceresna.virtel.screens.model.WidgetModel
+import com.vladceresna.virtel.screens.model.WidgetType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,64 +73,28 @@ fun Widget(model: WidgetModel, modifier: Modifier){
         WidgetType.BUTTON -> when(model.variant) {
             0 -> Row {
                 Button(onClick = onClick, modifier = modifier.wrapContentSize()) {
-                    var data = DataStore.tryGet(
-                        VirtelSystem.getCurrentRunnedProgram().appId,
-                        DataType.VIEW, model.childs.get(0)
-                    )
-                    if (data.returnType == DataType.VIEW) {
-                        var model = data.value as WidgetModel
-                        Widget(rd, model, Modifier.weight(model.weight))
-                    }
+                    var childModel = model.childs.get(0)
+                    Widget(childModel, Modifier.weight(childModel.weight))
                 }
             }
         }
         WidgetType.INPUT -> {
-            rd
-            var value by remember { mutableStateOf(model.value) }
             OutlinedTextField(
-                label = { Text(model.title) },
+                label = { Text(text = model.title) },
                 modifier = modifier,
-                value = value,
+                value = model.value,
                 onValueChange = {
                     model.value = it
-                    value = it
-                    model.value = value
-                    value = model.value
-                    DataStore.put(model.appId,DataType.VIEW,model.name,model)
                 }
             )
-            LaunchedEffect(Unit){
-                CoroutineScope(Job()).launch{
-                    while(true){
-                        var data = DataStore.tryGet(
-                            VirtelSystem.getCurrentRunnedProgram().appId,
-                            DataType.VIEW, model.name
-                        )
-                        if (data.returnType == DataType.VIEW) {
-                            var model = data.value as WidgetModel
-                            delay(10)
-                            if (model.value != value) {
-                                value = model.value
-                                model.value = value
-                                DataStore.put(model.appId, DataType.VIEW, model.name, model)
-                            }
-                        }
-                    }
-                }
-            }
         }
         WidgetType.ROW -> Row(
             modifier = modifier,
             horizontalArrangement = arrangement,
             verticalAlignment = alignmentVertical
         ) {
-            for (child in model.childs) {
-                var data = DataStore.tryGet(VirtelSystem.getCurrentRunnedProgram().appId,
-                    DataType.VIEW, child)
-                if (data.returnType == DataType.VIEW) {
-                    var model = data.value as WidgetModel
-                    Widget(rd, model, Modifier.weight(model.weight).fillMaxHeight())
-                }
+            model.childs.forEach {
+                Widget(it, Modifier.weight(it.weight).fillMaxHeight())
             }
         }
         WidgetType.COLUMN -> Column(
@@ -149,17 +102,8 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             verticalArrangement = arrangement,
             horizontalAlignment = alignmentHorizontal
         ) {
-            for (child in model.childs) {
-                var data = DataStore.tryGet(VirtelSystem.getCurrentRunnedProgram().appId,
-                    DataType.VIEW, child)
-                if (data.returnType == DataType.VIEW) {
-                    var model = data.value as WidgetModel
-                    var inmodifier = Modifier.weight(model.weight).fillMaxWidth()
-                    when(inmodifier){
-
-                    }
-                    Widget(rd, model, inmodifier)
-                }
+            model.childs.forEach {
+                Widget(it, Modifier.weight(it.weight).fillMaxHeight())
             }
         }
         WidgetType.TOP_BAR -> TopAppBar(
@@ -181,14 +125,9 @@ fun Widget(model: WidgetModel, modifier: Modifier){
         )
         WidgetType.BOTTOM_BAR -> BottomAppBar (
             actions = {
-                for (action in model.actions) {
-                    var data = DataStore.tryGet(VirtelSystem.getCurrentRunnedProgram().appId,
-                        DataType.VIEW, action)
-                    if (data.returnType == DataType.VIEW) {
-                        var model = data.value as WidgetModel
-                        IconButton(onClick = {  }) {
-                            Icon(IconRenderer(model.icon), contentDescription = "Localized description")
-                        }
+                model.actions.forEach {
+                    IconButton(onClick = {  }) {
+                        Icon(IconRenderer(model.icon), contentDescription = "Localized description")
                     }
                 }
             },

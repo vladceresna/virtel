@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.vladceresna.virtel.controllers.ScreenModel
 import com.vladceresna.virtel.screens.model.PageModel
 
 @Composable
@@ -34,15 +33,15 @@ fun Page(
     Row {
         Text("", Modifier.weight(1f))
         IconButton(onClick = { try{
-            ScreenModel.settingsClick()}catch (e:Exception){e.printStackTrace()} }, Modifier.weight(1f)) {
+            pageModel.settingsClick()}catch (e:Exception){e.printStackTrace()} }, Modifier.weight(1f)) {
             Icon(Icons.Filled.Settings, contentDescription = "Localized description")
         }
         IconButton(onClick = { try{
-            ScreenModel.homeClick()}catch (e:Exception){e.printStackTrace()} }, Modifier.weight(1f)) {
+            pageModel.homeClick()}catch (e:Exception){e.printStackTrace()} }, Modifier.weight(1f)) {
             Icon(Icons.Filled.Home, contentDescription = "Localized description")
         }
         IconButton(onClick = { try{
-            ScreenModel.backClick()}catch (e:Exception){e.printStackTrace()} }, Modifier.weight(1f)) {
+            pageModel.backClick()}catch (e:Exception){e.printStackTrace()} }, Modifier.weight(1f)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Localized description")
         }
         Text("", Modifier.weight(1f))

@@ -19,15 +19,17 @@ data class PageModel(
     }
 )
 data class ProgramViewModel(
-    var program: Program,
-    var root:WidgetModel = WidgetModel(),
-    var topAppBar:WidgetModel = WidgetModel(),
-    var bottomAppBar:WidgetModel = WidgetModel()
-)
+    var program: Program
+) {
+    var root:WidgetModel = WidgetModel(this)
+    var topAppBar:WidgetModel = WidgetModel(this)
+    var bottomAppBar:WidgetModel = WidgetModel(this)
+}
 
 
 
 data class WidgetModel(
+    var programViewModel: ProgramViewModel,
     var widgetType: WidgetType = WidgetType.VIEW,
     var appId:String = ""
 ) {
