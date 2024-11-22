@@ -1,6 +1,10 @@
 package com.vladceresna.virtel.controllers
 
 import com.vladceresna.virtel.other.VirtelException
+import com.vladceresna.virtel.screens.model.ProgramViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.SYSTEM
@@ -31,10 +35,21 @@ data object Programs {
     }
 
     fun startProgram(appId: String){
-        var program = findProgram(appId)
+
+        var program:Program = findProgram(appId)
         program.scan()
-        currentRunnedProgram = program
-        program.run()
+
+        CoroutineScope(Job()).launch {
+            program.run()
+        }
+
+        var screenModel = VirtelSystem.screenModel
+        var pageModel = screenModel.pageModels.get(screenModel.currentPageIndex)
+        pageModel.programViewModels.add(ProgramViewModel(pageModel, program))
+
+
+
+
     }
     fun runProgram(program: Program){
         program.run()

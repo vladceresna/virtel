@@ -20,11 +20,11 @@ data class PageModel(
     }
 ){
     var programViewModels: MutableList<ProgramViewModel> =
-        mutableListOf(ProgramViewModel(this))
+        mutableListOf()
 }
 data class ProgramViewModel(
     var pageModel: PageModel,
-    var program: Program = Programs.findProgram("vladceresna.virtel.launcher")
+    var program: Program
 ) {
     var isErrorHappened = false
     var errorMessage = ""

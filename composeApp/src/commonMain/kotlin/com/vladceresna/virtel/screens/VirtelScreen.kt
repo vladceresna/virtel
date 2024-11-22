@@ -15,13 +15,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun VirtelScreen(
-    screenModel: VirtelScreenViewModel = viewModel<VirtelScreenViewModel>()
+    screenModel: VirtelScreenViewModel
 ) {
-    LaunchedEffect(screenModel){
-        // after screenModel changes
-        CoroutineScope(Job()).launch { // TODO: Optimize performance
-            VirtelSystem.screenModel = screenModel.screenModel
-        }
-    }
     ScreenPager(screenModel.screenModel)
 }

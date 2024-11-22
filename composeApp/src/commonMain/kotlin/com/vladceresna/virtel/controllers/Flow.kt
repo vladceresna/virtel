@@ -855,7 +855,7 @@ class Flow(
                 }
             }
         } catch (e: Exception) {
-            (nGetProgramModel()?:ProgramViewModel(PageModel())).also {
+            (nGetProgramModel()?:ProgramViewModel(PageModel(),program)).also {
                 it.errorMessage = e.message.toString()
                 it.isErrorHappened = true
             }
