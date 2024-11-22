@@ -18,16 +18,16 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun App(theme: Boolean = isSystemInDarkTheme(),
         screenModel: VirtelScreenViewModel = viewModel<VirtelScreenViewModel>()){
     var darkTheme by remember { mutableStateOf(theme) }
-    val virtelSystem = VirtelSystem
     LaunchedEffect(Unit){
         //after first recomposition only
         CoroutineScope(Job()).launch {
             VirtelSystem.screenModel = screenModel.screenModel
             VirtelSystem.start()
+            screenModel.isLoading = false
         }
     }
     AppTheme {
-        if (virtelSystem.isLoading) {
+        if (screenModel.isLoading) {
             LoadingScreen()
         } else {
             VirtelScreen(screenModel)

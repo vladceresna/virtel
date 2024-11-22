@@ -7,4 +7,5 @@ import androidx.lifecycle.ViewModel
 
 class VirtelScreenViewModel:ViewModel() {
     var screenModel:ScreenModel by mutableStateOf(ScreenModel())
+    var isLoading by mutableStateOf(true)
 }

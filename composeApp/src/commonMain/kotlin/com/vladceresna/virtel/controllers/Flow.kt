@@ -726,15 +726,20 @@ class Flow(
     fun runStep(step: Step) {
         try {
             if (program.debugMode) {
-                log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.WARNING)
+                log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.DEBUG)
             }
 
             var fromRefsArgs = mutableListOf<String>()
             step.args.forEach {
                 fromRefsArgs.add(
-                    nGetVar(it, DataType.REF).toString()
+                    try {
+                        program.store.get(it, DataType.REF)!!.value.toString()
+                    }catch(e:Exception){
+                        it
+                    }
                 )
             }
+            step.args = fromRefsArgs
 
             when (step.mod) {
                 "sys" -> when (step.cmd) {
@@ -855,8 +860,12 @@ class Flow(
                 }
             }
         } catch (e: Exception) {
+            if (program.debugMode) {
+                e.printStackTrace()
+            }
             (nGetProgramModel()?:ProgramViewModel(PageModel(),program)).also {
-                it.errorMessage = e.message.toString()
+                it.errorMessage = "On line ${step.line} in file "+step.fileName+
+                        " in application with appId: ${step.appId}\n\n"+e.message.toString()
                 it.isErrorHappened = true
             }
         }
@@ -912,13 +921,13 @@ class Flow(
 
                     ';' -> {
                         step.args.add(lastString)
-                        try {
-                            runStep(step)
-                        } catch (e: Exception) {
-                            println("Error on line $lineNumber: ${e.message}")
-                            e.printStackTrace()
-                            break
-                        }
+
+                        step.appId = program.appId
+                        step.fileName = fileName
+                        step.line = lineNumber
+
+                        runStep(step)
+
                         lineNumber++
                         lastString = ""
                         step = Step(true)
@@ -944,10 +953,9 @@ class Flow(
         var gottenVar = program.store.getVar(name, type)
         if (gottenVar != null){
             return gottenVar
-        } else {
-            cslError(mutableListOf())
-            throw VirtelException("Variable not found: "+name)
         }
+        cslError(mutableListOf("\"Variable not found: $name\""))
+        return ""
     }
     fun nPutVar(name: String, type: DataType, value: Any) = program.store.putVar(name, type, value)
     fun nGetProgramModel():ProgramViewModel? {
@@ -969,4 +977,7 @@ data class Step(
     lateinit var mod: String
     lateinit var cmd: String
     var args: MutableList<String> = mutableListOf()
+    lateinit var appId: String
+    lateinit var fileName: String
+    var line: Int = 0
 }

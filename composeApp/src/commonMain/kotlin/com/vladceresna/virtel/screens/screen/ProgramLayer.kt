@@ -23,14 +23,13 @@ import com.vladceresna.virtel.screens.model.WidgetModel
 fun ProgramLayer(
     programViewModel:ProgramViewModel
 ){
-    var virtelSystem = VirtelSystem
 
     Column {
         Scaffold(
             Modifier.weight(1f),
             topBar = {
                 TopAppBar(
-                    title = { Text(virtelSystem.getCurrentRunnedProgram().appId) },
+                    title = { programViewModel.program.appId },
                 )
             },
             bottomBar = {

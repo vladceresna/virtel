@@ -17,23 +17,9 @@ data class Program(var path: String){
 
     var flows:MutableMap<String, Flow> = mutableMapOf()
 
-    /*lateinit var config: String
-    lateinit var cache: String*/
-
-    val fileSystem = FileSystem
-
     fun scan(){
         appId = path.toPath().name
         status = ProgramStatus.DISABLED
-        /*
-        config = "$path${fileSystem.srConfig}"
-        cache = "$path${fileSystem.srCache}"
-        if (okio.FileSystem.SYSTEM.exists(config.toPath())){
-            var result = okio.FileSystem.SYSTEM.read(config.toPath()) {
-                readUtf8()
-            }
-        }*/
-        //TODO:Config and cache analysis
     }
     fun run(){
         status = ProgramStatus.BACKGROUND

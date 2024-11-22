@@ -6,6 +6,9 @@ import com.vladceresna.virtel.ai.toSpeech
 import com.vladceresna.virtel.other.VirtelException
 import com.vladceresna.virtel.screens.model.ScreenModel
 import com.vladceresna.virtel.screens.model.VirtelScreenViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okio.Path.Companion.toPath
 import okio.SYSTEM
@@ -14,8 +17,6 @@ data object VirtelSystem {
 
     var screenModel:ScreenModel = ScreenModel()
 
-
-    var isLoading: Boolean = true
 
     val programs = Programs
     val fileSystem = FileSystem
@@ -60,7 +61,7 @@ data object VirtelSystem {
 
 
 
-        if(!isSawHello) {
+
             isSawHello = true
             try {
                 val text = "Вітаю!"
@@ -71,13 +72,14 @@ data object VirtelSystem {
                 playMP3(ttsFile)
             } catch (e: Exception) {
             }
+
+        CoroutineScope(Job()).launch {
             Programs.startProgram("vladceresna.virtel.launcher")
-
-
         }
 
 
-        isLoading = false
+
+
         log("Virtel Platform started", Log.SUCCESS)
 
     }
@@ -86,11 +88,6 @@ data object VirtelSystem {
         fileSystem.install()
     }
 
-
-
-    fun getCurrentRunnedProgram(): Program {
-        return programs.currentRunnedProgram
-    }
 
     fun readConfig(){
         val path = FileSystem.systemConfigPath.toPath()

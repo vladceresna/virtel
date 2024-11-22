@@ -10,7 +10,6 @@ import okio.Path.Companion.toPath
 import okio.SYSTEM
 
 data object Programs {
-    lateinit var currentRunnedProgram: Program
     var programs: MutableList<Program> = mutableListOf()
     val fileSystem = FileSystem
 
