@@ -31,10 +31,10 @@ fun log(message: String, type: Log){
     } catch (e:Exception){}
 }
 fun getLog(): String {
-    try {
-        return okio.FileSystem.SYSTEM.read(FileSystem.systemLogPath.toPath()){readUtf8()}
+    return try {
+        okio.FileSystem.SYSTEM.read(FileSystem.systemLogPath.toPath()){readUtf8()}
     } catch (e:Exception) {
-        return ""
+        ""
     }
 }
 expect fun logAny(message: String)
