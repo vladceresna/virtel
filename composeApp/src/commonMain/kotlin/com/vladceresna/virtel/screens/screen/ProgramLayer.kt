@@ -33,9 +33,11 @@ fun ProgramLayer(
                 )
             },
             bottomBar = {
-                var bottomData = programViewModel.bottomAppBar
-                if(!bottomData.childs.isEmpty()){
-                    var model = bottomData.value as WidgetModel
+                var bottomData = programViewModel.widgets.find {
+                    it.name == "bottom"
+                }
+                if(!bottomData!!.childs.isEmpty()){
+                    var model = bottomData
                     Widget(model, Modifier)
                 }
             }
@@ -46,13 +48,18 @@ fun ProgramLayer(
                         10.dp,
                         64.dp,
                         10.dp,
-                        if (!programViewModel.bottomAppBar.childs.isEmpty()) 90.dp else 10.dp
+                        if (!programViewModel.widgets.find {
+                                it.name == "bottom"
+                            }!!.childs.isEmpty()) 90.dp else 10.dp
+
                     )
                 ) {
-                    var rootData = programViewModel.root
+                    var rootData = programViewModel.widgets.find {
+                        it.name == "root"
+                    }
 
-                    if (!rootData.childs.isEmpty()) {
-                        var model = rootData.value as WidgetModel
+                    if (!rootData!!.childs.isEmpty()) {
+                        var model = rootData
                         Widget(model, Modifier.weight(model.weight))
                     }
                 }

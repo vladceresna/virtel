@@ -9,7 +9,8 @@ class DataStore(
     var data: MutexHashSet<Data> = MutexHashSet()
 
     fun get(name: String, type: DataType): Data? {
-        return data.find {
+        return if(name == "u" && type == DataType.VAR) Data(DataType.VAR, name, "") // nullability in command var u
+        else data.find {
             it.type == type && it.name == name
         }
     }

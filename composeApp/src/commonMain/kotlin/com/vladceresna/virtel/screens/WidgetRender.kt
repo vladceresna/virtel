@@ -53,6 +53,7 @@ import com.vladceresna.virtel.screens.model.WidgetType
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Widget(model: WidgetModel, modifier: Modifier){
+
     //log("Render Widget $model", Log.DEBUG)
     var arrangement = Arrangement.Center
     var alignmentVertical = Alignment.CenterVertically
@@ -61,20 +62,25 @@ fun Widget(model: WidgetModel, modifier: Modifier){
 
     var modifierClickable = modifier
     var onClick: () -> Unit = {}
-    if (!model.onclick.equals("noclick.steps")){
+    if (!model.onClick.equals("")){
         modifierClickable = modifier.clickable {
-            Programs.findProgram(model.appId).runFlow(model.onclick, model.onclick) }
+            model.programViewModel.program.runFlow(model.onClick, model.onClick) }
         onClick = {
-            Programs.findProgram(model.appId).runFlow(model.onclick, model.onclick) }
+            model.programViewModel.program.runFlow(model.onClick, model.onClick) }
     }
+    println("${model.widgetType} ${model.title}")
     when (model.widgetType) {
         WidgetType.TEXT -> Box(modifierClickable){
             Text(modifier = Modifier, text = model.title)}
         WidgetType.BUTTON -> when(model.variant) {
-            0 -> Row {
+            "primary" -> Row {
                 Button(onClick = onClick, modifier = modifier.wrapContentSize()) {
-                    var childModel = model.childs.get(0)
-                    Widget(childModel, Modifier.weight(childModel.weight))
+                    if(model.childs.isEmpty()){
+
+                    } else {
+                        var childModel = model.childs.get(0)
+                        Widget(childModel, Modifier.weight(childModel.weight))
+                    }
                 }
             }
         }
@@ -125,9 +131,9 @@ fun Widget(model: WidgetModel, modifier: Modifier){
         )
         WidgetType.BOTTOM_BAR -> BottomAppBar (
             actions = {
-                model.actions.forEach {
+                model.childs.forEach {
                     IconButton(onClick = {  }) {
-                        Icon(IconRenderer(model.icon), contentDescription = "Localized description")
+                        Icon(IconRenderer(model.foreground), contentDescription = "Localized description")
                     }
                 }
             },

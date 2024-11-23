@@ -29,36 +29,32 @@ data class ProgramViewModel(
     var isErrorHappened = false
     var errorMessage = ""
 
-    var root:WidgetModel = WidgetModel(this)
-    var topAppBar:WidgetModel = WidgetModel(this)
-    var bottomAppBar:WidgetModel = WidgetModel(this)
+    var widgets:MutableList<WidgetModel> = mutableListOf(
+        WidgetModel(this,"root", WidgetType.COLUMN),
+        WidgetModel(this, "top", WidgetType.TOP_BAR),
+        WidgetModel(this, "bottom",WidgetType.BOTTOM_BAR)
+    )
 }
+
 
 
 
 data class WidgetModel(
     var programViewModel: ProgramViewModel,
+    var name:String,
     var widgetType: WidgetType = WidgetType.VIEW,
-    var appId:String = ""
-) {
-    var childs = mutableListOf<WidgetModel>()
-    var name = ""
 
-    var width = 50//fill/wrap/fixed
-    var height = 50
-    var weight:Float = 1f
-    var variant = 0//primary/secondary/tertiary/destructive
-    var title = "Label"
-    var value = ""
-    var onclick = "noclick.steps"
-    var isRoot = false
+    var weight:Float = 1F, // float
+    var variant:String = "primary", // primary/secondary/tertiary/destructive
+    var title:String = "",
+    var value:String = "",
+    var foreground:String = "",
+    var background:String = "",
+    var onClick:String = "",
 
-    var icon = ""
-
-    var actions: MutableList<String> = mutableListOf()
-
-}
+    var childs:MutableList<WidgetModel> = mutableListOf(),
+)
 
 enum class WidgetType{
-    VIEW, COLUMN, ROW, BUTTON, TEXT, IMAGE, INPUT, TOP_BAR, BOTTOM_BAR
+    VIEW, COLUMN, ROW, BUTTON, TEXT, IMAGE, INPUT, CARD, TOP_BAR, BOTTOM_BAR
 }

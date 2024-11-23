@@ -70,6 +70,9 @@ class Flow(
         var value = nGetVar(args.get(0), DataType.VAR).toString()
         var mutableSetOf = mutableSetOf<Data>()
         // TODO: create new page
+
+
+
         Programs.startProgram(value)
     }
 
@@ -402,30 +405,42 @@ class Flow(
     }
 
 
-    /** scr new (viewType) (newVarName)
+    /** scr new (viewType) (weight) (variant) (title) (value)
+            (foreground) (background) (onClick) (parent) (newVarName)
      * */
     fun scrNew(args: MutableList<String>) {
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
-
-        var cleartype = nGetVar(args.get(0), DataType.VAR).toString()
-        var widgetType = when (cleartype) {
-            "view" -> WidgetType.VIEW
-            "text" -> WidgetType.TEXT
-            "button" -> WidgetType.BUTTON
-            "input" -> WidgetType.INPUT
-            "column" -> WidgetType.COLUMN
-            "row" -> WidgetType.ROW
-            "topBar" -> WidgetType.TOP_BAR
-            "bottomBar" -> WidgetType.BOTTOM_BAR
-            else -> WidgetType.VIEW
+        var parent = programModel.widgets.find {
+            it.name == nGetVar(args.get(8),DataType.VAR)
         }
-        nPutVar(args.get(1), DataType.VIEW,
-            WidgetModel(widgetType = widgetType,
-                appId = program.appId, programViewModel = programModel)
-                .also { it.name = args.get(1) }
+        if(parent == null) throw VirtelException("Parent widget not found by name: "+args.get(args.size-2))
+
+        var newModel = WidgetModel(
+            programModel,
+            args.get(9),
+            when(nGetVar(args.get(0), DataType.VAR)){
+                "view" -> {WidgetType.VIEW}
+                "text" -> {WidgetType.TEXT}
+                "button" -> {WidgetType.BUTTON}
+                "input" -> {WidgetType.INPUT}
+                "column" -> {WidgetType.COLUMN}
+                "row" -> {WidgetType.ROW}
+                "topBar" -> {WidgetType.TOP_BAR}
+                "bottomBar" -> {WidgetType.BOTTOM_BAR}
+                else -> {throw VirtelException("Variable "+args.get(0)+" contains not expected widget type")} },
+            try {nGetVar(args.get(1), DataType.VAR) as Float}catch(e:Exception){1F},
+            nGetVar(args.get(2), DataType.VAR).toString(),
+            nGetVar(args.get(3), DataType.VAR).toString(),
+            nGetVar(args.get(4), DataType.VAR).toString(),
+            nGetVar(args.get(5), DataType.VAR).toString(),
+            nGetVar(args.get(6), DataType.VAR).toString(),
+            nGetVar(args.get(7), DataType.VAR).toString(),
         )
+
+        parent.childs.add(newModel)
+        programModel.widgets.add(newModel)
     }
 
     /** scr del (newVarName)
@@ -445,37 +460,13 @@ class Flow(
         var value = nGetVar(args.get(0), DataType.VAR).toString()
         var widget = nGetVar(args.get(2), DataType.VIEW) as WidgetModel
         when (property) {
-            "width" -> widget.width = when (value) {
-                "wrap" -> -1
-                "fill" -> -2
-                else -> value.toInt()
-            }
 
-            "height" -> widget.height = when (value) {
-                "wrap" -> -1
-                "fill" -> -2
-                else -> value.toInt()
-            }
-
-            "weight" -> widget.weight = value.toFloat()
-            "variant" -> widget.variant = when (value) {
-                "primary" -> 0
-                "secondary" -> 1
-                "tertiary" -> 2
-                "destructive" -> 3
-                else -> value.toInt()
-            }
 
             "title" -> widget.title = value
             "value" -> widget.value = value
-            "onclick" -> widget.onclick = value
+            "onclick" -> widget.onClick = value
             "child" -> widget.childs.add(nGetVar(args.get(0),DataType.VIEW) as WidgetModel)
-            "node" -> when (value) {
-                "root" -> programModel.root = nGetVar(args.get(2),DataType.VIEW) as WidgetModel
-                "bottom" -> programModel.bottomAppBar = nGetVar(args.get(2),DataType.VIEW) as WidgetModel
-                "top" -> programModel.topAppBar = nGetVar(args.get(2),DataType.VIEW) as WidgetModel
-                else -> throw VirtelException("This is not a valid node name: "+value)
-            }
+
         }
         nPutVar(args.get(2), DataType.VIEW, widget)
     }
@@ -486,13 +477,11 @@ class Flow(
         var property = nGetVar(args.get(1), DataType.VAR).toString()
         var widget = nGetVar(args.get(0), DataType.VIEW) as WidgetModel
         nPutVar( args.get(2), DataType.VAR, when (property) {
-                "width" -> widget.width
-                "height" -> widget.height
                 "weight" -> widget.weight
                 "variant" -> widget.variant
                 "title" -> widget.title
                 "value" -> widget.value
-                "onclick" -> widget.onclick
+                "onclick" -> widget.onClick
                 else -> widget.title
             }
         )
@@ -530,6 +519,13 @@ class Flow(
             else -> throw VirtelException("This is not a system navigation button: "+navName)
         }
     }
+
+    /** scr page
+     * */
+    fun scrPage(args: MutableList<String>){
+        VirtelSystem.screenModel.pageModels.add(PageModel())
+    }
+
 
     /** run one (file)
      * */
@@ -818,6 +814,7 @@ class Flow(
                     "set" -> scrSet(step.args)
                     "get" -> scrGet(step.args)
                     "nav" -> scrNav(step.args)
+                    "page" -> scrPage(step.args)
                 }
 
                 "run" -> when (step.cmd) {
