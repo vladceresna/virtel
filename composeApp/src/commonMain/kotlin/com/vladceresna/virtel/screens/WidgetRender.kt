@@ -1,52 +1,48 @@
 package com.vladceresna.virtel.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.compose.ui.unit.dp
-import com.example.compose.errorContainerDark
-import com.vladceresna.virtel.controllers.DataStore
-import com.vladceresna.virtel.controllers.DataType
 import com.vladceresna.virtel.controllers.Log
-import com.vladceresna.virtel.controllers.Programs
-import com.vladceresna.virtel.controllers.VirtelSystem
+import com.vladceresna.virtel.controllers.log
+import com.vladceresna.virtel.other.makeError
 import com.vladceresna.virtel.screens.model.WidgetModel
 import com.vladceresna.virtel.screens.model.WidgetType
 
@@ -54,13 +50,36 @@ import com.vladceresna.virtel.screens.model.WidgetType
 @Composable
 fun Widget(model: WidgetModel, modifier: Modifier){
 
-    //log("Render Widget $model", Log.DEBUG)
-    var arrangement = Arrangement.Center
+    log("Render Widget $model", Log.DEBUG)
+    var arrangementVertical = Arrangement.Center
+    var arrangementHorizontal = Arrangement.Center
     var alignmentVertical = Alignment.CenterVertically
     var alignmentHorizontal = Alignment.CenterHorizontally
-    var alignment = Alignment.Center
+
 
     var modifierClickable = modifier
+
+
+    if(model.scrollable){
+        var scrollState = rememberScrollState()
+        when(model.widgetType){
+            WidgetType.COLUMN -> modifierClickable = modifierClickable.verticalScroll(scrollState)
+            WidgetType.ROW -> modifierClickable = modifierClickable.horizontalScroll(scrollState)
+            else -> makeError(model.programViewModel,
+                "This WidgetType doesnt support scroll: "+model.widgetType+
+                        " in var: "+model.name)
+        }
+    }
+
+    modifierClickable = modifierClickable.padding(
+        model.paddingLeft,
+        model.paddingTop,
+        model.paddingRight,
+        model.paddingBottom
+    )
+
+
+
     var onClick: () -> Unit = {}
     if (!model.onClick.equals("")){
         modifierClickable = modifier.clickable {
@@ -70,46 +89,84 @@ fun Widget(model: WidgetModel, modifier: Modifier){
     }
     println("${model.widgetType} ${model.title}")
     when (model.widgetType) {
-        WidgetType.TEXT -> Box(modifierClickable){
-            Text(modifier = Modifier, text = model.title)}
+        WidgetType.TEXT -> Text(modifier = modifierClickable, text = model.title)
         WidgetType.BUTTON -> when(model.variant) {
-            "primary" -> Row {
-                Button(onClick = onClick, modifier = modifier.wrapContentSize()) {
-                    if(model.childs.isEmpty()){
-
-                    } else {
-                        var childModel = model.childs.get(0)
-                        Widget(childModel, Modifier.weight(childModel.weight))
-                    }
+            "primary" -> Button(onClick = onClick, modifier = modifier) {
+                if(!model.childs.isEmpty()) {
+                    var childModel = model.childs.get(0)
+                    Widget(childModel, Modifier.weight(childModel.weight))
                 }
             }
         }
         WidgetType.INPUT -> {
+            var mutValue by remember { mutableStateOf(model.value) }
             OutlinedTextField(
                 label = { Text(text = model.title) },
                 modifier = modifier,
-                value = model.value,
+                value = mutValue,
                 onValueChange = {
+                    mutValue = it
                     model.value = it
                 }
             )
         }
         WidgetType.ROW -> Row(
             modifier = modifier,
-            horizontalArrangement = arrangement,
+            horizontalArrangement = arrangementHorizontal,
             verticalAlignment = alignmentVertical
         ) {
             model.childs.forEach {
-                Widget(it, Modifier.weight(it.weight).fillMaxHeight())
+                when (it.weight) {
+                    -1F -> {
+                        Widget(it, Modifier.fillMaxHeight().wrapContentWidth())
+                    }
+                    1F -> {
+                        Widget(it, Modifier.weight(it.weight,true).fillMaxHeight().fillMaxWidth())
+                    }
+                    else -> {
+                        Widget(it, Modifier.weight(it.weight).fillMaxHeight().fillMaxWidth())
+                    }
+                }
             }
         }
         WidgetType.COLUMN -> Column(
             modifier = modifier,
-            verticalArrangement = arrangement,
+            verticalArrangement = arrangementVertical,
             horizontalAlignment = alignmentHorizontal
         ) {
             model.childs.forEach {
-                Widget(it, Modifier.weight(it.weight).fillMaxHeight())
+                when (it.weight) {
+                    -1F -> {
+                        Widget(it, Modifier.fillMaxWidth().wrapContentHeight())
+                    }
+                    1F -> {
+                        Widget(it, Modifier.weight(it.weight,true).fillMaxWidth().fillMaxHeight())
+                    }
+                    else -> {
+                        Widget(it, Modifier.weight(it.weight).fillMaxWidth().fillMaxHeight())
+                    }
+                }
+            }
+        }
+        WidgetType.ADAPTIVE -> {
+            if(!model.childs.isEmpty()) {
+                Adaptive(
+                    left = {Widget(model.childs.get(0),
+                        Modifier.fillMaxWidth())},
+                    right = {Widget(model.childs.get(1),
+                        Modifier.fillMaxWidth())},
+                    leftModel = model.childs.get(0),
+                    rightModel = model.childs.get(1)
+                )
+            }
+        }
+        WidgetType.CARD -> {
+            Card(modifierClickable) {
+                Box(modifierClickable){
+                    model.childs.forEach {
+                        Widget(it, Modifier)
+                    }
+                }
             }
         }
         WidgetType.TOP_BAR -> TopAppBar(
@@ -159,3 +216,11 @@ fun IconRenderer(name: String):ImageVector{
         else -> Icons.Filled.Menu
     }
 }
+
+@Composable
+expect fun Adaptive(
+    left: @Composable () -> Unit,
+    right: @Composable () -> Unit,
+    leftModel: WidgetModel,
+    rightModel: WidgetModel
+)

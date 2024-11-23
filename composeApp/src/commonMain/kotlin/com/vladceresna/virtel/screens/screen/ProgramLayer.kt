@@ -3,6 +3,8 @@ package com.vladceresna.virtel.screens.screen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,15 +23,14 @@ import com.vladceresna.virtel.screens.model.WidgetModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgramLayer(
-    programViewModel:ProgramViewModel
+    programViewModel:ProgramViewModel,modifier: Modifier
 ){
 
-    Column {
         Scaffold(
-            Modifier.weight(1f),
+            modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { programViewModel.program.appId },
+                    title = { Text(programViewModel.program.appId) },
                 )
             },
             bottomBar = {
@@ -43,15 +44,12 @@ fun ProgramLayer(
             }
         ) {
             if (!programViewModel.isErrorHappened) {
-                Column(
+                Column (
                     modifier = Modifier.fillMaxSize().padding(
-                        10.dp,
-                        64.dp,
-                        10.dp,
+                        20.dp, 64.dp, 20.dp,
                         if (!programViewModel.widgets.find {
                                 it.name == "bottom"
-                            }!!.childs.isEmpty()) 90.dp else 10.dp
-
+                            }!!.childs.isEmpty()) 90.dp else 20.dp
                     )
                 ) {
                     var rootData = programViewModel.widgets.find {
@@ -60,17 +58,17 @@ fun ProgramLayer(
 
                     if (!rootData!!.childs.isEmpty()) {
                         var model = rootData
-                        Widget(model, Modifier.weight(model.weight))
+                        Widget(model, Modifier)
+
                     }
                 }
             } else {
 
 
-                AlertDialog( // 3
-                    onDismissRequest = { // 4
+                AlertDialog(
+                    onDismissRequest = {
                         programViewModel.isErrorHappened = false
                     },
-                    // 5
                     title = { Text(text = "Something went wrong") },
                     text = { Text(text = programViewModel.errorMessage+
                                 "\n\nPlease contact the developer of this program " +
@@ -79,6 +77,7 @@ fun ProgramLayer(
                         Button(
                             onClick = {
                                 programViewModel.isErrorHappened = false
+                                println("Restarting")
                             }
                         ) {
                             Text(
@@ -89,8 +88,6 @@ fun ProgramLayer(
                     }
                 )
             }
-
         }
-    }
 
 }

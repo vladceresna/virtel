@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.controllers
 
+import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.ai.giveAnswer
 import com.vladceresna.virtel.ai.toSpeech
 import com.vladceresna.virtel.controllers.VirtelSystem.labs
@@ -405,39 +406,42 @@ class Flow(
     }
 
 
-    /** scr new (viewType) (weight) (variant) (title) (value)
-            (foreground) (background) (onClick) (parent) (newVarName)
+    /** scr new (newVarName) (viewType) (weight) (parent)
      * */
     fun scrNew(args: MutableList<String>) {
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
         var parent = programModel.widgets.find {
-            it.name == nGetVar(args.get(8),DataType.VAR)
+            it.name == args.get(3)
         }
-        if(parent == null) throw VirtelException("Parent widget not found by name: "+args.get(args.size-2))
+        if(parent == null) throw VirtelException("Parent widget not found by name: "+args.get(3))
 
         var newModel = WidgetModel(
             programModel,
-            args.get(9),
-            when(nGetVar(args.get(0), DataType.VAR)){
+            args.get(0),
+            when(nGetVar(args.get(1), DataType.VAR)){
                 "view" -> {WidgetType.VIEW}
                 "text" -> {WidgetType.TEXT}
                 "button" -> {WidgetType.BUTTON}
                 "input" -> {WidgetType.INPUT}
                 "column" -> {WidgetType.COLUMN}
+                "adaptive" -> {WidgetType.ADAPTIVE}
                 "row" -> {WidgetType.ROW}
+                "card" -> {WidgetType.CARD}
                 "topBar" -> {WidgetType.TOP_BAR}
                 "bottomBar" -> {WidgetType.BOTTOM_BAR}
-                else -> {throw VirtelException("Variable "+args.get(0)+" contains not expected widget type")} },
-            try {nGetVar(args.get(1), DataType.VAR) as Float}catch(e:Exception){1F},
-            nGetVar(args.get(2), DataType.VAR).toString(),
-            nGetVar(args.get(3), DataType.VAR).toString(),
-            nGetVar(args.get(4), DataType.VAR).toString(),
-            nGetVar(args.get(5), DataType.VAR).toString(),
-            nGetVar(args.get(6), DataType.VAR).toString(),
-            nGetVar(args.get(7), DataType.VAR).toString(),
+                else -> {throw VirtelException("Variable "+args.get(1)+" contains not expected widget type")} },
+            try {nGetVar(args.get(2), DataType.VAR).toString().toFloat() }catch(e:Exception){ 1F},
         )
+
+        if (newModel.widgetType == WidgetType.CARD) {
+            var value = 20.dp
+            newModel.paddingTop = value
+            newModel.paddingRight = value
+            newModel.paddingBottom = value
+            newModel.paddingLeft = value
+        }
 
         parent.childs.add(newModel)
         programModel.widgets.add(newModel)
@@ -446,43 +450,107 @@ class Flow(
     /** scr del (newVarName)
      * */
     fun scrDel(args: MutableList<String>) {
-        program.store.data.items.remove(
-            Data(DataType.VIEW, args.get(0), nGetVar(args.get(0), DataType.VIEW)?:""))
+        var programModel = nGetProgramModel()
+        if (programModel == null) throw VirtelException("System Program View Model error")
+
+        var widget = programModel.widgets.find {
+            it.name == args.get(0)
+        }
+        if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
+
+        programModel.widgets.remove(widget)
+        widget = null
+
     }
 
-    /** scr set (value) (property) (newVarName)
+    /** scr set (newVarName) (property) (value)
+     * (property) = (weight) (variant) (title) (value)
+     *             (foreground) (background) (onClick) (parent)
+     *             (paddingTop) (paddingRight) (paddingBottom) (paddingLeft)
+     *             (marginTop) (marginRight) (marginBottom) (marginLeft) (scrollable)
      * */
     fun scrSet(args: MutableList<String>) {
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
+        var widget = programModel.widgets.find {
+            it.name == args.get(0)
+        }
+        if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
+
         var property = nGetVar(args.get(1), DataType.VAR).toString()
-        var value = nGetVar(args.get(0), DataType.VAR).toString()
-        var widget = nGetVar(args.get(2), DataType.VIEW) as WidgetModel
+        var value = nGetVar(args.get(2), DataType.VAR).toString()
+
         when (property) {
-
-
+            "weight" -> widget.weight = value.toFloat()
+            "variant" -> widget.variant = value
             "title" -> widget.title = value
             "value" -> widget.value = value
-            "onclick" -> widget.onClick = value
-            "child" -> widget.childs.add(nGetVar(args.get(0),DataType.VIEW) as WidgetModel)
+            "foreground" -> widget.foreground = value
+            "background" -> widget.background = value
+            "onClick" -> widget.onClick = value
+            "parent" -> (programModel.widgets.find {
+                it.name == args.get(2)
+            } as WidgetModel).childs.add(widget)
+            "paddingTop" ->    widget.paddingTop = value.toInt().dp
+            "paddingRight" ->  widget.paddingRight = value.toInt().dp
+            "paddingBottom" -> widget.paddingBottom = value.toInt().dp
+            "paddingLeft" ->   widget.paddingLeft = value.toInt().dp
+            "padding" ->       {
+                widget.paddingTop = value.toInt().dp
+                widget.paddingRight = value.toInt().dp
+                widget.paddingBottom = value.toInt().dp
+                widget.paddingLeft = value.toInt().dp
+            }
+            "marginTop" ->     widget.marginTop = value.toInt().dp
+            "marginRight" ->   widget.marginRight = value.toInt().dp
+            "marginBottom" ->  widget.marginBottom = value.toInt().dp
+            "marginLeft" ->    widget.marginLeft = value.toInt().dp
+            "margin" ->        {
+                widget.marginTop = value.toInt().dp
+                widget.marginRight = value.toInt().dp
+                widget.marginBottom = value.toInt().dp
+                widget.marginLeft = value.toInt().dp
+            }
+            "scrollable" ->    widget.scrollable = value.toBoolean()
 
         }
-        nPutVar(args.get(2), DataType.VIEW, widget)
     }
 
-    /** scr get (viewVarName) (property) (newVarName)
+    /** scr get (newVarName) (viewVarName) (property)
      * */
     fun scrGet(args: MutableList<String>) {
-        var property = nGetVar(args.get(1), DataType.VAR).toString()
-        var widget = nGetVar(args.get(0), DataType.VIEW) as WidgetModel
-        nPutVar( args.get(2), DataType.VAR, when (property) {
-                "weight" -> widget.weight
+        var property = nGetVar(args.get(2), DataType.VAR).toString()
+
+        var programModel = nGetProgramModel()
+        if (programModel == null) throw VirtelException("System Program View Model error")
+
+        var widget = programModel.widgets.find {
+            it.name == args.get(1)
+        }
+        if(widget == null) throw VirtelException("Widget not found by name: "+args.get(1))
+
+        nPutVar( args.get(0), DataType.VAR, when (property) {
+                "weight" -> widget.weight.toString()
                 "variant" -> widget.variant
                 "title" -> widget.title
                 "value" -> widget.value
-                "onclick" -> widget.onClick
-                else -> widget.title
+                "foreground" -> widget.foreground
+                "background" -> widget.background
+                "onClick" -> widget.onClick
+                "parent" -> (programModel.widgets.find {
+                    it.name == args.get(2)
+                } as WidgetModel).name
+                "paddingTop" ->    widget.paddingTop
+                "paddingRight" ->  widget.paddingRight
+                "paddingBottom" -> widget.paddingBottom
+                "paddingLeft" ->   widget.paddingLeft
+                "marginTop" ->     widget.marginTop
+                "marginRight" ->   widget.marginRight
+                "marginBottom" ->  widget.marginBottom
+                "marginLeft" ->    widget.marginLeft
+                "scrollable" ->    widget.scrollable.toString()
+                else -> ""
             }
         )
     }
@@ -498,24 +566,19 @@ class Flow(
             "settings" -> programModel.pageModel.settingsClick = {
                 CoroutineScope(Job()).launch {
                     runFile(file)
-
                 }
             }
-
             "home" -> programModel.pageModel.homeClick = {
                 CoroutineScope(Job()).launch {
                     runFile(file)
-
                 }
             }
-
             "back" -> programModel.pageModel.backClick = {
                 CoroutineScope(Job()).launch {
                     runFile(file)
 
                 }
             }
-
             else -> throw VirtelException("This is not a system navigation button: "+navName)
         }
     }
@@ -856,7 +919,7 @@ class Flow(
                     "ask" -> llmAsk(step.args)
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: VirtelException) {
             if (program.debugMode) {
                 e.printStackTrace()
             }
