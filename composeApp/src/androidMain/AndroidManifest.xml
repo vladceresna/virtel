@@ -25,12 +25,9 @@
         </activity>
         <activity
             android:name=".LauncherActivity"
-            android:clearTaskOnLaunch="true"
-            android:excludeFromRecents="true"
             android:exported="true"
-            android:launchMode="singleTask"
-            android:screenOrientation="nosensor"
-            android:stateNotNeeded="true">
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|mnc|colorMode|density|fontScale|fontWeightAdjustment|keyboard|layoutDirection|locale|mcc|navigation|smallestScreenSize|touchscreen|uiMode"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <!-- The following two intent-filters are the key to set homescreen -->
