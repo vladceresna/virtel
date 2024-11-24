@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.controllers
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.ai.giveAnswer
 import com.vladceresna.virtel.ai.toSpeech
@@ -69,11 +70,6 @@ class Flow(
      * */
     fun sysStart(args: MutableList<String>) {
         var value = nGetVar(args.get(0), DataType.VAR).toString()
-        var mutableSetOf = mutableSetOf<Data>()
-        // TODO: create new page
-
-
-
         Programs.startProgram(value)
     }
 
@@ -432,15 +428,17 @@ class Flow(
                 "topBar" -> {WidgetType.TOP_BAR}
                 "bottomBar" -> {WidgetType.BOTTOM_BAR}
                 else -> {throw VirtelException("Variable "+args.get(1)+" contains not expected widget type")} },
-            try {nGetVar(args.get(2), DataType.VAR).toString().toFloat() }catch(e:Exception){ 1F},
+            try {
+                mutableStateOf(nGetVar(args.get(2), DataType.VAR).toString().toFloat())
+            }catch(e:Exception){ mutableStateOf(1F)},
         )
 
         if (newModel.widgetType == WidgetType.CARD) {
             var value = 20.dp
-            newModel.paddingTop = value
-            newModel.paddingRight = value
-            newModel.paddingBottom = value
-            newModel.paddingLeft = value
+            newModel.paddingTop.value = value
+            newModel.paddingRight.value = value
+            newModel.paddingBottom.value = value
+            newModel.paddingLeft.value = value
         }
 
         parent.childs.add(newModel)
@@ -482,37 +480,37 @@ class Flow(
         var value = nGetVar(args.get(2), DataType.VAR).toString()
 
         when (property) {
-            "weight" -> widget.weight = value.toFloat()
-            "variant" -> widget.variant = value
-            "title" -> widget.title = value
-            "value" -> widget.value = value
-            "foreground" -> widget.foreground = value
-            "background" -> widget.background = value
-            "onClick" -> widget.onClick = value
+            "weight" -> widget.weight.value = value.toFloat()
+            "variant" -> widget.variant.value = value
+            "title" -> widget.title.value = value
+            "value" -> widget.value.value = value
+            "foreground" -> widget.foreground.value = value
+            "background" -> widget.background.value = value
+            "onClick" -> widget.onClick.value = value
             "parent" -> (programModel.widgets.find {
                 it.name == args.get(2)
             } as WidgetModel).childs.add(widget)
-            "paddingTop" ->    widget.paddingTop = value.toInt().dp
-            "paddingRight" ->  widget.paddingRight = value.toInt().dp
-            "paddingBottom" -> widget.paddingBottom = value.toInt().dp
-            "paddingLeft" ->   widget.paddingLeft = value.toInt().dp
+            "paddingTop" ->    widget.paddingTop.value = value.toInt().dp
+            "paddingRight" ->  widget.paddingRight.value = value.toInt().dp
+            "paddingBottom" -> widget.paddingBottom.value = value.toInt().dp
+            "paddingLeft" ->   widget.paddingLeft.value = value.toInt().dp
             "padding" ->       {
-                widget.paddingTop = value.toInt().dp
-                widget.paddingRight = value.toInt().dp
-                widget.paddingBottom = value.toInt().dp
-                widget.paddingLeft = value.toInt().dp
+                widget.paddingTop.value = value.toInt().dp
+                widget.paddingRight.value = value.toInt().dp
+                widget.paddingBottom.value = value.toInt().dp
+                widget.paddingLeft.value = value.toInt().dp
             }
-            "marginTop" ->     widget.marginTop = value.toInt().dp
-            "marginRight" ->   widget.marginRight = value.toInt().dp
-            "marginBottom" ->  widget.marginBottom = value.toInt().dp
-            "marginLeft" ->    widget.marginLeft = value.toInt().dp
+            "marginTop" ->     widget.marginTop.value = value.toInt().dp
+            "marginRight" ->   widget.marginRight.value = value.toInt().dp
+            "marginBottom" ->  widget.marginBottom.value = value.toInt().dp
+            "marginLeft" ->    widget.marginLeft.value = value.toInt().dp
             "margin" ->        {
-                widget.marginTop = value.toInt().dp
-                widget.marginRight = value.toInt().dp
-                widget.marginBottom = value.toInt().dp
-                widget.marginLeft = value.toInt().dp
+                widget.marginTop.value = value.toInt().dp
+                widget.marginRight.value = value.toInt().dp
+                widget.marginBottom.value = value.toInt().dp
+                widget.marginLeft.value = value.toInt().dp
             }
-            "scrollable" ->    widget.scrollable = value.toBoolean()
+            "scrollable" ->    widget.scrollable.value = value.toBoolean()
 
         }
     }
@@ -531,25 +529,25 @@ class Flow(
         if(widget == null) throw VirtelException("Widget not found by name: "+args.get(1))
 
         nPutVar( args.get(0), DataType.VAR, when (property) {
-                "weight" -> widget.weight.toString()
-                "variant" -> widget.variant
-                "title" -> widget.title
-                "value" -> widget.value
-                "foreground" -> widget.foreground
-                "background" -> widget.background
-                "onClick" -> widget.onClick
+                "weight" -> widget.weight.value.toString()
+                "variant" -> widget.variant.value
+                "title" -> widget.title.value
+                "value" -> widget.value.value
+                "foreground" -> widget.foreground.value
+                "background" -> widget.background.value
+                "onClick" -> widget.onClick.value
                 "parent" -> (programModel.widgets.find {
                     it.name == args.get(2)
                 } as WidgetModel).name
-                "paddingTop" ->    widget.paddingTop
-                "paddingRight" ->  widget.paddingRight
-                "paddingBottom" -> widget.paddingBottom
-                "paddingLeft" ->   widget.paddingLeft
-                "marginTop" ->     widget.marginTop
-                "marginRight" ->   widget.marginRight
-                "marginBottom" ->  widget.marginBottom
-                "marginLeft" ->    widget.marginLeft
-                "scrollable" ->    widget.scrollable.toString()
+                "paddingTop" ->    widget.paddingTop.value
+                "paddingRight" ->  widget.paddingRight.value
+                "paddingBottom" -> widget.paddingBottom.value
+                "paddingLeft" ->   widget.paddingLeft.value
+                "marginTop" ->     widget.marginTop.value
+                "marginRight" ->   widget.marginRight.value
+                "marginBottom" ->  widget.marginBottom.value
+                "marginLeft" ->    widget.marginLeft.value
+                "scrollable" ->    widget.scrollable.value.toString()
                 else -> ""
             }
         )
@@ -563,17 +561,17 @@ class Flow(
         var file = nGetVar(args.get(0), DataType.VAR).toString()
         var navName = nGetVar(args.get(1), DataType.VAR).toString()
         when (navName) {
-            "settings" -> programModel.pageModel.settingsClick = {
+            "settings" -> programModel.pageModel.settingsClick.value = {
                 CoroutineScope(Job()).launch {
                     runFile(file)
                 }
             }
-            "home" -> programModel.pageModel.homeClick = {
+            "home" -> programModel.pageModel.homeClick.value = {
                 CoroutineScope(Job()).launch {
                     runFile(file)
                 }
             }
-            "back" -> programModel.pageModel.backClick = {
+            "back" -> programModel.pageModel.backClick.value = {
                 CoroutineScope(Job()).launch {
                     runFile(file)
 
@@ -782,7 +780,7 @@ class Flow(
 
 
     /**parser**/
-    fun runStep(step: Step) {
+    fun runStep(step: Step):Boolean {
         try {
             if (program.debugMode) {
                 log("Executes ${step.mod} ${step.cmd} ${step.args}", Log.DEBUG)
@@ -919,15 +917,34 @@ class Flow(
                     "ask" -> llmAsk(step.args)
                 }
             }
+            return false // is not erroring
+        } catch (e: IndexOutOfBoundsException) {
+            if (program.debugMode) {
+                e.printStackTrace()
+            }
+            try {
+                (nGetProgramModel()!!).also {
+                    it.errorMessage.value = "On line ${step.line} in file " + step.fileName +
+                            " in application with appId: ${step.appId}\n\n" +
+                            "Not all need arguments provided for this command: " +
+                            step.mod + " " + step.cmd +
+                            "\nIf you`re developer, please, check documentation for it"
+                    it.isErrorHappened.value = true
+                }
+            } catch (k:Exception){k.printStackTrace()}
+            return true // erroring
         } catch (e: VirtelException) {
             if (program.debugMode) {
                 e.printStackTrace()
             }
-            (nGetProgramModel()?:ProgramViewModel(PageModel(),program)).also {
-                it.errorMessage = "On line ${step.line} in file "+step.fileName+
-                        " in application with appId: ${step.appId}\n\n"+e.message.toString()
-                it.isErrorHappened = true
-            }
+            try {
+                (nGetProgramModel() ?: ProgramViewModel(PageModel(), program)).also {
+                    it.errorMessage.value = "On line ${step.line} in file " + step.fileName +
+                            " in application with appId: ${step.appId}\n\n" + e.message.toString()
+                    it.isErrorHappened.value = true
+                }
+            } catch (e:Exception){e.printStackTrace()}
+            return true // erroring
         }
     }
 
@@ -986,7 +1003,7 @@ class Flow(
                         step.fileName = fileName
                         step.line = lineNumber
 
-                        runStep(step)
+                        if (runStep(step)) break // if erroring
 
                         lineNumber++
                         lastString = ""

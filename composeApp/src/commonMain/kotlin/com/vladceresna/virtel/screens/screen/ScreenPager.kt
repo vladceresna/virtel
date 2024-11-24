@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,10 +43,15 @@ fun ScreenPager(
         HorizontalPager(
             modifier = Modifier.weight(1F),
             state = pagerState,
-            contentPadding = PaddingValues(horizontal = 30.dp, vertical = 30.dp),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
             pageSpacing = 8.dp,
             verticalAlignment = Alignment.Top,
         ) { page ->
+
+            LaunchedEffect(pagerState.currentPage){
+                screenModel.currentPageIndex.value = pagerState.currentPage
+            }
+
             Page(screenModel.pageModels[page],Modifier.fillMaxSize()
                 .clip(RoundedCornerShape(20.dp)).weight(1F))
         }

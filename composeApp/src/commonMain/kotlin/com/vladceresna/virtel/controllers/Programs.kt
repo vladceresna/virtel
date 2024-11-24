@@ -38,16 +38,17 @@ data object Programs {
         var program:Program = findProgram(appId)
         program.scan()
 
-        CoroutineScope(Job()).launch {
-            program.run()
-        }
+
 
         var screenModel = VirtelSystem.screenModel
-        var pageModel = screenModel.pageModels.get(screenModel.currentPageIndex)
-        pageModel.programViewModels.add(ProgramViewModel(pageModel, program))
+        var pageModel = screenModel.pageModels.get(screenModel.currentPageIndex.value)
+
+        var programModel = ProgramViewModel(pageModel, program)
+
+        pageModel.programViewModels.add(programModel)
 
 
-
+        program.run()
 
     }
     fun runProgram(program: Program){

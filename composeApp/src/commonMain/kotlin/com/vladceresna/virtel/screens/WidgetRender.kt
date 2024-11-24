@@ -60,7 +60,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
     var modifierClickable = modifier
 
 
-    if(model.scrollable){
+    if(model.scrollable.value){
         var scrollState = rememberScrollState()
         when(model.widgetType){
             WidgetType.COLUMN -> modifierClickable = modifierClickable.verticalScroll(scrollState)
@@ -72,42 +72,63 @@ fun Widget(model: WidgetModel, modifier: Modifier){
     }
 
     modifierClickable = modifierClickable.padding(
-        model.paddingLeft,
-        model.paddingTop,
-        model.paddingRight,
-        model.paddingBottom
+        model.paddingLeft.value,
+        model.paddingTop.value,
+        model.paddingRight.value,
+        model.paddingBottom.value,
     )
 
 
 
     var onClick: () -> Unit = {}
-    if (!model.onClick.equals("")){
+    if (!model.onClick.value.equals("")){
         modifierClickable = modifier.clickable {
-            model.programViewModel.program.runFlow(model.onClick, model.onClick) }
+            model.programViewModel.program.runFlow(model.onClick.value, model.onClick.value) }
         onClick = {
-            model.programViewModel.program.runFlow(model.onClick, model.onClick) }
+            model.programViewModel.program.runFlow(model.onClick.value, model.onClick.value) }
     }
-    println("${model.widgetType} ${model.title}")
+    println("${model.widgetType} ${model.title.value}")
     when (model.widgetType) {
-        WidgetType.TEXT -> Text(modifier = modifierClickable, text = model.title)
-        WidgetType.BUTTON -> when(model.variant) {
+        WidgetType.TEXT -> Text(modifier = modifierClickable, text = model.title.value)
+        WidgetType.BUTTON -> when(model.variant.value) {
             "primary" -> Button(onClick = onClick, modifier = modifier) {
-                if(!model.childs.isEmpty()) {
-                    var childModel = model.childs.get(0)
-                    Widget(childModel, Modifier.weight(childModel.weight))
+                Row {
+                    model.childs.forEach {
+                        when (it.weight.value) {
+                            -1F -> {
+                                Widget(it, Modifier.wrapContentWidth())
+                            }
+
+                            1F -> {
+                                Widget(
+                                    it,
+                                    Modifier.weight(it.weight.value, true).fillMaxHeight()
+                                        .fillMaxWidth()
+                                )
+                            }
+
+                            else -> {
+                                Widget(
+                                    it,
+                                    Modifier.weight(it.weight.value).fillMaxHeight().fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
         WidgetType.INPUT -> {
-            var mutValue by remember { mutableStateOf(model.value) }
+            var mutValue by remember { mutableStateOf(model.value.value) }
             OutlinedTextField(
-                label = { Text(text = model.title) },
+                label = { Text(text = model.title.value) },
                 modifier = modifier,
                 value = mutValue,
                 onValueChange = {
                     mutValue = it
-                    model.value = it
-                }
+                    model.value.value = mutValue
+                },
+
             )
         }
         WidgetType.ROW -> Row(
@@ -116,15 +137,15 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             verticalAlignment = alignmentVertical
         ) {
             model.childs.forEach {
-                when (it.weight) {
+                when (it.weight.value) {
                     -1F -> {
-                        Widget(it, Modifier.fillMaxHeight().wrapContentWidth())
+                        Widget(it, Modifier.wrapContentWidth())
                     }
                     1F -> {
-                        Widget(it, Modifier.weight(it.weight,true).fillMaxHeight().fillMaxWidth())
+                        Widget(it, Modifier.weight(it.weight.value,true).wrapContentHeight().fillMaxWidth())
                     }
                     else -> {
-                        Widget(it, Modifier.weight(it.weight).fillMaxHeight().fillMaxWidth())
+                        Widget(it, Modifier.weight(it.weight.value).fillMaxHeight().fillMaxWidth())
                     }
                 }
             }
@@ -135,15 +156,15 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             horizontalAlignment = alignmentHorizontal
         ) {
             model.childs.forEach {
-                when (it.weight) {
+                when (it.weight.value) {
                     -1F -> {
-                        Widget(it, Modifier.fillMaxWidth().wrapContentHeight())
+                        Widget(it, Modifier.wrapContentHeight())
                     }
                     1F -> {
-                        Widget(it, Modifier.weight(it.weight,true).fillMaxWidth().fillMaxHeight())
+                        Widget(it, Modifier.weight(it.weight.value,true).wrapContentWidth().fillMaxHeight())
                     }
                     else -> {
-                        Widget(it, Modifier.weight(it.weight).fillMaxWidth().fillMaxHeight())
+                        Widget(it, Modifier.weight(it.weight.value).fillMaxWidth().fillMaxHeight())
                     }
                 }
             }
@@ -152,9 +173,15 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             if(!model.childs.isEmpty()) {
                 Adaptive(
                     left = {Widget(model.childs.get(0),
-                        Modifier.fillMaxWidth())},
+                        if(model.childs.get(0).weight.value == 1F)
+                            Modifier.fillMaxWidth()
+                        else Modifier
+                    )},
                     right = {Widget(model.childs.get(1),
-                        Modifier.fillMaxWidth())},
+                        if(model.childs.get(1).weight.value == 1F)
+                            Modifier.fillMaxWidth()
+                        else Modifier
+                    )},
                     leftModel = model.childs.get(0),
                     rightModel = model.childs.get(1)
                 )
@@ -190,7 +217,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             actions = {
                 model.childs.forEach {
                     IconButton(onClick = {  }) {
-                        Icon(IconRenderer(model.foreground), contentDescription = "Localized description")
+                        Icon(IconRenderer(model.foreground.value), contentDescription = "Localized description")
                     }
                 }
             },

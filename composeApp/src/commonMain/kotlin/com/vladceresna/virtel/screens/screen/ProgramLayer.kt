@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -31,6 +35,20 @@ fun ProgramLayer(
             topBar = {
                 TopAppBar(
                     title = { Text(programViewModel.program.appId) },
+                    actions = {
+                        IconButton(onClick = {
+                            VirtelSystem.screenModel
+                                .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
+                                .programViewModels.remove(programViewModel)
+
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "close",
+                                tint = Color.Black
+                            )
+                        }
+                    }
                 )
             },
             bottomBar = {
@@ -43,7 +61,7 @@ fun ProgramLayer(
                 }
             }
         ) {
-            if (!programViewModel.isErrorHappened) {
+            if (!programViewModel.isErrorHappened.value) {
                 Column (
                     modifier = Modifier.fillMaxSize().padding(
                         20.dp, 64.dp, 20.dp,
@@ -67,16 +85,16 @@ fun ProgramLayer(
 
                 AlertDialog(
                     onDismissRequest = {
-                        programViewModel.isErrorHappened = false
+                        programViewModel.isErrorHappened.value = false
                     },
                     title = { Text(text = "Something went wrong") },
-                    text = { Text(text = programViewModel.errorMessage+
+                    text = { Text(text = programViewModel.errorMessage.value+
                                 "\n\nPlease contact the developer of this program " +
                             "and provide him with the error text described above") },
                     confirmButton = { // 6
                         Button(
                             onClick = {
-                                programViewModel.isErrorHappened = false
+                                programViewModel.isErrorHappened.value = false
                                 println("Restarting")
                             }
                         ) {

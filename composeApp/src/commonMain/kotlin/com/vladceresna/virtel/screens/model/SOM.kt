@@ -1,5 +1,8 @@
 package com.vladceresna.virtel.screens.model
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.Program
@@ -7,31 +10,30 @@ import com.vladceresna.virtel.controllers.Programs
 
 
 data class ScreenModel(
-    var pageModels: MutableList<PageModel> = mutableListOf(PageModel()),
-    var currentPageIndex:Int = 0
+    var pageModels: MutableList<PageModel> = mutableStateListOf(PageModel()),
+    var currentPageIndex:MutableState<Int> = mutableStateOf(0)
 )
 data class PageModel(
-    var settingsClick:() -> Unit = {
+    var settingsClick:MutableState<() -> Unit> = mutableStateOf({
 
-    },
-    var homeClick:() -> Unit = {
+    }),
+    var homeClick:MutableState<() -> Unit> = mutableStateOf({
 
-    },
-    var backClick:() -> Unit = {
+    }),
+    var backClick:MutableState<() -> Unit> = mutableStateOf({
 
-    }
+    })
 ){
-    var programViewModels: MutableList<ProgramViewModel> =
-        mutableListOf()
+    var programViewModels: MutableList<ProgramViewModel> = mutableStateListOf()
 }
 data class ProgramViewModel(
     var pageModel: PageModel,
     var program: Program
 ) {
-    var isErrorHappened = false
-    var errorMessage = ""
+    var isErrorHappened = mutableStateOf(false)
+    var errorMessage = mutableStateOf("")
 
-    var widgets:MutableList<WidgetModel> = mutableListOf(
+    var widgets:MutableList<WidgetModel> = mutableStateListOf(
         WidgetModel(this,"root", WidgetType.COLUMN),
         WidgetModel(this, "top", WidgetType.TOP_BAR),
         WidgetModel(this, "bottom",WidgetType.BOTTOM_BAR)
@@ -45,24 +47,24 @@ data class WidgetModel(
     var programViewModel: ProgramViewModel,
     var name:String,
     var widgetType: WidgetType = WidgetType.VIEW,
-    var weight:Float = 1F, // float
-    var variant:String = "primary", // primary/secondary/tertiary/destructive
-    var title:String = "",
-    var value:String = "",
-    var foreground:String = "",
-    var background:String = "",
-    var onClick:String = "",
-    var paddingTop:Dp = 0.dp,
-    var paddingRight:Dp = 0.dp,
-    var paddingBottom:Dp = 0.dp,
-    var paddingLeft:Dp = 0.dp,
-    var marginTop:Dp = 0.dp,
-    var marginRight:Dp = 0.dp,
-    var marginBottom:Dp = 0.dp,
-    var marginLeft:Dp = 0.dp,
-    var scrollable:Boolean = false,
+    var weight:MutableState<Float> = mutableStateOf(1F), // float
+    var variant: MutableState<String> = mutableStateOf("primary"), // primary/secondary/tertiary/destructive
+    var title: MutableState<String> = mutableStateOf(""),
+    var value: MutableState<String> = mutableStateOf(""),
+    var foreground: MutableState<String> = mutableStateOf(""),
+    var background: MutableState<String> = mutableStateOf(""),
+    var onClick: MutableState<String> = mutableStateOf(""),
+    var paddingTop:MutableState<Dp> = mutableStateOf(0.dp),
+    var paddingRight:MutableState<Dp> = mutableStateOf(0.dp),
+    var paddingBottom:MutableState<Dp> = mutableStateOf(0.dp),
+    var paddingLeft:MutableState<Dp> = mutableStateOf(0.dp),
+    var marginTop:MutableState<Dp> = mutableStateOf(0.dp),
+    var marginRight:MutableState<Dp> = mutableStateOf(0.dp),
+    var marginBottom:MutableState<Dp> = mutableStateOf(0.dp),
+    var marginLeft:MutableState<Dp> = mutableStateOf(0.dp),
+    var scrollable:MutableState<Boolean> = mutableStateOf(false),
 
-    var childs:MutableList<WidgetModel> = mutableListOf(),
+    var childs:MutableList<WidgetModel> = mutableStateListOf()
 )
 
 enum class WidgetType{
