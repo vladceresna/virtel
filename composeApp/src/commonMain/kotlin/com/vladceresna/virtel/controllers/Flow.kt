@@ -402,16 +402,17 @@ class Flow(
     }
 
 
-    /** scr new (newVarName) (viewType) (weight) (parent)
+    /** scr new (newVarName) (viewType) (weight) (size) (parent)
+     *      (weight) = x>0 or 0 if without
      * */
     fun scrNew(args: MutableList<String>) {
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
         var parent = programModel.widgets.find {
-            it.name == args.get(3)
+            it.name == args.get(4)
         }
-        if(parent == null) throw VirtelException("Parent widget not found by name: "+args.get(3))
+        if(parent == null) throw VirtelException("Parent widget not found by name: "+args.get(4))
 
         var newModel = WidgetModel(
             programModel,
@@ -427,10 +428,13 @@ class Flow(
                 "card" -> {WidgetType.CARD}
                 "topBar" -> {WidgetType.TOP_BAR}
                 "bottomBar" -> {WidgetType.BOTTOM_BAR}
-                else -> {throw VirtelException("Variable "+args.get(1)+" contains not expected widget type")} },
+                else -> {throw VirtelException("Variable "+args.get(1)+" contains unexpected widget type")} },
             try {
                 mutableStateOf(nGetVar(args.get(2), DataType.VAR).toString().toFloat())
             }catch(e:Exception){ mutableStateOf(1F)},
+            size = try {
+                mutableStateOf(nGetVar(args.get(3), DataType.VAR).toString())
+            }catch(e:Exception){ mutableStateOf("min/min")}
         )
 
         if (newModel.widgetType == WidgetType.CARD) {
@@ -465,7 +469,8 @@ class Flow(
      * (property) = (weight) (variant) (title) (value)
      *             (foreground) (background) (onClick) (parent)
      *             (paddingTop) (paddingRight) (paddingBottom) (paddingLeft)
-     *             (marginTop) (marginRight) (marginBottom) (marginLeft) (scrollable)
+     *             (marginTop) (marginRight) (marginBottom) (marginLeft)
+     *             (scrollable) (size=[width]x[height])
      * */
     fun scrSet(args: MutableList<String>) {
         var programModel = nGetProgramModel()
@@ -511,6 +516,7 @@ class Flow(
                 widget.marginLeft.value = value.toInt().dp
             }
             "scrollable" ->    widget.scrollable.value = value.toBoolean()
+            "size" -> widget.size.value = value
 
         }
     }
@@ -548,6 +554,7 @@ class Flow(
                 "marginBottom" ->  widget.marginBottom.value
                 "marginLeft" ->    widget.marginLeft.value
                 "scrollable" ->    widget.scrollable.value.toString()
+                "size" ->          widget.size.value
                 else -> ""
             }
         )

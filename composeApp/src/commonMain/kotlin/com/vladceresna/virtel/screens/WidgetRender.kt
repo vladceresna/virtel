@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
@@ -40,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.Log
 import com.vladceresna.virtel.controllers.log
 import com.vladceresna.virtel.other.makeError
@@ -71,12 +75,19 @@ fun Widget(model: WidgetModel, modifier: Modifier){
         }
     }
 
-    modifierClickable = modifierClickable.padding(
-        model.paddingLeft.value,
-        model.paddingTop.value,
-        model.paddingRight.value,
-        model.paddingBottom.value,
-    )
+    modifierClickable = modifierClickable
+        .padding(
+            model.marginLeft.value,
+            model.marginTop.value,
+            model.marginRight.value,
+            model.marginBottom.value,
+        )
+        .padding(
+            model.paddingLeft.value,
+            model.paddingTop.value,
+            model.paddingRight.value,
+            model.paddingBottom.value,
+        )
 
 
 
@@ -91,107 +102,84 @@ fun Widget(model: WidgetModel, modifier: Modifier){
     when (model.widgetType) {
         WidgetType.TEXT -> Text(modifier = modifierClickable, text = model.title.value)
         WidgetType.BUTTON -> when(model.variant.value) {
-            "primary" -> Button(onClick = onClick, modifier = modifier) {
-                Row {
-                    model.childs.forEach {
-                        when (it.weight.value) {
-                            -1F -> {
-                                Widget(it, Modifier.wrapContentWidth())
-                            }
+            "primary" ->
+                    Button(onClick = onClick, modifier = modifierClickable) {
 
-                            1F -> {
-                                Widget(
-                                    it,
-                                    Modifier.weight(it.weight.value, true).fillMaxHeight()
-                                        .fillMaxWidth()
+                            if(model.childs.size == 1){
+                                SizedWidget(
+                                    model.childs.get(0),
+                                    Modifier
                                 )
                             }
 
-                            else -> {
-                                Widget(
-                                    it,
-                                    Modifier.weight(it.weight.value).fillMaxHeight().fillMaxWidth()
-                                )
-                            }
-                        }
                     }
-                }
-            }
+
         }
         WidgetType.INPUT -> {
-            var mutValue by remember { mutableStateOf(model.value.value) }
-            OutlinedTextField(
-                label = { Text(text = model.title.value) },
-                modifier = modifier,
-                value = mutValue,
-                onValueChange = {
-                    mutValue = it
-                    model.value.value = mutValue
-                },
-
-            )
+            Box(modifierClickable) {
+                var mutValue by remember { mutableStateOf(model.value.value) }
+                OutlinedTextField(
+                    label = { Text(text = model.title.value) },
+                    modifier = modifierClickable,
+                    value = mutValue,
+                    onValueChange = {
+                        mutValue = it
+                        model.value.value = mutValue
+                    },
+                )
+            }
         }
-        WidgetType.ROW -> Row(
-            modifier = modifier,
-            horizontalArrangement = arrangementHorizontal,
-            verticalAlignment = alignmentVertical
-        ) {
-            model.childs.forEach {
-                when (it.weight.value) {
-                    -1F -> {
-                        Widget(it, Modifier.wrapContentWidth())
-                    }
-                    1F -> {
-                        Widget(it, Modifier.weight(it.weight.value,true).wrapContentHeight().fillMaxWidth())
-                    }
-                    else -> {
-                        Widget(it, Modifier.weight(it.weight.value).fillMaxHeight().fillMaxWidth())
-                    }
+        WidgetType.ROW -> Box(modifierClickable) {
+            Row(
+                modifier = modifierClickable,
+                horizontalArrangement = arrangementHorizontal,
+                verticalAlignment = alignmentVertical
+            ) {
+                model.childs.forEach {
+                    SizedWidget(it,
+                        if(it.weight.value != 0f) {
+                            Modifier.weight(it.weight.value)
+                        } else Modifier
+                    )
                 }
             }
         }
-        WidgetType.COLUMN -> Column(
-            modifier = modifier,
-            verticalArrangement = arrangementVertical,
-            horizontalAlignment = alignmentHorizontal
-        ) {
-            model.childs.forEach {
-                when (it.weight.value) {
-                    -1F -> {
-                        Widget(it, Modifier.wrapContentHeight())
-                    }
-                    1F -> {
-                        Widget(it, Modifier.weight(it.weight.value,true).wrapContentWidth().fillMaxHeight())
-                    }
-                    else -> {
-                        Widget(it, Modifier.weight(it.weight.value).fillMaxWidth().fillMaxHeight())
-                    }
+        WidgetType.COLUMN -> Box(modifierClickable) {
+            Column(
+                modifier = modifierClickable,
+                verticalArrangement = arrangementVertical,
+                horizontalAlignment = alignmentHorizontal
+            ) {
+                model.childs.forEach {
+                    SizedWidget(
+                        it,
+                        if (it.weight.value != 0f) {
+                            Modifier.weight(it.weight.value)
+                        } else Modifier
+                    )
                 }
             }
         }
         WidgetType.ADAPTIVE -> {
-            if(!model.childs.isEmpty()) {
-                Adaptive(
-                    left = {Widget(model.childs.get(0),
-                        if(model.childs.get(0).weight.value == 1F)
-                            Modifier.fillMaxWidth()
-                        else Modifier
-                    )},
-                    right = {Widget(model.childs.get(1),
-                        if(model.childs.get(1).weight.value == 1F)
-                            Modifier.fillMaxWidth()
-                        else Modifier
-                    )},
-                    leftModel = model.childs.get(0),
-                    rightModel = model.childs.get(1)
-                )
+            if(model.childs.size == 2) {
+                Box(modifierClickable) {
+                    Adaptive(
+                        leftModel = model.childs.get(0),
+                        rightModel = model.childs.get(1)
+                    )
+                }
             }
         }
         WidgetType.CARD -> {
             Card(modifierClickable) {
-                Box(modifierClickable){
+                Column(modifierClickable) {
                     model.childs.forEach {
-                        Widget(it, Modifier)
+                        SizedWidget(
+                            it,
+                            if (it.weight.value != 0f) {
+                                Modifier.weight(it.weight.value)
+                            } else Modifier
+                        )
                     }
                 }
             }
@@ -246,8 +234,28 @@ fun IconRenderer(name: String):ImageVector{
 
 @Composable
 expect fun Adaptive(
-    left: @Composable () -> Unit,
-    right: @Composable () -> Unit,
     leftModel: WidgetModel,
     rightModel: WidgetModel
 )
+
+
+
+@Composable
+fun SizedWidget(model: WidgetModel, modifier: Modifier) {
+    var size = model.size.value.split("/")
+
+    var modifier = when (size[0]) {
+        "min" -> modifier.wrapContentWidth()
+        "max" -> modifier.fillMaxWidth()
+        else -> modifier.width(size[0].toInt().dp)
+    }
+
+    modifier = when (size[1]) {
+        "min" -> modifier.wrapContentHeight()
+        "max" -> modifier.fillMaxHeight()
+        else -> modifier.height(size[1].toInt().dp)
+    }
+
+    Widget(model, modifier)
+
+}

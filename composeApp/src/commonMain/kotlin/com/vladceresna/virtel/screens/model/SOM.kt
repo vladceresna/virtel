@@ -63,6 +63,7 @@ data class WidgetModel(
     var marginBottom:MutableState<Dp> = mutableStateOf(0.dp),
     var marginLeft:MutableState<Dp> = mutableStateOf(0.dp),
     var scrollable:MutableState<Boolean> = mutableStateOf(false),
+    var size:MutableState<String> = mutableStateOf(""),
 
     var childs:MutableList<WidgetModel> = mutableStateListOf()
 )
