@@ -131,6 +131,11 @@ csl write "Hello world";
 * [ ] Native (OS)
 
 ---------
+### Our Git Flow
+
+<img src='https://miro.medium.com/v2/resize:fit:828/format:webp/1*q1Q_vY3tA8u8CVaiqr-rxA.png' border='0'/>
+
+---------
 ### Project Structure
 This is a Kotlin Multiplatform project targeting Android, iOS, Desktop.
 
