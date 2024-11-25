@@ -12,7 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LoadingScreen(rd:Boolean){
+fun LoadingScreen(){
     Column(
         Modifier.fillMaxSize(),
         Arrangement.Center,

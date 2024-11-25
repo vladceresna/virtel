@@ -1,12 +1,15 @@
 package com.vladceresna.virtel.controllers
 
 import com.vladceresna.virtel.other.VirtelException
+import com.vladceresna.virtel.screens.model.ProgramViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.SYSTEM
 
 data object Programs {
-    lateinit var currentRunnedProgram: Program
     var programs: MutableList<Program> = mutableListOf()
     val fileSystem = FileSystem
 
@@ -27,14 +30,26 @@ data object Programs {
                 return program
             }
         }
-        throw VirtelException()//TODO:Fix
+        throw VirtelException("Not found program: "+appId)//TODO:Fix
     }
 
     fun startProgram(appId: String){
-        var program = findProgram(appId)
+
+        var program:Program = findProgram(appId)
         program.scan()
-        currentRunnedProgram = program
+
+
+
+        var screenModel = VirtelSystem.screenModel
+        var pageModel = screenModel.pageModels.get(screenModel.currentPageIndex.value)
+
+        var programModel = ProgramViewModel(pageModel, program)
+
+        pageModel.programViewModels.add(programModel)
+
+
         program.run()
+
     }
     fun runProgram(program: Program){
         program.run()

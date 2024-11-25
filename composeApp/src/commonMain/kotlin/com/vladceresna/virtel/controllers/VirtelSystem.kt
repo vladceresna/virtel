@@ -1,14 +1,22 @@
 package com.vladceresna.virtel.controllers
 
+import androidx.compose.ui.modifier.modifierLocalMapOf
 import com.vladceresna.virtel.getHomePath
 import com.vladceresna.virtel.ai.toSpeech
 import com.vladceresna.virtel.other.VirtelException
+import com.vladceresna.virtel.screens.model.ScreenModel
+import com.vladceresna.virtel.screens.model.VirtelScreenViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import okio.Path.Companion.toPath
 import okio.SYSTEM
 
 data object VirtelSystem {
-    var isLoading: Boolean = true
-    lateinit var renderFunction: () -> Unit
+
+    var screenModel:ScreenModel = ScreenModel()
+
 
     val programs = Programs
     val fileSystem = FileSystem
@@ -29,45 +37,57 @@ data object VirtelSystem {
 
     var isSaying = false
 
+
+    var isSawHello = false
+
+
+
     fun start() {
 
-
         log("Virtel Platform starting...", Log.INFO)
+
+
         val homePath = getHomePath()
-        if(homePath == null) throw VirtelException()//TODO:Fix iOS and JVM
-        else fileSystem.scan(homePath)
-        if(fileSystem.isInstalled().not()){
+        if(homePath == null) throw VirtelException("Home path not found, " +
+                "maybe your device is not supported by Virtel") //TODO:Fix iOS
+        else FileSystem.scan(homePath)
+        if(FileSystem.isInstalled().not()){
             install()
         }
         readConfig()
 
-        try {
-            val text = "Привіт, ярди в кедрах! Я тут щоб автоматизувати твою рутину."
-            var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
-            if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
-                toSpeech(text, labs, ttsFile)
-            }
-            playMP3(ttsFile)
-        } catch (e: Exception) {}
-
         Programs.scanPrograms()
         log("Virtel Launcher starting...", Log.INFO)
-        Programs.startProgram("vladceresna.virtel.launcher")
 
-        isLoading = false
-        renderFunction()
+
+
+
+            isSawHello = true
+            try {
+                val text = "Вітаю!"
+                var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
+                if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
+                    toSpeech(text, labs, ttsFile)
+                }
+                playMP3(ttsFile)
+            } catch (e: Exception) {
+            }
+
+        CoroutineScope(Job()).launch {
+            Programs.startProgram("vladceresna.virtel.launcher")
+        }
+
+
+
+
         log("Virtel Platform started", Log.SUCCESS)
+
     }
 
     fun install(){
         fileSystem.install()
     }
 
-
-
-    fun getCurrentRunnedProgram(): Program {
-        return programs.currentRunnedProgram
-    }
 
     fun readConfig(){
         val path = FileSystem.systemConfigPath.toPath()

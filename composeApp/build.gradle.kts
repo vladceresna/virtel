@@ -58,11 +58,11 @@ kotlin {
 
 
 
-            val editorVersion = "0.23.2"
+            /*val editorVersion = "0.23.2"
             implementation("io.github.Rosemoe.sora-editor:editor:$editorVersion")
             implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
             implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
-
+*/
 
 
 
@@ -80,6 +80,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.lifecycle.viewmodel.compose)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
@@ -89,7 +90,12 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
 
 
+            implementation("io.coil-kt.coil3:coil-compose:3.0.0-alpha06")
+            implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
 
+
+
+            // TODO: Other ui theme
 
         }
         commonTest.dependencies {
@@ -139,7 +145,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
 
-        isCoreLibraryDesugaringEnabled = true
+        //isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -148,7 +154,7 @@ android {
         debugImplementation(compose.uiTooling)
         implementation(libs.kotlinx.coroutines.android)
 
-        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
+        //coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
     }
 }
 

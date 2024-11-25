@@ -14,7 +14,6 @@ data object Logger{
 
 fun log(message: String, type: Log){
     val currentMoment: Instant = Clock.System.now()
-    val datetimeInUtc: LocalDateTime = currentMoment.toLocalDateTime(TimeZone.UTC)
     val datetimeInSystemZone: LocalDateTime = currentMoment.toLocalDateTime(TimeZone.currentSystemDefault())
     val messageRes = when(type){
         Log.SUCCESS -> "\u001B[32m[SUCCESS] : ${datetimeInSystemZone} : $message\u001B[0m"
@@ -32,10 +31,10 @@ fun log(message: String, type: Log){
     } catch (e:Exception){}
 }
 fun getLog(): String {
-    try {
-        return okio.FileSystem.SYSTEM.read(FileSystem.systemLogPath.toPath()){readUtf8()}
+    return try {
+        okio.FileSystem.SYSTEM.read(FileSystem.systemLogPath.toPath()){readUtf8()}
     } catch (e:Exception) {
-        return ""
+        ""
     }
 }
 expect fun logAny(message: String)

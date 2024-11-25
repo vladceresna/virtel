@@ -1,4 +1,5 @@
 package com.vladceresna.virtel.lib
+/*
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -58,4 +59,4 @@ private fun setCodeEditorFactory(
     }
     state.editor = editor
     return editor
-}
+}*/

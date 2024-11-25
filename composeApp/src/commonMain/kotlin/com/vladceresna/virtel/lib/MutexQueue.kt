@@ -1,34 +1,38 @@
 package com.vladceresna.virtel.lib
 
+import kotlinx.coroutines.sync.Mutex
+
 /**
  * FIFO Queue for Multithreading
  * null<-{}<-{}<-{lastItem}
  * **/
 class MutexQueue<T> {
-    var isLocked = false
-    var lastItem: Item<T>? = null
+    var lock: Mutex = Mutex(false)
+    var lastQueueItem: QueueItem<T>? = null
     fun push(value:T){
-        while(isLocked){}
-        isLocked = true
-        lastItem = Item(value,lastItem)
-        isLocked = false
+        while(!lock.tryLock()){}
+
+        lastQueueItem = QueueItem(value,lastQueueItem)
+
+        lock.unlock()
     }
     fun take():T?{
-        while(isLocked){}
-        isLocked = true
-        var currentItem:Item<T> = lastItem ?: return null
-        var newFirstItem:Item<T>? = null
-        while(currentItem.parent != null){
-            newFirstItem = currentItem
-            currentItem = currentItem.parent!!
+        while(!lock.tryLock()){}
+
+        var currentQueueItem:QueueItem<T> = lastQueueItem ?: return null
+        var newFirstQueueItem:QueueItem<T>? = null
+        while(currentQueueItem.parent != null){
+            newFirstQueueItem = currentQueueItem
+            currentQueueItem = currentQueueItem.parent!!
         }
-        if(newFirstItem == null) lastItem = null
-        else newFirstItem.parent = null
-        isLocked = false
-        return currentItem.value
+        if(newFirstQueueItem == null) lastQueueItem = null
+        else newFirstQueueItem.parent = null
+
+        lock.unlock()
+        return currentQueueItem.value
     }
 }
-data class Item<T>(
+data class QueueItem<T>(
     var value:T,
-    var parent:Item<T>?
+    var parent:QueueItem<T>?
 )
