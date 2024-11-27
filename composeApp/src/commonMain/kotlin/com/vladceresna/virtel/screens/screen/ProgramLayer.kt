@@ -44,8 +44,7 @@ fun ProgramLayer(
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = "close",
-                                tint = Color.Black
+                                contentDescription = "close"
                             )
                         }
                     }

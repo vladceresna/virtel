@@ -588,10 +588,23 @@ class Flow(
         }
     }
 
-    /** scr page
+    /** scr page ""
      * */
     fun scrPage(args: MutableList<String>){
         VirtelSystem.screenModel.pageModels.add(PageModel())
+    }
+    /** scr theme (themeName)
+     * (themeName) = (dark) (light)
+     * */
+    fun scrTheme(args: MutableList<String>){
+        var theme = nGetVar(args.get(0),DataType.VAR)
+        when(theme){
+            "light" -> VirtelSystem.darkTheme.value = false
+            "dark" -> VirtelSystem.darkTheme.value = true
+            else -> throw VirtelException("This is not a theme name: "+ theme+". In arg-var expression: "+args.get(0))
+        }
+
+
     }
 
 
@@ -883,6 +896,7 @@ class Flow(
                     "get" -> scrGet(step.args)
                     "nav" -> scrNav(step.args)
                     "page" -> scrPage(step.args)
+                    "theme" -> scrTheme(step.args)
                 }
 
                 "run" -> when (step.cmd) {
@@ -923,6 +937,7 @@ class Flow(
                 "llm" -> when (step.cmd) {
                     "ask" -> llmAsk(step.args)
                 }
+                else -> throw VirtelException("This is not a Virtel module: ${step.mod}")
             }
             return false // is not erroring
         } catch (e: IndexOutOfBoundsException) {

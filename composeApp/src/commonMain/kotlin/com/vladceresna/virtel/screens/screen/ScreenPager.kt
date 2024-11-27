@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -23,22 +25,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.Rgb
 import androidx.compose.ui.unit.dp
+import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.screens.model.ScreenModel
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScreenPager(
-    screenModel: ScreenModel,
-    modifier: Modifier = Modifier
+    screenModel: ScreenModel
 ) {
     val pagerState = rememberPagerState(pageCount = {
         screenModel.pageModels.size
     })
 
     Column (
-        modifier = modifier
+        if (VirtelSystem.darkTheme.value) {
+            Modifier.fillMaxSize().background(Color(0,20,5))
+        } else {
+            Modifier.fillMaxSize()
+        }
     ) {
         HorizontalPager(
             modifier = Modifier.weight(1F),
@@ -53,7 +60,7 @@ fun ScreenPager(
             }
 
             Page(screenModel.pageModels[page],Modifier.fillMaxSize()
-                .clip(RoundedCornerShape(20.dp)).weight(1F))
+                .clip(RoundedCornerShape(20.dp)).weight(1F), pagerState)
         }
         Row(
             Modifier
@@ -63,14 +70,25 @@ fun ScreenPager(
         ) {
             repeat(pagerState.pageCount) { iteration ->
                 val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+                val width = if (pagerState.currentPage == iteration) 40.dp else 10.dp
                 Box(
                     modifier = Modifier
                         .padding(2.dp)
                         .clip(CircleShape)
                         .background(color)
-                        .size(8.dp)
+                        .height(10.dp)
+                        .width(width)
                 )
             }
         }
+    }
+}
+
+
+fun getColorOfIcon():Color{
+    return if(VirtelSystem.darkTheme.value){
+        Color(255,255,255)
+    } else {
+        Color(0,0,0)
     }
 }

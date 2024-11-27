@@ -27,11 +27,14 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,6 +46,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.Log
 import com.vladceresna.virtel.controllers.log
@@ -100,7 +107,24 @@ fun Widget(model: WidgetModel, modifier: Modifier){
     }
     println("${model.widgetType} ${model.title.value}")
     when (model.widgetType) {
-        WidgetType.TEXT -> Text(modifier = modifierClickable, text = model.title.value)
+        WidgetType.TEXT -> {
+            when(model.variant.value) {
+                "primary" -> {
+                    Text(
+                        modifier = modifierClickable,
+                        text = model.title.value,
+                        fontSize = TextUnit(40f, TextUnitType.Sp),
+                        lineHeight = TextUnit(50f, TextUnitType.Sp),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                else -> Text(
+                    modifier = modifierClickable,
+                    text = model.title.value,
+                    fontSize = TextUnit(20f, TextUnitType.Sp)
+                )
+            }
+        }
         WidgetType.BUTTON -> when(model.variant.value) {
             "primary" ->
                     Button(onClick = onClick, modifier = modifierClickable) {
@@ -171,7 +195,9 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             }
         }
         WidgetType.CARD -> {
-            Card(modifierClickable) {
+            ElevatedCard(modifierClickable,
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                ) {
                 Column(modifierClickable) {
                     model.childs.forEach {
                         SizedWidget(

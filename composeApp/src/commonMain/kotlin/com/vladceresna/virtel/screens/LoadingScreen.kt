@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,11 +11,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.vladceresna.virtel.controllers.VirtelSystem
 
 @Composable
 fun LoadingScreen(){
     Column(
-        Modifier.fillMaxSize(),
+        if (VirtelSystem.darkTheme.value) {
+            Modifier.fillMaxSize().background(Color(0,50,0))
+        } else {
+            Modifier.fillMaxSize()
+        }
+        ,
         Arrangement.Center,
         Alignment.CenterHorizontally
     ) {
