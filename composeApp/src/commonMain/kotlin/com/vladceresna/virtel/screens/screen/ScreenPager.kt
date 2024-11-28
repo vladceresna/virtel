@@ -1,7 +1,12 @@
 package com.vladceresna.virtel.screens.screen
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.HoverInteraction
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,15 +22,21 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.Rgb
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.screens.model.ScreenModel
@@ -47,21 +58,48 @@ fun ScreenPager(
             Modifier.fillMaxSize()
         }
     ) {
-        HorizontalPager(
-            modifier = Modifier.weight(1F),
-            state = pagerState,
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
-            pageSpacing = 8.dp,
-            verticalAlignment = Alignment.Top,
-        ) { page ->
+        var appsScreen = remember { VirtelSystem.appsScreen }
 
-            LaunchedEffect(pagerState.currentPage){
-                screenModel.currentPageIndex.value = pagerState.currentPage
+
+        AnimatedVisibility(!VirtelSystem.appsScreen.value, Modifier.weight(1F).fillMaxWidth()) {
+            HorizontalPager(
+                modifier = Modifier.weight(1F),
+                state = pagerState,
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+                pageSpacing = 8.dp,
+                verticalAlignment = Alignment.Top,
+            ) { page ->
+
+                LaunchedEffect(pagerState.currentPage) {
+                    screenModel.currentPageIndex.value = pagerState.currentPage
+                }
+
+                Page(
+                    screenModel.pageModels[page], Modifier.fillMaxSize()
+                        .clip(RoundedCornerShape(20.dp)).weight(1F), pagerState
+                )
             }
-
-            Page(screenModel.pageModels[page],Modifier.fillMaxSize()
-                .clip(RoundedCornerShape(20.dp)).weight(1F), pagerState)
         }
+        AnimatedVisibility(VirtelSystem.appsScreen.value,Modifier.weight(1F).fillMaxWidth()){
+            Column(
+                modifier = Modifier.weight(1F).fillMaxWidth()
+                    .padding(PaddingValues(horizontal = 20.dp, vertical = 20.dp))
+                    .clip(RoundedCornerShape(20.dp)).background(getColorOfBackground()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                screenModel.pageModels.get(screenModel.currentPageIndex.value)
+                    .programViewModels.forEach {
+                        ElevatedCard(
+                            elevation = CardDefaults.elevatedCardElevation(2.dp)) {
+                            Box(Modifier.padding(10.dp,10.dp)){
+                                Text(it.program.appId)
+                            }
+                        }
+                }
+            }
+        }
+
         Row(
             Modifier
                 .fillMaxWidth()
@@ -70,14 +108,17 @@ fun ScreenPager(
         ) {
             repeat(pagerState.pageCount) { iteration ->
                 val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
-                val width = if (pagerState.currentPage == iteration) 40.dp else 10.dp
+                val width = if (pagerState.currentPage == iteration) 50.dp else 20.dp
                 Box(
                     modifier = Modifier
                         .padding(2.dp)
                         .clip(CircleShape)
                         .background(color)
-                        .height(10.dp)
+                        .height(20.dp)
                         .width(width)
+                        .clickable {
+                            VirtelSystem.appsScreen.value = !VirtelSystem.appsScreen.value
+                        }
                 )
             }
         }
@@ -90,5 +131,12 @@ fun getColorOfIcon():Color{
         Color(255,255,255)
     } else {
         Color(0,0,0)
+    }
+}
+fun getColorOfBackground():Color{
+    return if(VirtelSystem.darkTheme.value){
+        Color(0,10,0)
+    } else {
+        Color(200,255,230)
     }
 }

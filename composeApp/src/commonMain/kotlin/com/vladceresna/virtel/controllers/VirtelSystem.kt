@@ -19,6 +19,7 @@ data object VirtelSystem {
     var screenModel:ScreenModel = ScreenModel()
 
     var darkTheme = mutableStateOf(true)
+    var appsScreen = mutableStateOf(false)
 
 
     val programs = Programs
