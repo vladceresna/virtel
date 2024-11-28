@@ -779,7 +779,7 @@ class Flow(
         nPutVar(args.get(0), DataType.VAR, MediaSystem.allResult)
     }
 
-    /** sprPlay (type) (path)
+    /** spr play (type) (path)
      * */
     fun sprPlay(args: MutableList<String>) {
         var path = nGetVar(args.get(1), DataType.VAR).toString()
