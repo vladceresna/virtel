@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +61,7 @@ import com.vladceresna.virtel.screens.model.WidgetType
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Widget(model: WidgetModel, modifier: Modifier){
+
 
     log("Render Widget $model", Log.DEBUG)
     var arrangementVertical = Arrangement.Center

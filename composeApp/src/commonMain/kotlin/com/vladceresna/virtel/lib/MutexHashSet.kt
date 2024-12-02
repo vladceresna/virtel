@@ -10,11 +10,13 @@ class MutexHashSet<T> {
     var lock:Mutex = Mutex(false)
     var items = mutableListOf<T>()
     
-    fun put(value:T):T{
+    fun put(value:T,equals: (T,T) -> Boolean):T{
         while(!lock.tryLock()){}
 
-        items.remove(value)
-        items.add(value)
+        var i = -1
+        items.forEachIndexed { index, t -> if(equals(t,value)){ i = index} }
+        if(i != -1) items.set(i,value)
+        else items.add(value)
 
         lock.unlock()
         return value

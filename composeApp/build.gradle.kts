@@ -157,6 +157,9 @@ android {
         //coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
     }
 }
+dependencies {
+    testImplementation(libs.junit.jupiter)
+}
 
 compose.desktop {
 

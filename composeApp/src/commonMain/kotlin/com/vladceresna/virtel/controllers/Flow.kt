@@ -211,8 +211,8 @@ class Flow(
     /** str cut (first) (last) (value) (newVarName)
      * */
     fun strCut(args: MutableList<String>) {
-        var first = nGetVar(args.get(0), DataType.VAR).toString().toInt()
-        var second = nGetVar(args.get(1), DataType.VAR).toString().toInt()
+        var first = nGetVar(args.get(0), DataType.VAR).toString().toDouble().roundToInt()
+        var second = nGetVar(args.get(1), DataType.VAR).toString().toDouble().roundToInt()
         var value = nGetVar(args.get(2), DataType.VAR).toString()
         nPutVar(args.get(3), DataType.VAR, value.substring(first, second))
     }
@@ -246,6 +246,14 @@ class Flow(
         var firstStr = nGetVar(args.get(0), DataType.VAR).toString()
         var secondStr = nGetVar(args.get(1), DataType.VAR).toString()
         nPutVar(args.get(2), DataType.VAR, firstStr.equals(secondStr).toString())
+    }
+
+    /** str split (regex) (value) (newVarListName)
+     * */
+    fun strSplit(args: MutableList<String>) {
+        var regexStr = nGetVar(args.get(0), DataType.VAR).toString()
+        var valueStr = nGetVar(args.get(1), DataType.VAR).toString()
+        nPutVar(args.get(2), DataType.LIST, valueStr.split(regexStr).toMutableList())
     }
 
     /** mat plus (a) (b) (newVarName)
@@ -437,12 +445,18 @@ class Flow(
             }catch(e:Exception){ mutableStateOf("min/min")}
         )
 
-        if (newModel.widgetType == WidgetType.CARD) {
-            var value = 20.dp
-            newModel.paddingTop.value = value
-            newModel.paddingRight.value = value
-            newModel.paddingBottom.value = value
-            newModel.paddingLeft.value = value
+        when (newModel.widgetType) {
+            WidgetType.CARD -> {
+                var value = 20.dp
+                newModel.paddingTop.value = value
+                newModel.paddingRight.value = value
+                newModel.paddingBottom.value = value
+                newModel.paddingLeft.value = value
+            }
+            WidgetType.BUTTON -> {
+                newModel.variant.value = "primary"
+            }
+            else -> {}
         }
 
         parent.childs.add(newModel)
@@ -519,6 +533,7 @@ class Flow(
             "size" -> widget.size.value = value
 
         }
+
     }
 
     /** scr get (newVarName) (viewVarName) (property)
@@ -606,6 +621,7 @@ class Flow(
 
 
     }
+    
 
 
     /** run one (file)
@@ -861,6 +877,7 @@ class Flow(
                     "len" -> strLen(step.args)
                     "get" -> strGet(step.args)
                     "eqs" -> strEqs(step.args)
+                    "split" -> strSplit(step.args)
                 }
 
                 "mat" -> when (step.cmd) {
