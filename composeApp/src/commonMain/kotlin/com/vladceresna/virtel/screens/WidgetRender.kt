@@ -39,6 +39,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -143,14 +144,14 @@ fun Widget(model: WidgetModel, modifier: Modifier){
         }
         WidgetType.INPUT -> {
             Box(modifierClickable) {
-                var mutValue by remember { mutableStateOf(model.value.value) }
+                var mutValue by remember { model.value }
                 OutlinedTextField(
                     label = { Text(text = model.title.value) },
                     modifier = modifierClickable,
                     value = mutValue,
                     onValueChange = {
                         mutValue = it
-                        model.value.value = mutValue
+                        model.value.value = it
                     },
                 )
             }

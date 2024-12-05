@@ -359,6 +359,11 @@ class Flow(
         var path = nGetVar(args.get(0), DataType.VAR).toString()
             .replace("$", FileSystem.systemPath)//$/path and pa/th
         var value = nGetVar(args.get(1), DataType.VAR).toString()
+
+        var file = path.toPath()
+        if (!okio.FileSystem.SYSTEM.exists(file.parent ?: path.toPath())) {
+            okio.FileSystem.SYSTEM.createDirectories(file.parent ?: path.toPath())
+        }
         okio.FileSystem.SYSTEM.write(path.toPath()) { writeUtf8(value) }
     }
 
