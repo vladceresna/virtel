@@ -24,8 +24,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladceresna.virtel.controllers.VirtelSystem
-import com.vladceresna.virtel.lib.CodeEditor
-import com.vladceresna.virtel.lib.CodeEditorState
 import dev.icerock.moko.permissions.PermissionState
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
@@ -119,6 +117,7 @@ fun AppAndroidPreview() {
 
 
 
+/*
 @Preview
 @Composable
 fun SoraPreview(
@@ -137,4 +136,4 @@ class SoraViewModel : ViewModel() {
     val editorState by mutableStateOf(
         CodeEditorState()
     )
-}
+}*/
