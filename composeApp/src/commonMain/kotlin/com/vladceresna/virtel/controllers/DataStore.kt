@@ -27,7 +27,7 @@ class DataStore(
     }
     fun putVar(name: String, type: DataType, value: Any){
         var newData = Data(type,name,value)
-        data.put(newData)
+        data.put(newData){t1,t2 -> t1.name.equals(t2.name) && t1.type.equals(t2.type) }
     }
 }
 

@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.controllers
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.modifier.modifierLocalMapOf
 import com.vladceresna.virtel.getHomePath
 import com.vladceresna.virtel.ai.toSpeech
@@ -16,6 +17,9 @@ import okio.SYSTEM
 data object VirtelSystem {
 
     var screenModel:ScreenModel = ScreenModel()
+
+    var darkTheme = mutableStateOf(true)
+    var appsScreen = mutableStateOf(false)
 
 
     val programs = Programs

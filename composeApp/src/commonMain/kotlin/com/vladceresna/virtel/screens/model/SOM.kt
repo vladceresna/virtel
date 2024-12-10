@@ -48,7 +48,7 @@ data class WidgetModel(
     var name:String,
     var widgetType: WidgetType = WidgetType.VIEW,
     var weight:MutableState<Float> = mutableStateOf(1F), // float
-    var variant: MutableState<String> = mutableStateOf("primary"), // primary/secondary/tertiary/destructive
+    var variant: MutableState<String> = mutableStateOf(""), // primary/secondary/tertiary/destructive
     var title: MutableState<String> = mutableStateOf(""),
     var value: MutableState<String> = mutableStateOf(""),
     var foreground: MutableState<String> = mutableStateOf(""),
@@ -64,6 +64,8 @@ data class WidgetModel(
     var marginLeft:MutableState<Dp> = mutableStateOf(0.dp),
     var scrollable:MutableState<Boolean> = mutableStateOf(false),
     var size:MutableState<String> = mutableStateOf(""),
+    var align:MutableState<String> = mutableStateOf(""),
+    var justify:MutableState<String> = mutableStateOf(""),
 
     var childs:MutableList<WidgetModel> = mutableStateListOf()
 )

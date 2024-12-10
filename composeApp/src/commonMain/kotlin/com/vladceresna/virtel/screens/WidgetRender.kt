@@ -27,22 +27,31 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.Log
 import com.vladceresna.virtel.controllers.log
@@ -53,6 +62,7 @@ import com.vladceresna.virtel.screens.model.WidgetType
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Widget(model: WidgetModel, modifier: Modifier){
+
 
     log("Render Widget $model", Log.DEBUG)
     var arrangementVertical = Arrangement.Center
@@ -100,7 +110,24 @@ fun Widget(model: WidgetModel, modifier: Modifier){
     }
     println("${model.widgetType} ${model.title.value}")
     when (model.widgetType) {
-        WidgetType.TEXT -> Text(modifier = modifierClickable, text = model.title.value)
+        WidgetType.TEXT -> {
+            when(model.variant.value) {
+                "primary" -> {
+                    Text(
+                        modifier = modifierClickable,
+                        text = model.title.value,
+                        fontSize = TextUnit(40f, TextUnitType.Sp),
+                        lineHeight = TextUnit(50f, TextUnitType.Sp),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                else -> Text(
+                    modifier = modifierClickable,
+                    text = model.title.value,
+                    fontSize = TextUnit(20f, TextUnitType.Sp)
+                )
+            }
+        }
         WidgetType.BUTTON -> when(model.variant.value) {
             "primary" ->
                     Button(onClick = onClick, modifier = modifierClickable) {
@@ -117,14 +144,14 @@ fun Widget(model: WidgetModel, modifier: Modifier){
         }
         WidgetType.INPUT -> {
             Box(modifierClickable) {
-                var mutValue by remember { mutableStateOf(model.value.value) }
+                var mutValue by remember { model.value }
                 OutlinedTextField(
                     label = { Text(text = model.title.value) },
                     modifier = modifierClickable,
                     value = mutValue,
                     onValueChange = {
                         mutValue = it
-                        model.value.value = mutValue
+                        model.value.value = it
                     },
                 )
             }
@@ -171,7 +198,9 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             }
         }
         WidgetType.CARD -> {
-            Card(modifierClickable) {
+            ElevatedCard(modifierClickable,
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                ) {
                 Column(modifierClickable) {
                     model.childs.forEach {
                         SizedWidget(
@@ -223,6 +252,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
         )
         else -> Box(modifier)
     }
+
 }
 @Composable
 fun IconRenderer(name: String):ImageVector{
