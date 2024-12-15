@@ -10,7 +10,7 @@ plugins {
 }
 
 
-var version = "1.2.2"
+var version = "2.0.0"
 
 
 
