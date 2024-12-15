@@ -14,17 +14,18 @@ data class Program(var path: String){
     var debugMode:Boolean = true
     lateinit var status: ProgramStatus
     lateinit var appId: String
+    lateinit var appName: String
 
     var flows:MutableMap<String, Flow> = mutableMapOf()
 
     fun scan(){
         appId = path.toPath().name
+        appName = appId.split(".").last()
         status = ProgramStatus.DISABLED
     }
     fun run(){
         status = ProgramStatus.BACKGROUND
         runFlow("/start.steps", "main")
-
     }
     fun runFlow(fileName:String, flowName:String){
         var flow = Flow(this, flowName,Step(false))

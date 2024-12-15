@@ -63,7 +63,7 @@ class Flow(
     /** sys log (newVarName)
      * */
     fun sysLog(args: MutableList<String>) {
-        nPutVar(args.get(0), DataType.VAR, getLog())
+        nPutVar(args.get(0), DataType.VAR, Logger.logs.joinToString("\n"))
     }
 
     /** sys start (appId)
@@ -489,7 +489,7 @@ class Flow(
      *             (foreground) (background) (onClick) (parent)
      *             (paddingTop) (paddingRight) (paddingBottom) (paddingLeft)
      *             (marginTop) (marginRight) (marginBottom) (marginLeft)
-     *             (scrollable) (size=[width]x[height])
+     *             (scrollable) (size=[width]x[height]) (align) (justify)
      * */
     fun scrSet(args: MutableList<String>) {
         var programModel = nGetProgramModel()
@@ -536,6 +536,8 @@ class Flow(
             }
             "scrollable" ->    widget.scrollable.value = value.toBoolean()
             "size" -> widget.size.value = value
+            "align" -> widget.align.value = value
+            "justify" -> widget.justify.value = value
 
         }
 
@@ -575,6 +577,8 @@ class Flow(
                 "marginLeft" ->    widget.marginLeft.value
                 "scrollable" ->    widget.scrollable.value.toString()
                 "size" ->          widget.size.value
+                "align" -> widget.align.value
+                "justify" -> widget.justify.value
                 else -> ""
             }
         )
@@ -1028,7 +1032,6 @@ class Flow(
 
                     '\\' -> {
                         displayer = !displayer
-                        lastString += '\\'
                     }
 
                     '"' -> {
@@ -1036,8 +1039,8 @@ class Flow(
                             displayer = false
                         } else {
                             inValue = !inValue
-                            lastString += '"'
                         }
+                        lastString += '"'
                     }
 
                     ';' -> {
@@ -1054,12 +1057,12 @@ class Flow(
                         step = Step(true)
                         word = 0
                         inValue = false
-                        if (displayer) displayer = false
+                        displayer = false
                     }
 
                     else -> {
                         lastString += c
-                        if (displayer) displayer = false
+                        displayer = false
                     }
                 }
             }
