@@ -24,18 +24,15 @@ fun log(message: String, type: Log){
         Log.PROGRAM ->  "\u001B[0m[PROGRAM] : ${datetimeInSystemZone} : $message"
     }
     logAny(messageRes)
-    Logger.logs.add(messageRes)
+    Logger.logs.add(messageRes
+        .replace("\u001B[32m","")
+        .replace("\u001B[31m","")
+        .replace("\u001B[33m","")
+        .replace("\u001B[0m",""))
     try {
         okio.FileSystem.SYSTEM.write(FileSystem.systemLogPath.toPath()){
-            writeUtf8(getLog()+messageRes+"\n")}
+            writeUtf8(Logger.logs.joinToString("\n"))}
     } catch (e:Exception){}
-}
-fun getLog(): String {
-    return try {
-        okio.FileSystem.SYSTEM.read(FileSystem.systemLogPath.toPath()){readUtf8()}
-    } catch (e:Exception) {
-        ""
-    }
 }
 expect fun logAny(message: String)
 

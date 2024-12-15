@@ -36,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.Rgb
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.VirtelSystem
@@ -61,9 +63,9 @@ fun ScreenPager(
         var appsScreen = remember { VirtelSystem.appsScreen }
 
 
-        AnimatedVisibility(!VirtelSystem.appsScreen.value, Modifier.weight(1F).fillMaxWidth()) {
+        if(!VirtelSystem.appsScreen.value) {
             HorizontalPager(
-                modifier = Modifier.weight(1F),
+                modifier = Modifier.weight(1F).fillMaxWidth(),
                 state = pagerState,
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
                 pageSpacing = 8.dp,
@@ -80,11 +82,12 @@ fun ScreenPager(
                 )
             }
         }
-        AnimatedVisibility(VirtelSystem.appsScreen.value,Modifier.weight(1F).fillMaxWidth()){
+        if(VirtelSystem.appsScreen.value) {
             Column(
                 modifier = Modifier.weight(1F).fillMaxWidth()
                     .padding(PaddingValues(horizontal = 20.dp, vertical = 20.dp))
-                    .clip(RoundedCornerShape(20.dp)).background(getColorOfBackground()),
+                    .clip(RoundedCornerShape(20.dp)).background(getColorOfBackground())
+                ,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -103,7 +106,17 @@ fun ScreenPager(
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp),
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            if (event.type == PointerEventType.Enter) {
+                                VirtelSystem.appsScreen.value = !VirtelSystem.appsScreen.value
+                            }
+                        }
+                    }
+                }
+            ,
             horizontalArrangement = Arrangement.Center
         ) {
             repeat(pagerState.pageCount) { iteration ->
@@ -111,14 +124,12 @@ fun ScreenPager(
                 val width = if (pagerState.currentPage == iteration) 50.dp else 20.dp
                 Box(
                     modifier = Modifier
-                        .padding(2.dp)
+                        .padding(bottom = 8.dp)
                         .clip(CircleShape)
                         .background(color)
                         .height(20.dp)
                         .width(width)
-                        .clickable {
-                            VirtelSystem.appsScreen.value = !VirtelSystem.appsScreen.value
-                        }
+
                 )
             }
         }
