@@ -34,7 +34,8 @@ fun ProgramLayer(
             modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { Text(programViewModel.program.appId) },
+                    title = { Text(programViewModel.program.appName.first().uppercaseChar()+
+                            programViewModel.program.appName.drop(1)) },
                     actions = {
                         IconButton(onClick = {
                             VirtelSystem.screenModel

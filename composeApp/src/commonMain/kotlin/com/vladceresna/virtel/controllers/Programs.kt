@@ -26,7 +26,7 @@ data object Programs {
 
     fun findProgram(appId:String): Program {
         for (program in programs) {
-            if(program.appId.equals(appId)){
+            if(program.appId.equals(appId) || program.appName.equals(appId)){
                 return program
             }
         }
