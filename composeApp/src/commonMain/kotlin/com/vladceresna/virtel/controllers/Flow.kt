@@ -64,6 +64,13 @@ class Flow(
         nPutVar(args.get(0), DataType.VAR, FileSystem.userFilesPath)
     }
 
+    /** sys flowname (newVarName)
+     * */
+    fun sysFlowname(args: MutableList<String>) {
+        nPutVar(args.get(0), DataType.VAR, flowName)
+    }
+
+
     /** sys log (newVarName)
      * */
     fun sysLog(args: MutableList<String>) {
@@ -153,6 +160,14 @@ class Flow(
     fun varSet(args: MutableList<String>) {
         var value = nGetVar(args.get(0), DataType.VAR)
         nPutVar(args.get(1), DataType.VAR, value)
+    }
+
+    /** var get (valueVarName) (newVarName)
+     * */
+    fun varGet(args: MutableList<String>) {
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+        var value = nGetVar(name, DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR,value)
     }
 
 
@@ -729,15 +744,16 @@ class Flow(
                             var flowName = nGetNameOfNextFlow(it.file)
                             call.parameters.toMap().forEach {
                                 nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.SERVER,it.value) // TODO: Sometimes may be Critical Bug
+                                        +"-parameters-"+it.key,DataType.VAR,it.value
+                                            .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
                             }
 
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
                                     +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.SERVER,it.route) // TODO: Sometimes may be Critical Bug
+                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.SERVER,it.method) // TODO: Sometimes may be Critical Bug
+                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
                             runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
                             var response = nGetVar(it.resVar,DataType.VAR).toString()
                             call.respondText {
@@ -749,15 +765,16 @@ class Flow(
                             var flowName = nGetNameOfNextFlow(it.file)
                             call.parameters.toMap().forEach {
                                 nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.SERVER,it.value) // TODO: Sometimes may be Critical Bug
+                                        +"-parameters-"+it.key,DataType.VAR,it.value
+                                    .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
                             }
 
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
                                     +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.SERVER,it.route) // TODO: Sometimes may be Critical Bug
+                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.SERVER,it.method) // TODO: Sometimes may be Critical Bug
+                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
                             runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
                             var response = nGetVar(it.resVar,DataType.VAR).toString()
                             call.respondText {
@@ -769,15 +786,16 @@ class Flow(
                             var flowName = nGetNameOfNextFlow(it.file)
                             call.parameters.toMap().forEach {
                                 nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.SERVER,it.value) // TODO: Sometimes may be Critical Bug
+                                        +"-parameters-"+it.key,DataType.VAR,it.value
+                                    .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
                             }
 
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
                                     +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.SERVER,it.route) // TODO: Sometimes may be Critical Bug
+                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.SERVER,it.method) // TODO: Sometimes may be Critical Bug
+                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
                             runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
                             var response = nGetVar(it.resVar,DataType.VAR).toString()
                             call.respondText {
@@ -907,6 +925,7 @@ class Flow(
                 "sys" -> when (step.cmd) {
                     "apps" -> sysApps(step.args)
                     "files" -> sysFiles(step.args)
+                    "flowname" -> sysFlowname(step.args)
                     "start" -> sysStart(step.args)
                     "homedir" -> sysHomedir(step.args)
                     "install" -> sysInstall(step.args)
@@ -929,6 +948,7 @@ class Flow(
 
                 "var" -> when (step.cmd) {
                     "set" -> varSet(step.args)
+                    "get" -> varGet(step.args)
                     "del" -> varDel(step.args)
                 }
 
