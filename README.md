@@ -37,6 +37,7 @@ If you know **Compose Multiplatform**, you can help us to develop Virtel itself.
 * `mat min {num as text or var name} {num as text or var name} {name of the var to store the result}`
 * `mat mult {num as text or var name} {num as text or var name} {name of the var to store the result}`
 * `mat div {num as text or var name} {num as text or var name} {name of the var to store the result}`
+* other commands for every needs
 
 ### Different code examples:
 #### Basic example, working with `bin run`:
