@@ -22,6 +22,7 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import io.ktor.util.toMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,6 +38,9 @@ import kotlin.math.roundToInt
  * In exectime:
  * - value/var (or variable with it): tryGet: any name
  * - varName (var need to write/save in): clear using: newVarName, newListName
+ *
+ * Flow params format:
+ * app.id-flow-1-varname
  * **/
 class Flow(
     var program: Program,
@@ -59,6 +63,13 @@ class Flow(
     fun sysFiles(args: MutableList<String>) {
         nPutVar(args.get(0), DataType.VAR, FileSystem.userFilesPath)
     }
+
+    /** sys flowname (newVarName)
+     * */
+    fun sysFlowname(args: MutableList<String>) {
+        nPutVar(args.get(0), DataType.VAR, flowName)
+    }
+
 
     /** sys log (newVarName)
      * */
@@ -149,6 +160,14 @@ class Flow(
     fun varSet(args: MutableList<String>) {
         var value = nGetVar(args.get(0), DataType.VAR)
         nPutVar(args.get(1), DataType.VAR, value)
+    }
+
+    /** var get (valueVarName) (newVarName)
+     * */
+    fun varGet(args: MutableList<String>) {
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+        var value = nGetVar(name, DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR,value)
     }
 
 
@@ -310,6 +329,22 @@ class Flow(
         var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
         var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
         nPutVar(args.get(2), DataType.VAR, (a < b).toString())
+    }
+
+    /** mat grtreqs (a) (b) (newVarName)
+     * */
+    fun matGrtrEqs(args: MutableList<String>) {
+        var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
+        var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
+        nPutVar(args.get(2), DataType.VAR, (a >= b).toString())
+    }
+
+    /** mat lesseqs (a) (b) (newVarName)
+     * */
+    fun matLessEqs(args: MutableList<String>) {
+        var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
+        var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
+        nPutVar(args.get(2), DataType.VAR, (a <= b).toString())
     }
 
 
@@ -664,7 +699,11 @@ class Flow(
     /** run flow (file)
      * */
     fun runFlow(args: MutableList<String>) {
-        CoroutineScope(Job()).launch { runOne(args) }
+        var file = nGetVar(args.get(0), DataType.VAR).toString()
+        var flowName = nGetNameOfNextFlow(file)
+        program.runFlow(file,flowName)
+
+        //CoroutineScope(Job()).launch { runOne(args) }
     }
 
     /** run pause (time)
@@ -702,7 +741,20 @@ class Flow(
                 server.routes.forEach {
                     when (it.method) {
                         "get" -> get(it.route) {
-                            runFile(it.file)
+                            var flowName = nGetNameOfNextFlow(it.file)
+                            call.parameters.toMap().forEach {
+                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                        +"-parameters-"+it.key,DataType.VAR,it.value
+                                            .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                            }
+
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
+                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
                             var response = nGetVar(it.resVar,DataType.VAR).toString()
                             call.respondText {
                                 response
@@ -710,7 +762,20 @@ class Flow(
                         }
 
                         "post" -> post(it.route) {
-                            runFile(it.file)
+                            var flowName = nGetNameOfNextFlow(it.file)
+                            call.parameters.toMap().forEach {
+                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                        +"-parameters-"+it.key,DataType.VAR,it.value
+                                    .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                            }
+
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
+                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
                             var response = nGetVar(it.resVar,DataType.VAR).toString()
                             call.respondText {
                                 response
@@ -718,7 +783,20 @@ class Flow(
                         }
 
                         "delete" -> delete(it.route) {
-                            runFile(it.file)
+                            var flowName = nGetNameOfNextFlow(it.file)
+                            call.parameters.toMap().forEach {
+                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                        +"-parameters-"+it.key,DataType.VAR,it.value
+                                    .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                            }
+
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
+                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
+                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
+                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
                             var response = nGetVar(it.resVar,DataType.VAR).toString()
                             call.respondText {
                                 response
@@ -847,6 +925,7 @@ class Flow(
                 "sys" -> when (step.cmd) {
                     "apps" -> sysApps(step.args)
                     "files" -> sysFiles(step.args)
+                    "flowname" -> sysFlowname(step.args)
                     "start" -> sysStart(step.args)
                     "homedir" -> sysHomedir(step.args)
                     "install" -> sysInstall(step.args)
@@ -869,6 +948,7 @@ class Flow(
 
                 "var" -> when (step.cmd) {
                     "set" -> varSet(step.args)
+                    "get" -> varGet(step.args)
                     "del" -> varDel(step.args)
                 }
 
@@ -897,6 +977,8 @@ class Flow(
                     "eqs" -> matEqs(step.args)
                     "grtr" -> matGrtr(step.args)
                     "less" -> matLess(step.args)
+                    "grtreqs" -> matGrtrEqs(step.args)
+                    "lesseqs" -> matLessEqs(step.args)
                 }
 
                 "bln" -> when (step.cmd) {
@@ -1092,6 +1174,11 @@ class Flow(
             }
         }
         return model
+    }
+    fun nGetNameOfNextFlow(file:String):String{
+        var splitByDot = file.split(".").toMutableList()
+        splitByDot.removeLast()
+        return splitByDot.joinToString(".")+"-"+program.flows.size
     }
 }
 

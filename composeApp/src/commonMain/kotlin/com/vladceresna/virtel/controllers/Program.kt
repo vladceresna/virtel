@@ -33,10 +33,13 @@ data class Program(var path: String){
         CoroutineScope(Job()).launch {
             status = ProgramStatus.SCREEN
             flow.runFile(fileName)
+            flows.remove(flowName)
+            if (flows.isEmpty()) destroy()
         }
     }
     fun destroy(){
-
+        status = ProgramStatus.DISABLED
+        log("Program $appId destroyed", Log.SUCCESS)
     }
 }
 
