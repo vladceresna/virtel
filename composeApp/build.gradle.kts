@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
 
+    id("io.gitlab.trixnity.cargo.kotlin.multiplatform") version "0.1.0"
     id("io.gitlab.trixnity.uniffi.kotlin.multiplatform") version "0.1.0"
 }
 
@@ -190,12 +191,12 @@ compose.desktop {
 
 
 cargo {
-    packageDirectory = layout.projectDirectory.dir("math") // путь к Rust-проекту
+    packageDirectory = layout.projectDirectory.dir("math")
 }
 
 uniffi {
     generateFromLibrary {
-        namespace = "math" // пространство имен для генерируемых классов
-        build = "release" // или другой профиль сборки Rust
+        namespace = "math"
+        build = "release"
     }
 }
