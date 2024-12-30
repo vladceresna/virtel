@@ -8,12 +8,23 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
 
-    id("io.gitlab.trixnity.cargo.kotlin.multiplatform") version "0.1.0"
-    id("io.gitlab.trixnity.uniffi.kotlin.multiplatform") version "0.1.0"
+    alias(libs.plugins.cargoKotlinMultiplatform)
+    alias(libs.plugins.uniffiKotlinMultiplatform)
+    alias(libs.plugins.kotlinAtomicFU)
+}
+
+var version = "2.1.0"
+
+
+cargo {
+    packageDirectory = project.layout.projectDirectory.dir("../math")
+}
+
+uniffi {
+    generateFromLibrary()
 }
 
 
-var version = "2.0.1"
 
 
 
@@ -27,7 +38,7 @@ kotlin {
     
     jvm("desktop")
     
-    listOf(
+    /*listOf(
         iosX64(),
         iosArm64(),
         iosSimulatorArm64()
@@ -36,14 +47,14 @@ kotlin {
             baseName = "ComposeApp"
             isStatic = true
         }
-    }
+    }*/
     
     sourceSets {
         val desktopMain by getting
 
-        iosMain.dependencies {
+        /*iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-        }
+        }*/
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -97,7 +108,7 @@ kotlin {
             implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
 
 
-
+            implementation("net.java.dev.jna:jna:5.13.0")
             // TODO: Other ui theme
 
         }
@@ -185,18 +196,5 @@ compose.desktop {
             }
 
         }
-    }
-}
-
-
-
-cargo {
-    packageDirectory = layout.projectDirectory.dir("math")
-}
-
-uniffi {
-    generateFromLibrary {
-        namespace = "math"
-        build = "release"
     }
 }

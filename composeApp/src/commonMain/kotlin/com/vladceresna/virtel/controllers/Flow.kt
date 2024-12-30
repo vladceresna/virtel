@@ -280,7 +280,7 @@ class Flow(
     fun matPlus(args: MutableList<String>) {
         var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
         var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
-        nPutVar(args.get(2), DataType.VAR, (a + b).toString())
+        nPutVar(args.get(2), DataType.VAR, (math.add(a.toUInt(),b.toUInt())).toString())
     }
 
     /** mat minus (a) (b) (newVarName)
