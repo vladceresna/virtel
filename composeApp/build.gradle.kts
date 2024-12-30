@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+
+    id("io.gitlab.trixnity.uniffi.kotlin.multiplatform") version "0.1.0"
 }
 
 
@@ -182,5 +184,18 @@ compose.desktop {
             }
 
         }
+    }
+}
+
+
+
+cargo {
+    packageDirectory = layout.projectDirectory.dir("math") // путь к Rust-проекту
+}
+
+uniffi {
+    generateFromLibrary {
+        namespace = "math" // пространство имен для генерируемых классов
+        build = "release" // или другой профиль сборки Rust
     }
 }
