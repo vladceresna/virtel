@@ -1,3 +1,5 @@
+import io.gitlab.trixnity.gradle.CargoHost
+import io.gitlab.trixnity.gradle.cargo.dsl.jvm
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -18,6 +20,9 @@ var version = "2.1.0"
 
 cargo {
     packageDirectory = project.layout.projectDirectory.dir("../math")
+    builds.jvm {
+        jvm = (rustTarget == CargoHost.current.hostTarget)
+    }
 }
 
 uniffi {

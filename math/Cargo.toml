@@ -1,0 +1,14 @@
+[package]
+name = "math"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "math"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[dependencies]
+uniffi = { version = "0.25.3" }
+
+[build-dependencies]
+uniffi = { version = "0.25.3", features = ["build"] }
