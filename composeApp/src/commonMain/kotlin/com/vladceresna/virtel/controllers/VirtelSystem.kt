@@ -74,6 +74,8 @@ data object VirtelSystem {
                     toSpeech(text, labs, ttsFile)
                 }
                 playMP3(ttsFile)
+
+
             } catch (e: Exception) {
             }
 
