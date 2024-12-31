@@ -113,7 +113,6 @@ kotlin {
             implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
 
 
-            implementation("net.java.dev.jna:jna:5.13.0")
             // TODO: Other ui theme
 
         }
