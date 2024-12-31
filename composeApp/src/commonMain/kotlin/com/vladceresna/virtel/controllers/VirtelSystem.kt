@@ -75,7 +75,7 @@ data object VirtelSystem {
                 }
                 playMP3(ttsFile)
 
-
+                math.ttsSay("Вітаю!")
             } catch (e: Exception) {
             }
 

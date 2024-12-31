@@ -1,4 +1,6 @@
-use tts_rust::{languages::Languages, tts::GTTSClient};
+use natural_tts::{models::gtts::GttsModel, Model, NaturalTtsBuilder};
+
+
 
 uniffi::include_scaffolding!("math");
 
@@ -8,12 +10,12 @@ fn add(a: u32, b: u32) -> u32 {
 }
 
 fn tts_say(text: String) {
-    let mut narrator: GTTSClient = GTTSClient {
-        volume: 1.0, 
-        language: Languages::English, // use the Languages enum
-        tld: "com",
-    };
-    narrator.speak(text.as_str());
+    let mut natural = NaturalTtsBuilder::default()
+        .gtts_model(GttsModel::default())
+        .default_model(Model::Gtts)
+        .build().unwrap();
+
+    let _ = natural.say_auto(text).unwrap();
 }
 
 #[cfg(test)]
