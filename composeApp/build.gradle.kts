@@ -1,8 +1,10 @@
+
 import io.gitlab.trixnity.gradle.CargoHost
 import io.gitlab.trixnity.gradle.cargo.dsl.jvm
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -18,8 +20,9 @@ plugins {
 var version = "2.1.0"
 
 
+
 cargo {
-    packageDirectory = project.layout.projectDirectory.dir("../math")
+    packageDirectory = project.layout.projectDirectory.dir("../virtel-native")
     builds.jvm {
         jvm = (rustTarget == CargoHost.current.hostTarget)
     }

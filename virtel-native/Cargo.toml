@@ -1,14 +1,15 @@
 [package]
-name = "math"
+name = "virtel-native"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "math"
+name = "virtel-native"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [dependencies]
-natural-tts = "0.1.5"
+io_bluetooth = "0.1.0"
+natural-tts = { git = "https://github.com/vladceresna/cotts-rs.git" }
 
 uniffi = { version = "0.25.3" }
 
