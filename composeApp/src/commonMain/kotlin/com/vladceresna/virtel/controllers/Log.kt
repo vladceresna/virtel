@@ -1,15 +1,18 @@
 package com.vladceresna.virtel.controllers
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import okio.Path.Companion.toPath
-import okio.SYSTEM
 
 data object Logger{
-    var logs: MutableList<String> = mutableListOf()
+    var logs: MutableList<String> = mutableStateListOf()
+    var readLine = mutableStateOf(false)
+    var afterReadLine: (readedValue: String) -> Unit = {}
 }
 
 fun log(message: String, type: Log){

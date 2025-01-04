@@ -1,0 +1,11 @@
+Esperanto small model for Vosk
+
+WER
+
+%WER 4.80 [ 5824 / 121229, 809 ins, 549 del, 4466 sub ] exp/chain/tdnn/decode_dev_look_fast/wer_11_0.0
+%WER 7.24 [ 8673 / 119712, 1073 ins, 1060 del, 6540 sub ] exp/chain/tdnn/decode_test_look_fast/wer_11_0.0
+
+Previous model 0.22
+
+%WER 6.02 [ 7294 / 121229, 931 ins, 671 del, 5692 sub ] exp/chain.save1/tdnn/decode_dev_look_fast/wer_11_0.0
+%WER 8.55 [ 10238 / 119712, 1191 ins, 1232 del, 7815 sub ] exp/chain.save1/tdnn/decode_test_look_fast/wer_11_0.0
