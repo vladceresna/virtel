@@ -16,5 +16,5 @@ captures
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
-/virtel-native/Cargo.lock
-/virtel-native/target/
+/vnative/Cargo.lock
+/vnative/target/
