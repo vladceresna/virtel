@@ -31,6 +31,8 @@ import kotlinx.coroutines.runBlocking
 import okio.IOException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
+import vnative.LangDetectEngine
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.roundToInt
 
 
@@ -124,7 +126,15 @@ class Flow(
     /** csl read (newVarName)
      * */
     fun cslRead(args: MutableList<String>) {
-        nPutVar(args.get(0), DataType.VAR, readln())
+        try {
+            nPutVar(args.get(0), DataType.VAR, readln())
+        } catch (e: Exception) {
+            Logger.readLine.value = true
+            Logger.afterReadLine = { readedValue ->
+                nPutVar(args.get(0), DataType.VAR, readedValue)
+            }
+            while (Logger.readLine.value){}
+        }
     }
 
 
@@ -280,7 +290,7 @@ class Flow(
     fun matPlus(args: MutableList<String>) {
         var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
         var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
-        nPutVar(args.get(2), DataType.VAR, (a + b).toString())
+        nPutVar(args.get(2), DataType.VAR, (vnative.add(a.toUInt(),b.toUInt())).toString())
     }
 
     /** mat minus (a) (b) (newVarName)
@@ -346,6 +356,21 @@ class Flow(
         var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
         nPutVar(args.get(2), DataType.VAR, (a <= b).toString())
     }
+
+    /** mat random (min) (max) (newVarName)
+     * */
+    fun matRandom(args: MutableList<String>) {
+        var min = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
+        var max = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
+        nPutVar(args.get(2), DataType.VAR, (ThreadLocalRandom.current().nextDouble(min, max)).toString())
+    }
+    /** mat int (numberDouble) (newVarName)
+     * */
+    fun matInt(args: MutableList<String>) {
+        var numberDouble = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
+        nPutVar(args.get(1), DataType.VAR, (numberDouble.toInt()).toString())
+    }
+
 
 
     /** bln and (a) (b) (newVarName)
@@ -830,9 +855,9 @@ class Flow(
 
     }
 
-    /** tts say (text)
+    /** tts say2 (text)
      * */
-    fun ttsSay(args: MutableList<String>) {
+    fun ttsSay2(args: MutableList<String>) {
         var text = nGetVar(args.get(0), DataType.VAR).toString()
         var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
         if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
@@ -840,6 +865,24 @@ class Flow(
         }
         playMP3(ttsFile)
     }
+
+    /** tts say (text) \language\
+     * */
+    fun ttsSay(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
+        if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
+            if(args.size == 2) vnative.ttsSayLang(text, args.get(1), ttsFile)
+            else vnative.ttsSay(text, ttsFile,
+                when(VirtelSystem.language_detection){
+                    "whichlang" -> LangDetectEngine.WHICHLANG
+                    "lingua" -> LangDetectEngine.LINGUA
+                    else -> LangDetectEngine.WHICHLANG
+                }
+            )
+        } else vnative.playMp3(ttsFile)
+    }
+
 
     /** stt start
      * */
@@ -979,6 +1022,8 @@ class Flow(
                     "less" -> matLess(step.args)
                     "grtreqs" -> matGrtrEqs(step.args)
                     "lesseqs" -> matLessEqs(step.args)
+                    "random" -> matRandom(step.args)
+                    "int" -> matInt(step.args)
                 }
 
                 "bln" -> when (step.cmd) {
@@ -1027,6 +1072,7 @@ class Flow(
 
                 "tts" -> when (step.cmd) {
                     "say" -> ttsSay(step.args)
+                    "say2" -> ttsSay2(step.args)
                 }
 
                 "stt" -> when (step.cmd) {
@@ -1086,7 +1132,9 @@ class Flow(
             "${FileSystem.programsPath}/${program.appId}${FileSystem.srCode}$fileName".toPath()
         )
         { readUtf8() }
-
+        runCode(code,fileName)
+    }
+    fun runCode(code: String, fileName: String) {
         try {
             var lineNumber = 0
             var lastString = ""
@@ -1151,7 +1199,6 @@ class Flow(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
 

@@ -93,7 +93,7 @@ csl write "Hello world";
 - [x] ref (References on vars)
 - [x] var (Vars)
 - [x] lst (Lists)
-- [x] mat (Math operations)
+- [x] mat (Math and Random operations)
 - [x] str (String operations (ex. cut))
 - [x] bln (Boolean operations)
 - [x] run (if, while)

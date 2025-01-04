@@ -1,6 +1,7 @@
 package com.vladceresna.virtel.screens.screen
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,28 +21,50 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.Rgb
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.github.terrakok.adaptivestack.HorizontalAdaptiveStack
+import com.vladceresna.virtel.controllers.Flow
+import com.vladceresna.virtel.controllers.Logger
+import com.vladceresna.virtel.controllers.Program
+import com.vladceresna.virtel.controllers.ProgramStatus
+import com.vladceresna.virtel.controllers.Programs
+import com.vladceresna.virtel.controllers.Step
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.screens.model.ScreenModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -55,7 +78,7 @@ fun ScreenPager(
 
     Column (
         if (VirtelSystem.darkTheme.value) {
-            Modifier.fillMaxSize().background(Color(0,20,5))
+            Modifier.background(Color(0,20,5)).fillMaxSize()
         } else {
             Modifier.fillMaxSize()
         }
@@ -67,7 +90,7 @@ fun ScreenPager(
             HorizontalPager(
                 modifier = Modifier.weight(1F).fillMaxWidth(),
                 state = pagerState,
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+                contentPadding = PaddingValues(20.dp, 20.dp, 20.dp, 0.dp),
                 pageSpacing = 8.dp,
                 verticalAlignment = Alignment.Top,
             ) { page ->
@@ -84,21 +107,141 @@ fun ScreenPager(
         }
         if(VirtelSystem.appsScreen.value) {
             Column(
-                modifier = Modifier.weight(1F).fillMaxWidth()
-                    .padding(PaddingValues(horizontal = 20.dp, vertical = 20.dp))
-                    .clip(RoundedCornerShape(20.dp)).background(getColorOfBackground())
+                modifier = Modifier.padding(20.dp,20.dp,20.dp,0.dp)
+                    .weight(1F).fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.background).padding(PaddingValues(horizontal = 20.dp, vertical = 20.dp))
                 ,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                screenModel.pageModels.get(screenModel.currentPageIndex.value)
-                    .programViewModels.forEach {
-                        ElevatedCard(
-                            elevation = CardDefaults.elevatedCardElevation(2.dp)) {
-                            Box(Modifier.padding(10.dp,10.dp)){
-                                Text(it.program.appId)
-                            }
+                HorizontalAdaptiveStack {
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(20.dp))
+                            .fillMaxSize()
+                    ) {
+
+                        var scrollState = rememberScrollState(0)
+                        Column(
+                            Modifier.verticalScroll(scrollState)
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                .padding(10.dp).weight(1f).animateContentSize().fillMaxWidth()
+                        ) {
+                            Text("Running programs",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Black, fontSize = 25.sp, modifier = Modifier.padding(10.dp))
+                            screenModel.pageModels.get(screenModel.currentPageIndex.value)
+                                .programViewModels.forEachIndexed { index, it ->
+                                    Column (Modifier.padding(10.dp,5.dp).fillMaxWidth()
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                        .clickable {
+                                            VirtelSystem.appsScreen.value = false
+                                            screenModel.pageModels.get(screenModel.currentPageIndex.value)
+                                                .programViewModels.removeAt(index)
+                                            screenModel.pageModels.get(screenModel.currentPageIndex.value)
+                                                .programViewModels.add(it)
+                                        }
+                                        .padding(10.dp)
+                                    ) {
+                                            Text(it.program.appName.first().uppercaseChar()+
+                                                    it.program.appName.drop(1),
+                                                color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black)
+                                            Text(it.program.appId, color = MaterialTheme.colorScheme.onSurface)
+                                    }
+                                }
                         }
+                    }
+                    Column(
+                        Modifier
+                            .padding(20.dp,0.dp)
+                            .weight(1f)
+                            .clip(RoundedCornerShape(20.dp))
+                            .fillMaxSize()
+                    ) {
+
+                        var scrollState = rememberScrollState(0)
+                        Column(
+                            Modifier.verticalScroll(scrollState)
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                .padding(10.dp).weight(1f).animateContentSize().fillMaxWidth()
+                        ) {
+                            Text("All programs",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Black, fontSize = 25.sp, modifier = Modifier.padding(10.dp))
+                            Programs.programs.forEach {
+                                    Column (Modifier.padding(10.dp,5.dp).fillMaxWidth()
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                        .clickable {
+                                            VirtelSystem.appsScreen.value = false
+                                            Programs.startProgram(it.appId)
+                                        }.padding(10.dp)
+                                    ) {
+                                        Text(it.appName.first().uppercaseChar()+
+                                                it.appName.drop(1),
+                                            color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black)
+                                        Text(it.appId,color = MaterialTheme.colorScheme.onSurface)
+                                    }
+                                }
+                        }
+                    }
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(20.dp))
+                            .fillMaxSize()
+                    ) {
+                        var scrollState = rememberScrollState(0)
+                        Column(
+                            Modifier.verticalScroll(scrollState)
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                .padding(20.dp).weight(1f).animateContentSize(),
+                            verticalArrangement = Arrangement.Bottom
+                        ) {
+                            Logger.logs.forEach {
+                                Text(text = it, color = MaterialTheme.colorScheme.onSurface)
+                            }
+                            LaunchedEffect(Logger.logs.size) {
+                                scrollState.animateScrollTo(Int.MAX_VALUE)
+                            }
+
+                        }
+                        Row(
+                            Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow),
+                        ) {
+                            var value by remember { mutableStateOf("") }
+                            TextField(
+                                modifier = Modifier.weight(1f),
+                                label = { Text("Write command") },
+                                supportingText = { Text("Command in steps format. For example: csl write \"Hello world\"") },
+                                prefix =
+                                { if(Logger.readLine.value){
+                                    Text("#")
+                                } else {
+                                    Text(">")
+                                }},
+                                value = value, onValueChange = { value = it }
+                            )
+                            Button(modifier = Modifier.padding(10.dp,0.dp),
+                                onClick = {
+                                    CoroutineScope(Job()).launch {
+                                        if(Logger.readLine.value){
+                                            Logger.readLine.value = false
+                                            Logger.afterReadLine(value)
+                                        } else {
+                                            var program = Program("")
+                                            program.appId = "vladceresna.virtel.console"
+                                            program.appName = "Console"
+                                            program.status = ProgramStatus.BACKGROUND
+                                            var flow = Flow(program, "main", Step(false))
+                                            flow.runCode(value, "/start.steps")
+                                        }
+                                    }
+                            }){ Text("Send") }
+                        }
+                    }
                 }
             }
         }
@@ -121,13 +264,13 @@ fun ScreenPager(
         ) {
             repeat(pagerState.pageCount) { iteration ->
                 val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
-                val width = if (pagerState.currentPage == iteration) 50.dp else 20.dp
+                val width = if (pagerState.currentPage == iteration) 50.dp else 10.dp
                 Box(
                     modifier = Modifier
-                        .padding(bottom = 8.dp)
+                        .padding(2.dp,5.dp,2.dp,5.dp)
                         .clip(CircleShape)
                         .background(color)
-                        .height(20.dp)
+                        .height(10.dp)
                         .width(width)
 
                 )

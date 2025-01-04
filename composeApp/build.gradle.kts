@@ -1,16 +1,38 @@
+
+import io.gitlab.trixnity.gradle.CargoHost
+import io.gitlab.trixnity.gradle.cargo.dsl.jvm
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+
+    alias(libs.plugins.cargoKotlinMultiplatform)
+    alias(libs.plugins.uniffiKotlinMultiplatform)
+    alias(libs.plugins.kotlinAtomicFU)
+}
+
+var version = "2.1.0"
+
+
+
+cargo {
+    packageDirectory = project.layout.projectDirectory.dir("../vnative")
+    builds.jvm {
+        jvm = (rustTarget == CargoHost.current.hostTarget)
+    }
+}
+
+uniffi {
+    generateFromLibrary()
 }
 
 
-var version = "2.0.1"
 
 
 
@@ -24,7 +46,7 @@ kotlin {
     
     jvm("desktop")
     
-    listOf(
+    /*listOf(
         iosX64(),
         iosArm64(),
         iosSimulatorArm64()
@@ -33,14 +55,14 @@ kotlin {
             baseName = "ComposeApp"
             isStatic = true
         }
-    }
+    }*/
     
     sourceSets {
         val desktopMain by getting
 
-        iosMain.dependencies {
+        /*iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-        }
+        }*/
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -94,6 +116,7 @@ kotlin {
             implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
 
 
+            implementation("com.github.terrakok:adaptivestack:1.0.0")
 
             // TODO: Other ui theme
 

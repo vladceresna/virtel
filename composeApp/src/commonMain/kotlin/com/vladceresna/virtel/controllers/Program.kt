@@ -10,6 +10,8 @@ data class Program(var path: String){
     var store:DataStore = DataStore(this)
 
 
+    var config:HashMap<String, String> = hashMapOf()
+
 
     var debugMode:Boolean = true
     lateinit var status: ProgramStatus
@@ -17,6 +19,8 @@ data class Program(var path: String){
     lateinit var appName: String
 
     var flows:MutableMap<String, Flow> = mutableMapOf()
+
+
 
     fun scan(){
         appId = path.toPath().name
