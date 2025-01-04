@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,7 +71,7 @@ fun Page(
                             imageVector = Icons.Outlined.AddCircle,
                             contentDescription = "Plus",
                             modifier = Modifier.size(150.dp),
-                            tint = getColorOfIcon()
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     IconButton(
@@ -88,7 +89,7 @@ fun Page(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = "Delete",
                             modifier = Modifier.size(150.dp),
-                            tint = getColorOfIcon()
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -103,7 +104,7 @@ fun Page(
                 }
             }, Modifier.weight(1f)) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Localized description",
-                    tint = getColorOfIcon())
+                    tint = MaterialTheme.colorScheme.onBackground)
             }
             IconButton(onClick = {
                 try {
@@ -113,7 +114,7 @@ fun Page(
                 }
             }, Modifier.weight(1f)) {
                 Icon(Icons.Filled.Settings, contentDescription = "Localized description",
-                    tint = getColorOfIcon())
+                    tint = MaterialTheme.colorScheme.onBackground)
             }
             IconButton(onClick = {
                 try {
@@ -123,7 +124,7 @@ fun Page(
                 }
             }, Modifier.weight(1f)) {
                 Icon(Icons.Filled.Home, contentDescription = "Localized description",
-                    tint = getColorOfIcon())
+                    tint = MaterialTheme.colorScheme.onBackground)
             }
             IconButton(onClick = {
                 try {
@@ -135,7 +136,7 @@ fun Page(
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Localized description",
-                    tint = getColorOfIcon()
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
             IconButton(
@@ -147,7 +148,7 @@ fun Page(
                 }
             }, Modifier.weight(1f)) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Localized description",
-                    tint = getColorOfIcon()
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
         }

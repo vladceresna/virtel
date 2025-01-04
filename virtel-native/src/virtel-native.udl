@@ -1,4 +1,0 @@
-namespace virtel-native {
-  u32 add(u32 a, u32 b);
-  void tts_say(string text);
-};

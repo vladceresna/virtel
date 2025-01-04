@@ -18,6 +18,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.screens.Widget
@@ -35,7 +36,8 @@ fun ProgramLayer(
             topBar = {
                 TopAppBar(
                     title = { Text(programViewModel.program.appName.first().uppercaseChar()+
-                            programViewModel.program.appName.drop(1)) },
+                            programViewModel.program.appName.drop(1),
+                        fontWeight = FontWeight.Black) },
                     actions = {
                         IconButton(onClick = {
                             VirtelSystem.screenModel

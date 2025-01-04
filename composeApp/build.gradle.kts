@@ -22,7 +22,7 @@ var version = "2.1.0"
 
 
 cargo {
-    packageDirectory = project.layout.projectDirectory.dir("../virtel-native")
+    packageDirectory = project.layout.projectDirectory.dir("../vnative")
     builds.jvm {
         jvm = (rustTarget == CargoHost.current.hostTarget)
     }
@@ -115,6 +115,8 @@ kotlin {
             implementation("io.coil-kt.coil3:coil-compose:3.0.0-alpha06")
             implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
 
+
+            implementation("com.github.terrakok:adaptivestack:1.0.0")
 
             // TODO: Other ui theme
 

@@ -1,17 +1,19 @@
 [package]
-name = "virtel-native"
+name = "vnative"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "virtel-native"
+name = "vnative"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [dependencies]
-io_bluetooth = "0.1.0"
-natural-tts = { git = "https://github.com/vladceresna/cotts-rs.git" }
-
 uniffi = { version = "0.25.3" }
+lingua = "1.6.2"
+minreq = {version="2.0.3", features=["https"]}
+percent-encoding = "2.1.0"
+rodio = "0.20.1"
+whichlang = "0.1.0"
 
 [build-dependencies]
 uniffi = { version = "0.25.3", features = ["build"] }

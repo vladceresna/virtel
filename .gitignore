@@ -18,3 +18,4 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 /vnative/Cargo.lock
 /vnative/target/
+/composeApp/release/

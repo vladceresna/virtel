@@ -30,6 +30,7 @@ data object VirtelSystem {
     var llm = ""
     var vosk = ""
     var native = ""//android stt/tts
+    var language_detection = ""
 
     var echo = false
 
@@ -68,14 +69,12 @@ data object VirtelSystem {
 
             isSawHello = true
             try {
-                val text = "Вітаю!"
+                var text = "Вітаю!"
                 var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
                 if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
-                    toSpeech(text, labs, ttsFile)
-                }
-                playMP3(ttsFile)
-
-                math.ttsSay("Вітаю!")
+                    //toSpeech(text, labs, ttsFile)
+                    vnative.ttsSayLang(text, "uk", ttsFile)
+                } else vnative.playMp3(ttsFile)
             } catch (e: Exception) {
             }
 
@@ -107,6 +106,7 @@ data object VirtelSystem {
                     "llm" -> {llm = pair.get(1).trim().replace("$",FileSystem.systemPath)}
                     "vosk" -> {vosk = pair.get(1).trim().replace("$",FileSystem.systemPath)}
                     "native" -> {native = pair.get(1).trim()}
+                    "language_detection" -> {language_detection = pair.get(1).trim()}
                     else -> {}
                 }
             }
