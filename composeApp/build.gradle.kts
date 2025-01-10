@@ -17,7 +17,7 @@ plugins {
     alias(libs.plugins.kotlinAtomicFU)
 }
 
-var version = "2.1.0"
+var version = "2.1.1"
 
 
 
@@ -85,9 +85,6 @@ kotlin {
             implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
             implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
 */
-
-
-
 
 
 
