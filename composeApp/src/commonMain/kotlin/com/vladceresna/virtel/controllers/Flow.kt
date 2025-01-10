@@ -31,7 +31,6 @@ import kotlinx.coroutines.runBlocking
 import okio.IOException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
-import vnative.LangDetectEngine
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.roundToInt
 
@@ -442,7 +441,7 @@ class Flow(
         }
     }
 
-    /** fls dirs (path)
+    /** fls dir (path)
      * */
     fun flsDir(args: MutableList<String>) {
         var path = nGetVar(args.get(0), DataType.VAR).toString()
@@ -872,14 +871,8 @@ class Flow(
         var text = nGetVar(args.get(0), DataType.VAR).toString()
         var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
         if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
-            if(args.size == 2) vnative.ttsSayLang(text, args.get(1), ttsFile)
-            else vnative.ttsSay(text, ttsFile,
-                when(VirtelSystem.language_detection){
-                    "whichlang" -> LangDetectEngine.WHICHLANG
-                    "lingua" -> LangDetectEngine.LINGUA
-                    else -> LangDetectEngine.WHICHLANG
-                }
-            )
+            if(args.size == 2) vnative.ttsSayLang(text, ttsFile, args.get(1))
+            else vnative.ttsSay(text, ttsFile)
         } else vnative.playMp3(ttsFile)
     }
 

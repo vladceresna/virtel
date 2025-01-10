@@ -1,11 +1,6 @@
 namespace vnative {
   u32 add(u32 a, u32 b);
-  void tts_say_lang(string text, string language, string path);
-  void tts_say(string text, string path, LangDetectEngine engine);
+  void tts_say_lang(string text, string path, string language);
+  void tts_say(string text, string path);
   void play_mp3(string path);
-};
-
-enum LangDetectEngine {
-    "WHICHLANG",
-    "LINGUA",
 };
