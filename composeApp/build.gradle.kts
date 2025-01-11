@@ -17,7 +17,7 @@ plugins {
     alias(libs.plugins.kotlinAtomicFU)
 }
 
-var version = "2.1.1"
+var version = "2.2.0"
 
 
 
@@ -116,6 +116,8 @@ kotlin {
             implementation("com.github.terrakok:adaptivestack:1.0.0")
 
             // TODO: Other ui theme
+
+
 
         }
         commonTest.dependencies {

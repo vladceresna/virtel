@@ -16,6 +16,15 @@ class FlowTest {
     }
 
 
+
+    @Test
+    fun testDtm(){
+        flow.dtmNow(mutableListOf("\"now\""))
+        flow.dtmFormat(mutableListOf("\"now\"","\"yyyy-MM-dd-HH:mm:ss\"","formatDate"))
+        println(flow.nGetVar("formatDate",DataType.VAR).toString())
+    }
+
+
     @Test
     fun testCslWrite(){
         //assertFails { flow.cslWrite(mutableListOf("\"testValue")) }
