@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.lib
 
+import androidx.compose.runtime.mutableStateListOf
 import kotlinx.coroutines.sync.Mutex
 
 /**
@@ -8,7 +9,7 @@ import kotlinx.coroutines.sync.Mutex
  * **/
 class MutexHashSet<T> {
     var lock:Mutex = Mutex(false)
-    var items = mutableListOf<T>()
+    var items = mutableStateListOf<T>()
     
     fun put(value:T,equals: (T,T) -> Boolean):T{
         while(!lock.tryLock()){}
