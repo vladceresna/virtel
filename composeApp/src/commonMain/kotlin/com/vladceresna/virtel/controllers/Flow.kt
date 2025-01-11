@@ -28,6 +28,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.DateTimeFormatBuilder
+import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.toLocalDateTime
 import okio.IOException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
@@ -105,6 +115,38 @@ class Flow(
         var packAppId = nGetVar(args.get(0), DataType.VAR).toString()
         nPutVar(args.get(1), DataType.VAR, VarInstaller.toVar(packAppId))
     }
+
+
+    /** dtm now (newVarName)
+     * */
+    fun dtmNow(args: MutableList<String>) {
+        nPutVar(args.get(0), DataType.VAR, System.currentTimeMillis().toString())
+    }
+
+
+    /** dtm format (now) (format) /timezone/ (contentVARNewVarName)
+     * */
+    fun dtmFormat(args: MutableList<String>) {
+        var now = nGetVar(args.get(0), DataType.VAR).toString()
+        var format = nGetVar(args.get(1), DataType.VAR).toString()
+        val currentMomentTemp = Instant.fromEpochMilliseconds(now.toLong())
+        val currentMoment: LocalDateTime
+        if (args.size == 4) {
+            var timezone = nGetVar(args.get(2), DataType.VAR).toString()
+            if (timezone == "UTC") {
+                currentMoment = currentMomentTemp.toLocalDateTime(TimeZone.UTC)
+            } else {
+                currentMoment = currentMomentTemp.toLocalDateTime(TimeZone.of(timezone))
+            }
+        } else {
+            currentMoment = currentMomentTemp.toLocalDateTime(TimeZone.currentSystemDefault())
+        }
+
+        val dateTimeFormat = LocalDateTime.Format { byUnicodePattern(format) }
+        nPutVar(args.last(), DataType.VAR, currentMoment.format(dateTimeFormat))
+    }
+
+
 
 
     /** csl error (text)
@@ -968,6 +1010,10 @@ class Flow(
                     "pack" -> sysPack(step.args)
                     "log" -> sysLog(step.args)
                 }
+                "dtm" -> when (step.cmd) {
+                    "now" -> dtmNow(step.args)
+                    "format" -> dtmFormat(step.args)
+                }
 
                 "csl" -> when (step.cmd) {
                     "error" -> cslError(step.args)
@@ -1107,12 +1153,14 @@ class Flow(
                 e.printStackTrace()
             }
             try {
-                (nGetProgramModel() ?: ProgramViewModel(PageModel(), program)).also {
+                (nGetProgramModel()!!).also {
                     it.errorMessage.value = "On line ${step.line} in file " + step.fileName +
-                            " in application with appId: ${step.appId}\n\n" + e.message.toString()
+                            " in application with appId: ${step.appId}\n\n" +
+                            e.message.toString() +
+                            "\nIf you`re developer, please, check documentation for it"
                     it.isErrorHappened.value = true
                 }
-            } catch (e:Exception){e.printStackTrace()}
+            } catch (k:Exception){k.printStackTrace()}
             return true // erroring
         }
     }

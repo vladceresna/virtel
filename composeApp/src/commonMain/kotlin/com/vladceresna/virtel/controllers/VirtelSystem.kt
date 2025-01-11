@@ -9,6 +9,7 @@ import com.vladceresna.virtel.screens.model.ScreenModel
 import com.vladceresna.virtel.screens.model.VirtelScreenViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okio.Path.Companion.toPath
@@ -50,7 +51,6 @@ data object VirtelSystem {
 
         log("Virtel Platform starting...", Log.INFO)
 
-
         val homePath = getHomePath()
         if(homePath == null) throw VirtelException("Home path not found, " +
                 "maybe your device is not supported by Virtel") //TODO:Fix iOS
@@ -63,8 +63,8 @@ data object VirtelSystem {
         Programs.scanPrograms()
         log("Virtel Launcher starting...", Log.INFO)
 
-
         CoroutineScope(Job()).launch {
+
             isSawHello = true
             try {
                 var text = "Вітаю!"
