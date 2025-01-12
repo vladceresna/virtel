@@ -45,7 +45,7 @@ data object FileSystem {
         FileSystem.SYSTEM.createDirectories(launcherCodePath.toPath())
         FileSystem.SYSTEM.createDirectories(userFilesPath.toPath())
         Launchers.loadLauncher(
-            "https://drive.usercontent.google.com/uc?id=1JqI2WvSE738mA4YxRylNM0L3_fV-SqQl&export=download")
+            "https://virtel.netlify.app/std-apps/vladceresna.virtel.launcher.var")
     }
     fun getListPaths(path: String): List<Path> {
         return okio.FileSystem.SYSTEM.listRecursively(path.toPath()).toList()

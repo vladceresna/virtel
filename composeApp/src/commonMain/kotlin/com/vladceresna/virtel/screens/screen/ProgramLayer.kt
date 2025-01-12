@@ -91,10 +91,10 @@ fun ProgramLayer(
             if (!programViewModel.isErrorHappened.value) {
                 Column (
                     modifier = Modifier.fillMaxSize().padding(
-                        20.dp, 64.dp, 20.dp,
+                        10.dp, 64.dp, 10.dp,
                         if (!programViewModel.widgets.find {
                                 it.name == "bottom"
-                            }!!.childs.isEmpty()) 90.dp else 20.dp
+                            }!!.childs.isEmpty()) 90.dp else 10.dp
                     )
                 ) {
                     var rootData = programViewModel.widgets.find {
