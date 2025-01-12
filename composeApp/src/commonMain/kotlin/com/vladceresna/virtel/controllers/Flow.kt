@@ -63,6 +63,7 @@ class Flow(
     /** sys apps (newListName)
      * */
     fun sysApps(args: MutableList<String>) {
+        Programs.scanPrograms()
         val list = okio.FileSystem.SYSTEM.list(FileSystem.programsPath.toPath())
         var programsIds: MutableList<String> = mutableListOf()
         list.forEach { programsIds.add(it.name) }
@@ -91,6 +92,7 @@ class Flow(
     /** sys start (appId)
      * */
     fun sysStart(args: MutableList<String>) {
+        Programs.scanPrograms()
         var value = nGetVar(args.get(0), DataType.VAR).toString()
         Programs.startProgram(value)
     }
@@ -230,12 +232,15 @@ class Flow(
             Data(DataType.VAR, args.get(0), nGetVar(args.get(0), DataType.VAR)))
     }
 
+    /** lst new (lstName)
+     * */
+    fun lstNew(args: MutableList<String>) {
+        nPutVar(args.get(0), DataType.LIST, mutableListOf<String>())
+    }
     /** lst set (lstName) (index) (value)
      * */
     fun lstSet(args: MutableList<String>) {
-        val list = try {
-            nGetVar(args.get(0), DataType.LIST) as MutableList<String>
-        } catch (e: VirtelException) { mutableListOf<String>() }
+        val list = nGetVar(args.get(0), DataType.LIST) as MutableList<String>
         var index = nGetVar(args.get(1), DataType.VAR).toString().toInt()
         var value = nGetVar(args.get(2), DataType.VAR).toString()
         list.add(index, value)
@@ -1035,6 +1040,7 @@ class Flow(
                 }
 
                 "lst" -> when (step.cmd) {
+                    "new" -> lstNew(step.args)
                     "set" -> lstSet(step.args)
                     "get" -> lstGet(step.args)
                     "del" -> lstDel(step.args)
@@ -1202,6 +1208,7 @@ class Flow(
                     }
 
                     '\\' -> {
+                        if (displayer) lastString += "\\"
                         displayer = !displayer
                     }
 
@@ -1215,20 +1222,25 @@ class Flow(
                     }
 
                     ';' -> {
-                        step.args.add(lastString)
+                        if (!inValue) {
+                            step.args.add(lastString)
 
-                        step.appId = program.appId
-                        step.fileName = fileName
-                        step.line = lineNumber
+                            step.appId = program.appId
+                            step.fileName = fileName
+                            step.line = lineNumber
 
-                        if (runStep(step)) break // if erroring
+                            if (runStep(step)) break // if erroring
 
-                        lineNumber++
-                        lastString = ""
-                        step = Step(true)
-                        word = 0
-                        inValue = false
-                        displayer = false
+                            lineNumber++
+                            lastString = ""
+                            step = Step(true)
+                            word = 0
+                            inValue = false
+                            displayer = false
+                        } else {
+                            lastString += c
+                            displayer = false
+                        }
                     }
 
                     else -> {

@@ -17,7 +17,7 @@ plugins {
     alias(libs.plugins.kotlinAtomicFU)
 }
 
-var version = "2.2.0"
+var version = "2.2.1"
 
 
 
