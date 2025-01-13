@@ -17,7 +17,7 @@ plugins {
     alias(libs.plugins.kotlinAtomicFU)
 }
 
-var version = "2.2.1"
+var version = "2.3.0"
 
 
 
@@ -45,17 +45,23 @@ kotlin {
     }
     
     jvm("desktop")
-    
-    /*listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
+
+
+    if (CargoHost.Platform.MacOS.isCurrent) {
+        listOf(
+            iosX64(),
+            iosArm64(),
+            iosSimulatorArm64()
+        ).forEach { iosTarget ->
+            iosTarget.binaries.framework {
+                baseName = "ComposeApp"
+                isStatic = true
+            }
         }
-    }*/
+    }
+
+
+
     
     sourceSets {
         val desktopMain by getting
