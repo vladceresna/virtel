@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.screens.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,17 +13,29 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.VectorGroup
+import androidx.compose.ui.graphics.vector.VectorPainter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.screens.Widget
 import com.vladceresna.virtel.screens.model.ProgramViewModel
 import com.vladceresna.virtel.screens.model.WidgetModel
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.vectorResource
+import virtel.composeapp.generated.resources.Res
+import virtel.composeapp.generated.resources.baseline_close_fullscreen_24
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,17 +48,31 @@ fun ProgramLayer(
             topBar = {
                 TopAppBar(
                     title = { Text(programViewModel.program.appName.first().uppercaseChar()+
-                            programViewModel.program.appName.drop(1)) },
+                            programViewModel.program.appName.drop(1),
+                        fontWeight = FontWeight.Black) },
                     actions = {
                         IconButton(onClick = {
                             VirtelSystem.screenModel
                                 .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
                                 .programViewModels.remove(programViewModel)
-
+                        }) {
+                            Icon(
+                                vectorResource(Res.drawable.baseline_close_fullscreen_24),
+                                contentDescription = "close",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        IconButton(onClick = {
+                            programViewModel.program.store.data.items.clear()
+                            VirtelSystem.screenModel
+                                .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
+                                .programViewModels.remove(programViewModel)
+                            //TODO: need to stop program work
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = "close"
+                                contentDescription = "close",
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -64,10 +91,10 @@ fun ProgramLayer(
             if (!programViewModel.isErrorHappened.value) {
                 Column (
                     modifier = Modifier.fillMaxSize().padding(
-                        20.dp, 64.dp, 20.dp,
+                        10.dp, 64.dp, 10.dp,
                         if (!programViewModel.widgets.find {
                                 it.name == "bottom"
-                            }!!.childs.isEmpty()) 90.dp else 20.dp
+                            }!!.childs.isEmpty()) 90.dp else 10.dp
                     )
                 ) {
                     var rootData = programViewModel.widgets.find {

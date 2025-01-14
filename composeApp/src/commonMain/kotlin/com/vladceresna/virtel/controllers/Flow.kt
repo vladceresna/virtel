@@ -28,9 +28,20 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.DateTimeFormatBuilder
+import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.toLocalDateTime
 import okio.IOException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.roundToInt
 
 
@@ -52,6 +63,7 @@ class Flow(
     /** sys apps (newListName)
      * */
     fun sysApps(args: MutableList<String>) {
+        Programs.scanPrograms()
         val list = okio.FileSystem.SYSTEM.list(FileSystem.programsPath.toPath())
         var programsIds: MutableList<String> = mutableListOf()
         list.forEach { programsIds.add(it.name) }
@@ -80,6 +92,7 @@ class Flow(
     /** sys start (appId)
      * */
     fun sysStart(args: MutableList<String>) {
+        Programs.scanPrograms()
         var value = nGetVar(args.get(0), DataType.VAR).toString()
         Programs.startProgram(value)
     }
@@ -106,6 +119,38 @@ class Flow(
     }
 
 
+    /** dtm now (newVarName)
+     * */
+    fun dtmNow(args: MutableList<String>) {
+        nPutVar(args.get(0), DataType.VAR, System.currentTimeMillis().toString())
+    }
+
+
+    /** dtm format (now) (format) /timezone/ (contentVARNewVarName)
+     * */
+    fun dtmFormat(args: MutableList<String>) {
+        var now = nGetVar(args.get(0), DataType.VAR).toString()
+        var format = nGetVar(args.get(1), DataType.VAR).toString()
+        val currentMomentTemp = Instant.fromEpochMilliseconds(now.toLong())
+        val currentMoment: LocalDateTime
+        if (args.size == 4) {
+            var timezone = nGetVar(args.get(2), DataType.VAR).toString()
+            if (timezone == "UTC") {
+                currentMoment = currentMomentTemp.toLocalDateTime(TimeZone.UTC)
+            } else {
+                currentMoment = currentMomentTemp.toLocalDateTime(TimeZone.of(timezone))
+            }
+        } else {
+            currentMoment = currentMomentTemp.toLocalDateTime(TimeZone.currentSystemDefault())
+        }
+
+        val dateTimeFormat = LocalDateTime.Format { byUnicodePattern(format) }
+        nPutVar(args.last(), DataType.VAR, currentMoment.format(dateTimeFormat))
+    }
+
+
+
+
     /** csl error (text)
      * */
     fun cslError(args: MutableList<String>) {
@@ -124,7 +169,15 @@ class Flow(
     /** csl read (newVarName)
      * */
     fun cslRead(args: MutableList<String>) {
-        nPutVar(args.get(0), DataType.VAR, readln())
+        try {
+            nPutVar(args.get(0), DataType.VAR, readln())
+        } catch (e: Exception) {
+            Logger.readLine.value = true
+            Logger.afterReadLine = { readedValue ->
+                nPutVar(args.get(0), DataType.VAR, readedValue)
+            }
+            while (Logger.readLine.value){}
+        }
     }
 
 
@@ -179,12 +232,15 @@ class Flow(
             Data(DataType.VAR, args.get(0), nGetVar(args.get(0), DataType.VAR)))
     }
 
+    /** lst new (lstName)
+     * */
+    fun lstNew(args: MutableList<String>) {
+        nPutVar(args.get(0), DataType.LIST, mutableListOf<String>())
+    }
     /** lst set (lstName) (index) (value)
      * */
     fun lstSet(args: MutableList<String>) {
-        val list = try {
-            nGetVar(args.get(0), DataType.LIST) as MutableList<String>
-        } catch (e: VirtelException) { mutableListOf<String>() }
+        val list = nGetVar(args.get(0), DataType.LIST) as MutableList<String>
         var index = nGetVar(args.get(1), DataType.VAR).toString().toInt()
         var value = nGetVar(args.get(2), DataType.VAR).toString()
         list.add(index, value)
@@ -280,7 +336,7 @@ class Flow(
     fun matPlus(args: MutableList<String>) {
         var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
         var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
-        nPutVar(args.get(2), DataType.VAR, (a + b).toString())
+        nPutVar(args.get(2), DataType.VAR, (vnative.add(a.toUInt(),b.toUInt())).toString())
     }
 
     /** mat minus (a) (b) (newVarName)
@@ -346,6 +402,21 @@ class Flow(
         var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
         nPutVar(args.get(2), DataType.VAR, (a <= b).toString())
     }
+
+    /** mat random (min) (max) (newVarName)
+     * */
+    fun matRandom(args: MutableList<String>) {
+        var min = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
+        var max = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
+        nPutVar(args.get(2), DataType.VAR, (ThreadLocalRandom.current().nextDouble(min, max)).toString())
+    }
+    /** mat int (numberDouble) (newVarName)
+     * */
+    fun matInt(args: MutableList<String>) {
+        var numberDouble = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
+        nPutVar(args.get(1), DataType.VAR, (numberDouble.toInt()).toString())
+    }
+
 
 
     /** bln and (a) (b) (newVarName)
@@ -417,7 +488,7 @@ class Flow(
         }
     }
 
-    /** fls dirs (path)
+    /** fls dir (path)
      * */
     fun flsDir(args: MutableList<String>) {
         var path = nGetVar(args.get(0), DataType.VAR).toString()
@@ -830,9 +901,9 @@ class Flow(
 
     }
 
-    /** tts say (text)
+    /** tts say2 (text)
      * */
-    fun ttsSay(args: MutableList<String>) {
+    fun ttsSay2(args: MutableList<String>) {
         var text = nGetVar(args.get(0), DataType.VAR).toString()
         var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
         if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
@@ -840,6 +911,18 @@ class Flow(
         }
         playMP3(ttsFile)
     }
+
+    /** tts say (text) \language\
+     * */
+    fun ttsSay(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
+        if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
+            if(args.size == 2) vnative.ttsSayLang(text, ttsFile, args.get(1))
+            else vnative.ttsSay(text, ttsFile)
+        } else vnative.playMp3(ttsFile)
+    }
+
 
     /** stt start
      * */
@@ -932,6 +1015,10 @@ class Flow(
                     "pack" -> sysPack(step.args)
                     "log" -> sysLog(step.args)
                 }
+                "dtm" -> when (step.cmd) {
+                    "now" -> dtmNow(step.args)
+                    "format" -> dtmFormat(step.args)
+                }
 
                 "csl" -> when (step.cmd) {
                     "error" -> cslError(step.args)
@@ -953,6 +1040,7 @@ class Flow(
                 }
 
                 "lst" -> when (step.cmd) {
+                    "new" -> lstNew(step.args)
                     "set" -> lstSet(step.args)
                     "get" -> lstGet(step.args)
                     "del" -> lstDel(step.args)
@@ -979,6 +1067,8 @@ class Flow(
                     "less" -> matLess(step.args)
                     "grtreqs" -> matGrtrEqs(step.args)
                     "lesseqs" -> matLessEqs(step.args)
+                    "random" -> matRandom(step.args)
+                    "int" -> matInt(step.args)
                 }
 
                 "bln" -> when (step.cmd) {
@@ -1027,6 +1117,7 @@ class Flow(
 
                 "tts" -> when (step.cmd) {
                     "say" -> ttsSay(step.args)
+                    "say2" -> ttsSay2(step.args)
                 }
 
                 "stt" -> when (step.cmd) {
@@ -1068,12 +1159,14 @@ class Flow(
                 e.printStackTrace()
             }
             try {
-                (nGetProgramModel() ?: ProgramViewModel(PageModel(), program)).also {
+                (nGetProgramModel()!!).also {
                     it.errorMessage.value = "On line ${step.line} in file " + step.fileName +
-                            " in application with appId: ${step.appId}\n\n" + e.message.toString()
+                            " in application with appId: ${step.appId}\n\n" +
+                            e.message.toString() +
+                            "\nIf you`re developer, please, check documentation for it"
                     it.isErrorHappened.value = true
                 }
-            } catch (e:Exception){e.printStackTrace()}
+            } catch (k:Exception){k.printStackTrace()}
             return true // erroring
         }
     }
@@ -1086,7 +1179,9 @@ class Flow(
             "${FileSystem.programsPath}/${program.appId}${FileSystem.srCode}$fileName".toPath()
         )
         { readUtf8() }
-
+        runCode(code,fileName)
+    }
+    fun runCode(code: String, fileName: String) {
         try {
             var lineNumber = 0
             var lastString = ""
@@ -1113,6 +1208,7 @@ class Flow(
                     }
 
                     '\\' -> {
+                        if (displayer) lastString += "\\"
                         displayer = !displayer
                     }
 
@@ -1126,20 +1222,25 @@ class Flow(
                     }
 
                     ';' -> {
-                        step.args.add(lastString)
+                        if (!inValue) {
+                            step.args.add(lastString)
 
-                        step.appId = program.appId
-                        step.fileName = fileName
-                        step.line = lineNumber
+                            step.appId = program.appId
+                            step.fileName = fileName
+                            step.line = lineNumber
 
-                        if (runStep(step)) break // if erroring
+                            if (runStep(step)) break // if erroring
 
-                        lineNumber++
-                        lastString = ""
-                        step = Step(true)
-                        word = 0
-                        inValue = false
-                        displayer = false
+                            lineNumber++
+                            lastString = ""
+                            step = Step(true)
+                            word = 0
+                            inValue = false
+                            displayer = false
+                        } else {
+                            lastString += c
+                            displayer = false
+                        }
                     }
 
                     else -> {
@@ -1151,7 +1252,6 @@ class Flow(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
 
