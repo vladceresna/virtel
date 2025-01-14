@@ -1,52 +1,94 @@
+
+import io.gitlab.trixnity.gradle.CargoHost
+import io.gitlab.trixnity.gradle.cargo.dsl.jvm
+import io.gitlab.trixnity.gradle.cargo.rust.targets.RustWindowsTarget
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+
+    alias(libs.plugins.cargoKotlinMultiplatform)
+    alias(libs.plugins.uniffiKotlinMultiplatform)
+    alias(libs.plugins.kotlinAtomicFU)
+}
+
+var version = "2.3.0"
+
+
+
+cargo {
+    packageDirectory = project.layout.projectDirectory.dir("../vnative")
+    builds.jvm {
+        if (CargoHost.Platform.Windows.isCurrent) {
+            jvm = rustTarget == RustWindowsTarget.X64
+        } else {
+            jvm = rustTarget == CargoHost.current.hostTarget
+        }
+    }
+}
+
+uniffi {
+    if (CargoHost.Platform.Windows.isCurrent) {
+        generateFromUdl {
+            namespace = "vnative"
+            build = RustWindowsTarget.X64.friendlyName
+            udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
+        }
+    } else {
+        generateFromLibrary()
+    }
 }
 
 
-var version = "2.0.1"
 
 
 
 kotlin {
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
     jvm("desktop")
-    
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
+
+
+    if (CargoHost.Platform.MacOS.isCurrent) {
+        listOf(
+            iosX64(),
+            iosArm64(),
+            iosSimulatorArm64()
+        ).forEach { iosTarget ->
+            iosTarget.binaries.framework {
+                baseName = "ComposeApp"
+                isStatic = true
+            }
         }
     }
+
+
+
     
     sourceSets {
         val desktopMain by getting
 
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
+        if (CargoHost.Platform.MacOS.isCurrent) {
+            iosMain.dependencies {
+                implementation(libs.ktor.client.darwin)
+            }
         }
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
             implementation("javazoom:jlayer:1.0.1")
-
             implementation("ai.picovoice:picollm-android:1.1.0")
 
 
@@ -57,20 +99,15 @@ kotlin {
             api(libs.moko.permissions.compose)
 
 
-
-            /*val editorVersion = "0.23.2"
-            implementation("io.github.Rosemoe.sora-editor:editor:$editorVersion")
-            implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
-            implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
-*/
-
-
-
-
-
+                /*val editorVersion = "0.23.2"
+                implementation("io.github.Rosemoe.sora-editor:editor:$editorVersion")
+                implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
+                implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
+                */
 
 
         }
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -94,8 +131,11 @@ kotlin {
             implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
 
 
+            implementation("com.github.terrakok:adaptivestack:1.0.0")
 
             // TODO: Other ui theme
+
+
 
         }
         commonTest.dependencies {

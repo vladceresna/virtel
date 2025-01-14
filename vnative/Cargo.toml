@@ -1,0 +1,42 @@
+[package]
+name = "vnative"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "vnative"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[dependencies]
+uniffi = { version = "0.25.3" }
+minreq = {version="2.0.3", features=["https"]}
+percent-encoding = "2.1.0"
+rodio = "0.20.1"
+whichlang = "0.1.0"
+
+[build-dependencies]
+uniffi = { version = "0.25.3", features = ["build"] }
+
+
+
+# [profile.release]
+# opt-level = "z"
+# debug = false
+# lto = true
+# codegen-units = 1
+# strip = true
+# incremental = false
+# debug-assertions = false
+# overflow-checks = false
+# default-features = false
+
+# [profile.dev]
+# opt-level = "z"
+# debug = false
+# lto = true
+# codegen-units = 1
+# strip = true
+# incremental = false
+# debug-assertions = false
+# overflow-checks = false
+# default-features = false
