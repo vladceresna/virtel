@@ -1,6 +1,7 @@
 
 import io.gitlab.trixnity.gradle.CargoHost
 import io.gitlab.trixnity.gradle.cargo.dsl.jvm
+import io.gitlab.trixnity.gradle.cargo.rust.targets.RustWindowsTarget
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -24,12 +25,16 @@ var version = "2.3.0"
 cargo {
     packageDirectory = project.layout.projectDirectory.dir("../vnative")
     builds.jvm {
-        jvm = (rustTarget == CargoHost.current.hostTarget)
+        jvm = rustTarget == RustWindowsTarget.X64
     }
 }
 
 uniffi {
-    generateFromLibrary()
+    generateFromUdl {
+        namespace = "vnative"
+        build = RustWindowsTarget.X64.friendlyName
+        udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
+    }
 }
 
 
@@ -37,13 +42,13 @@ uniffi {
 
 
 kotlin {
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
     jvm("desktop")
 
 
@@ -66,15 +71,16 @@ kotlin {
     sourceSets {
         val desktopMain by getting
 
-        /*iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }*/
+        if (CargoHost.Platform.MacOS.isCurrent) {
+            iosMain.dependencies {
+                implementation(libs.ktor.client.darwin)
+            }
+        }
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
             implementation("javazoom:jlayer:1.0.1")
-
             implementation("ai.picovoice:picollm-android:1.1.0")
 
 
@@ -85,17 +91,15 @@ kotlin {
             api(libs.moko.permissions.compose)
 
 
-
-            /*val editorVersion = "0.23.2"
-            implementation("io.github.Rosemoe.sora-editor:editor:$editorVersion")
-            implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
-            implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
-*/
-
-
+                /*val editorVersion = "0.23.2"
+                implementation("io.github.Rosemoe.sora-editor:editor:$editorVersion")
+                implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
+                implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
+                */
 
 
         }
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
