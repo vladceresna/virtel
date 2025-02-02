@@ -117,8 +117,7 @@ fun ScreenPager(
                         .clip(RoundedCornerShape(20.dp)).weight(1F), pagerState
                 )
             }
-        }
-        if(VirtelSystem.appsScreen.value) {
+        } else{
             Column(
                 modifier = Modifier.padding(10.dp,10.dp,10.dp,0.dp)
                     .weight(1F).fillMaxWidth()
