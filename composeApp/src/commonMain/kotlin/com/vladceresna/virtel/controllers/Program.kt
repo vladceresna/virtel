@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.controllers
 
+import androidx.compose.runtime.mutableStateMapOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -7,7 +8,7 @@ import okio.Path.Companion.toPath
 
 
 data class Program(var path: String){
-    var store:DataStore = DataStore(this)
+
 
 
     var config:HashMap<String, String> = hashMapOf()
@@ -18,7 +19,7 @@ data class Program(var path: String){
     lateinit var appId: String
     lateinit var appName: String
 
-    var flows:MutableMap<String, Flow> = mutableMapOf()
+    var flows = mutableStateMapOf<String,Flow>()
 
 
 

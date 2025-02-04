@@ -58,7 +58,7 @@ class Flow(
     var flowName: String,
     var currentStep: Step
 ) {
-
+    var store:DataStore = DataStore(this)
 
     /** sys apps (newListName)
      * */
@@ -204,8 +204,8 @@ class Flow(
     /** ref del (newRefName)
      * */
     fun refDel(args: MutableList<String>) {
-        program.store.data.items.remove(
-            Data(DataType.REF, args.get(0), nGetVar(args.get(0), DataType.REF)))
+        store.data.remove(
+            Pair(args.get(0), DataType.REF), nGetVar(args.get(0), DataType.REF))
     }
 
     /** var set (value) (newVarName)
@@ -228,8 +228,8 @@ class Flow(
     /** var del (newVarName)
      * */
     fun varDel(args: MutableList<String>) {
-        program.store.data.items.remove(
-            Data(DataType.VAR, args.get(0), nGetVar(args.get(0), DataType.VAR)))
+        store.data.remove(Pair(args.get(0), DataType.VAR),
+            nGetVar(args.get(0), DataType.VAR))
     }
 
     /** lst new (lstName)
@@ -260,7 +260,7 @@ class Flow(
     fun lstDel(args: MutableList<String>) {
         var list = nGetVar(args.get(0), DataType.LIST) as MutableList<Any>
         var index = nGetVar(args.get(1), DataType.VAR).toString().toInt()
-        program.store.data.items.remove(Data(DataType.LIST,args.get(0), list))
+        store.data.remove(Pair(args.get(0),DataType.LIST), list)
         list.remove(list.get(index))
         nPutVar(args.get(0), DataType.LIST, list)
     }
@@ -996,7 +996,7 @@ class Flow(
             step.args.forEach {
                 fromRefsArgs.add(
                     try {
-                        program.store.get(it, DataType.REF)!!.value.toString()
+                        store.get(it, DataType.REF)!!.toString()
                     }catch(e:Exception){
                         it
                     }
@@ -1256,14 +1256,14 @@ class Flow(
 
 
     fun nGetVar(name: String, type: DataType): Any {
-        var gottenVar = program.store.getVar(name, type)
+        var gottenVar = store.getVar(name, type)
         if (gottenVar != null){
             return gottenVar
         }
         cslError(mutableListOf("\"Variable not found: $name\""))
         return ""
     }
-    fun nPutVar(name: String, type: DataType, value: Any) = program.store.putVar(name, type, value)
+    fun nPutVar(name: String, type: DataType, value: Any) = store.putVar(name, type, value)
     fun nGetProgramModel():ProgramViewModel? {
         var model:ProgramViewModel? = null
         for (pageModel in VirtelSystem.screenModel.pageModels) {
