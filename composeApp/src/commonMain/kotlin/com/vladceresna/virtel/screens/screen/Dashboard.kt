@@ -78,6 +78,7 @@ fun Dashboard(
                     Text("Running programs",
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Black, fontSize = 25.sp, modifier = Modifier.padding(10.dp))
+
                     screenModel.pageModels.get(screenModel.currentPageIndex.value)
                         .programViewModels.forEachIndexed { index, it ->
                             Column (
@@ -126,7 +127,7 @@ fun Dashboard(
                                     }
                                 }
 
-                                val items = remember { it.program.store.data.items }
+                                val items = remember { it.program.flows }
 
                                 var modifier = if (open.value) Modifier
                                 else Modifier.height(0.dp)
@@ -137,18 +138,14 @@ fun Dashboard(
                                         .padding(5.dp).fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(5.dp),
                                 ) {
-                                    items.forEachIndexed { index, item ->
+                                    items.forEach { t,u ->
                                         Column{
                                             Row {
                                                 Column(Modifier.weight(1f)) {
                                                     Text(
-                                                        item.name,
+                                                        t,
                                                         color = MaterialTheme.colorScheme.onSurface,
                                                         fontWeight = FontWeight.Black
-                                                    )
-                                                    Text(
-                                                        item.value.toString(),
-                                                        color = MaterialTheme.colorScheme.onSurface
                                                     )
                                                 }
                                                 IconButton(onClick = {
