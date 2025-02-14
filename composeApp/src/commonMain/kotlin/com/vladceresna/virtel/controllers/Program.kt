@@ -1,9 +1,6 @@
 package com.vladceresna.virtel.controllers
 
 import androidx.compose.runtime.mutableStateMapOf
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import okio.Path.Companion.toPath
 
 
@@ -35,12 +32,13 @@ data class Program(var path: String){
     fun runFlow(fileName:String, flowName:String){
         var flow = Flow(this, flowName,Step(false))
         flows.put(flowName, flow)
-        CoroutineScope(Job()).launch {
+
+        Thread {
             status = ProgramStatus.SCREEN
             flow.runFile(fileName)
             flows.remove(flowName)
             if (flows.isEmpty()) destroy()
-        }
+        }.start()
     }
     fun destroy(){
         status = ProgramStatus.DISABLED

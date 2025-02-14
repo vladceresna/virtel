@@ -59,6 +59,7 @@ class Flow(
     var currentStep: Step
 ) {
     var store:DataStore = DataStore(this)
+    var run = true
 
     /** sys apps (newListName)
      * */
@@ -774,14 +775,21 @@ class Flow(
         var flowName = nGetNameOfNextFlow(file)
         program.runFlow(file,flowName)
 
-        //CoroutineScope(Job()).launch { runOne(args) }
     }
+
 
     /** run pause (time)
      * */
     fun runPause(args: MutableList<String>) {
         var time = nGetVar(args.get(0), DataType.VAR).toString().toInt()
         runBlocking { delay(time.toLong()) }
+    }
+
+
+    /** run break ()
+     * */
+    fun runBreak(args: MutableList<String>) {
+
     }
 
     /** srv new (port) (newVarName)
@@ -846,6 +854,7 @@ class Flow(
                                     +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
                             nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
                                     +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
+
                             runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
                             var response = nGetVar(it.resVar,DataType.VAR).toString()
                             call.respondText {
@@ -1181,6 +1190,7 @@ class Flow(
         { readUtf8() }
         runCode(code,fileName)
     }
+
     fun runCode(code: String, fileName: String) {
         try {
             var lineNumber = 0
@@ -1191,6 +1201,11 @@ class Flow(
             var displayer = false
             //lexing
             for (i in code.indices) {
+                if (!run) {
+                    store.data.clear()
+                    program.flows.remove(flowName)
+                    break
+                }
                 when (val c = code[i]) {
                     ' ' -> {
                         if (inValue) {

@@ -63,7 +63,7 @@ fun ProgramLayer(
                             )
                         }
                         IconButton(onClick = {
-                            programViewModel.program.store.data.items.clear()
+                            programViewModel.program.flows.clear()
                             VirtelSystem.screenModel
                                 .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
                                 .programViewModels.remove(programViewModel)

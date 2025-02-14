@@ -135,30 +135,84 @@ fun Dashboard(
                                     modifier = modifier.padding(0.dp, 5.dp, 0.dp, 0.dp).animateContentSize()
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(MaterialTheme.colorScheme.surfaceContainer)
-                                        .padding(5.dp).fillMaxWidth(),
+                                        .fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(5.dp),
                                 ) {
-                                    items.forEach { t,u ->
-                                        Column{
-                                            Row {
-                                                Column(Modifier.weight(1f)) {
+                                    items.forEach { (t, u) ->
+                                        Row (
+                                            modifier.clip(RoundedCornerShape(10.dp))
+                                                .background(MaterialTheme.colorScheme.surfaceContainer)
+                                                .padding(5.dp).fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                t,
+                                                Modifier.weight(1f),
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontWeight = FontWeight.Black
+                                            )
+                                            IconButton({
+                                                u.run = false
+                                                items.remove(t)
+                                            }) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Delete,
+                                                    contentDescription = "Close",
+                                                    tint = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
+                                        }
+                                        Column(
+                                            modifier = modifier.padding(0.dp, 5.dp, 0.dp, 0.dp).animateContentSize()
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(MaterialTheme.colorScheme.surfaceDim)
+                                                .fillMaxWidth(),
+                                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                                        ) {
+                                            u.store.data.forEach {
+                                                Column(
+                                                    modifier.clip(RoundedCornerShape(10.dp))
+                                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                                        .padding(5.dp).fillMaxWidth(),
+                                                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                                                ) {
+                                                    Row(
+                                                        modifier.clip(RoundedCornerShape(10.dp))
+                                                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                                                            .padding(5.dp).fillMaxWidth(),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Text(
+                                                            it.key.first,
+                                                            Modifier.weight(1f),
+                                                            color = MaterialTheme.colorScheme.onSurface,
+                                                            fontWeight = FontWeight.Black
+                                                        )
+                                                        Text(
+                                                            "[ " + it.key.second.toString() + " ]",
+                                                            Modifier.weight(1f),
+                                                            color = MaterialTheme.colorScheme.onSurface,
+                                                            fontWeight = FontWeight.W100
+                                                        )
+                                                        IconButton({
+                                                            u.store.data.remove(it.key)
+                                                        }) {
+                                                            Icon(
+                                                                imageVector = Icons.Filled.Delete,
+                                                                contentDescription = "Close",
+                                                                tint = MaterialTheme.colorScheme.onSurface
+                                                            )
+                                                        }
+
+                                                    }
                                                     Text(
-                                                        t,
+                                                        it.value.toString(),
+                                                        Modifier,
                                                         color = MaterialTheme.colorScheme.onSurface,
                                                         fontWeight = FontWeight.Black
                                                     )
                                                 }
-                                                IconButton(onClick = {
-                                                    it.program.store.data.items.removeAt(index)
-                                                }) {
-                                                    Icon(
-                                                        imageVector = Icons.Filled.Delete,
-                                                        contentDescription = "Close",
-                                                        tint = MaterialTheme.colorScheme.onSurface
-                                                    )
-                                                }
                                             }
-                                            HorizontalDivider()
                                         }
                                     }
                                 }
