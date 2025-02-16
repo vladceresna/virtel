@@ -17,11 +17,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -33,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,7 +52,9 @@ import com.vladceresna.virtel.screens.model.ScreenModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import okio.Path.Companion.toPath
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dashboard(
     modifier:Modifier = Modifier,
@@ -132,85 +138,128 @@ fun Dashboard(
                                 var modifier = if (open.value) Modifier
                                 else Modifier.height(0.dp)
                                 Column(
-                                    modifier = modifier.padding(0.dp, 5.dp, 0.dp, 0.dp).animateContentSize()
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    modifier = modifier.padding(top = 5.dp)
                                         .fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(5.dp),
                                 ) {
                                     items.forEach { (t, u) ->
-                                        Row (
-                                            modifier.clip(RoundedCornerShape(10.dp))
-                                                .background(MaterialTheme.colorScheme.surfaceContainer)
-                                                .padding(5.dp).fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                t,
-                                                Modifier.weight(1f),
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontWeight = FontWeight.Black
-                                            )
-                                            IconButton({
-                                                u.run = false
-                                                items.remove(t)
-                                            }) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Delete,
-                                                    contentDescription = "Close",
-                                                    tint = MaterialTheme.colorScheme.onSurface
-                                                )
-                                            }
-                                        }
+
+                                        val openFlow = remember { mutableStateOf(false) }
                                         Column(
-                                            modifier = modifier.padding(0.dp, 5.dp, 0.dp, 0.dp).animateContentSize()
+                                            modifier = Modifier
                                                 .clip(RoundedCornerShape(10.dp))
-                                                .background(MaterialTheme.colorScheme.surfaceDim)
-                                                .fillMaxWidth(),
-                                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                                                .background(MaterialTheme.colorScheme.surfaceContainer)
+                                                .fillMaxWidth().padding(5.dp),
                                         ) {
-                                            u.store.data.forEach {
-                                                Column(
-                                                    modifier.clip(RoundedCornerShape(10.dp))
-                                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                                                        .padding(5.dp).fillMaxWidth(),
-                                                    verticalArrangement = Arrangement.spacedBy(5.dp),
-                                                ) {
-                                                    Row(
-                                                        modifier.clip(RoundedCornerShape(10.dp))
-                                                            .background(MaterialTheme.colorScheme.surfaceContainer)
-                                                            .padding(5.dp).fillMaxWidth(),
-                                                        verticalAlignment = Alignment.CenterVertically
+                                            Row (
+                                                Modifier.clip(RoundedCornerShape(10.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                                    .fillMaxWidth().padding(start = 10.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    t,
+                                                    Modifier.weight(1f),
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontWeight = FontWeight.Black
+                                                )
+                                                IconButton({
+                                                    u.run = false
+                                                    items.remove(t)
+                                                }) {
+                                                    Icon(
+                                                        imageVector = Icons.Filled.Delete,
+                                                        contentDescription = "Close",
+                                                        tint = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+                                                var iconInFlow = remember { mutableStateOf(Icons.Filled.KeyboardArrowDown) }
+                                                IconButton(onClick = {
+                                                    if (iconInFlow.value == Icons.Filled.KeyboardArrowDown) {
+                                                        iconInFlow.value = Icons.AutoMirrored.Filled.KeyboardArrowLeft
+                                                        openFlow.value = true
+                                                    } else {
+                                                        iconInFlow.value = Icons.Filled.KeyboardArrowDown
+                                                        openFlow.value = false
+                                                    }
+                                                }) {
+                                                    Icon(imageVector = iconInFlow.value,
+                                                        contentDescription = "Close",
+                                                        tint = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+                                            }
+                                            var modifierFlow = if (openFlow.value) Modifier
+                                            else Modifier.height(0.dp)
+                                            Column(
+                                                modifierFlow.padding(top = 5.dp),
+                                                verticalArrangement = Arrangement.spacedBy(5.dp),
+                                            ) {
+                                                u.store.data.forEach {
+                                                    Column(
+                                                        Modifier.clip(RoundedCornerShape(10.dp))
+
+                                                            .fillMaxWidth(),
                                                     ) {
-                                                        Text(
-                                                            it.key.first,
-                                                            Modifier.weight(1f),
-                                                            color = MaterialTheme.colorScheme.onSurface,
-                                                            fontWeight = FontWeight.Black
-                                                        )
-                                                        Text(
-                                                            "[ " + it.key.second.toString() + " ]",
-                                                            Modifier.weight(1f),
-                                                            color = MaterialTheme.colorScheme.onSurface,
-                                                            fontWeight = FontWeight.W100
-                                                        )
-                                                        IconButton({
-                                                            u.store.data.remove(it.key)
-                                                        }) {
-                                                            Icon(
-                                                                imageVector = Icons.Filled.Delete,
-                                                                contentDescription = "Close",
-                                                                tint = MaterialTheme.colorScheme.onSurface
+                                                        Row(
+                                                            Modifier.clip(
+                                                                RoundedCornerShape(
+                                                                    10.dp,
+                                                                    10.dp,
+                                                                    0.dp,
+                                                                    0.dp
+                                                                )
+                                                            )
+                                                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                                                .padding(start = 10.dp)
+                                                                .fillMaxWidth(),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Text(
+                                                                it.key.first,
+                                                                Modifier,
+                                                                color = MaterialTheme.colorScheme.onSurface,
+                                                                fontWeight = FontWeight.Black
+                                                            )
+                                                            Text(
+                                                                " ( " + it.key.second.toString() + " )",
+                                                                Modifier.weight(1f),
+                                                                color = MaterialTheme.colorScheme.onSurface,
+                                                                fontWeight = FontWeight.W100
+                                                            )
+                                                            IconButton({
+                                                                u.store.data.remove(it.key)
+                                                            }) {
+                                                                Icon(
+                                                                    imageVector = Icons.Filled.Delete,
+                                                                    contentDescription = "Close",
+                                                                    tint = MaterialTheme.colorScheme.onSurface
+                                                                )
+                                                            }
+
+                                                        }
+                                                        Row(
+                                                            Modifier.clip(
+                                                                RoundedCornerShape(
+                                                                    0.dp,
+                                                                    0.dp,
+                                                                    10.dp,
+                                                                    10.dp
+                                                                )
+                                                            )
+                                                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                                                .padding(10.dp, 0.dp, 10.dp, 10.dp)
+                                                                .fillMaxWidth(),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Text(
+                                                                it.value.toString(),
+                                                                Modifier,
+                                                                color = MaterialTheme.colorScheme.onSurface,
+                                                                fontWeight = FontWeight.W100
                                                             )
                                                         }
-
                                                     }
-                                                    Text(
-                                                        it.value.toString(),
-                                                        Modifier,
-                                                        color = MaterialTheme.colorScheme.onSurface,
-                                                        fontWeight = FontWeight.Black
-                                                    )
                                                 }
                                             }
                                         }
@@ -239,7 +288,7 @@ fun Dashboard(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Black, fontSize = 25.sp, modifier = Modifier.padding(10.dp))
                     Programs.programs.forEach {
-                        Column (
+                        Row (
                             Modifier.padding(10.dp,5.dp).fillMaxWidth()
                             .clip(RoundedCornerShape(20.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
@@ -248,10 +297,63 @@ fun Dashboard(
                                 Programs.startProgram(it.appId)
                             }.padding(10.dp)
                         ) {
-                            Text(it.appName.first().uppercaseChar()+
-                                    it.appName.drop(1),
-                                color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black)
-                            Text(it.appId,color = MaterialTheme.colorScheme.onSurface)
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    it.appName.first().uppercaseChar() +
+                                            it.appName.drop(1),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Black
+                                )
+                                Text(it.appId, color = MaterialTheme.colorScheme.onSurface)
+                            }
+
+                            var showDialog by remember { mutableStateOf(false) }
+                            IconButton(onClick = {
+                                showDialog = true
+                            }) {
+                                Icon(imageVector = Icons.Filled.Delete,
+                                    contentDescription = "Close",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            if (showDialog) {
+                                AlertDialog(
+                                    onDismissRequest = {
+                                        showDialog = false
+                                    },
+                                    title = { Text(text = "Really?") },
+                                    text = { Text(text = "Do you want delete this app: " + it.appName) },
+                                    confirmButton = {
+                                        Button(
+                                            colors = ButtonColors(
+                                                containerColor = Color.Red,
+                                                contentColor = Color.White,
+                                                disabledContainerColor = Color.Red,
+                                                disabledContentColor = Color.White
+                                            ),
+                                            onClick = {
+                                                okio.FileSystem.SYSTEM.deleteRecursively(
+                                                    Programs.findProgram(it.appId).path.toPath()
+                                                )
+                                                showDialog = false
+                                            }
+                                        ) {
+                                            Text(
+                                                text = "Yes"
+                                            )
+                                        }
+                                    },
+                                    dismissButton = {
+                                        OutlinedButton(
+                                            onClick = {
+                                                showDialog = false
+                                            }
+                                        ) {
+                                            Text(text = "No")
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }

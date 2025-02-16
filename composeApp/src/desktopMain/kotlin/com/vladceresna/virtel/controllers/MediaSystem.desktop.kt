@@ -77,8 +77,9 @@ data object DesktopMediaSystem {
                                         val file = it.value.first
                                         val appId = it.value.second
                                         CoroutineScope(Job()).launch {
-                                            Programs.findProgram(appId)
-                                                .runFlow(file, file + "-flow")
+                                            var (flowName, thr) = Programs.findProgram(appId)
+                                                .runFlow(file)
+                                            thr.start()
                                         }
                                     }
                                 }

@@ -126,8 +126,7 @@ fun ProgramLayer(
                             }
                         ) {
                             Text(
-                                text = "Restart",
-                                color = Color.White
+                                text = "Restart"
                             )
                         }
                     }

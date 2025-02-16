@@ -60,6 +60,7 @@ class Flow(
 ) {
     var store:DataStore = DataStore(this)
     var run = true
+    var runCycle = true
 
     /** sys apps (newListName)
      * */
@@ -117,6 +118,13 @@ class Flow(
     fun sysPack(args: MutableList<String>) {
         var packAppId = nGetVar(args.get(0), DataType.VAR).toString()
         nPutVar(args.get(1), DataType.VAR, VarInstaller.toVar(packAppId))
+    }
+
+    /** sys clear (newVarName)
+     * */
+    fun sysClear(args: MutableList<String>) {
+        store.data.clear()
+        program.flows.remove(flowName)
     }
 
 
@@ -233,6 +241,28 @@ class Flow(
             nGetVar(args.get(0), DataType.VAR))
     }
 
+    /** var import (valueFlowName) (varName)
+     * */
+    fun varImport(args: MutableList<String>) {
+        var valueFlowName = nGetVar(args.get(0), DataType.VAR).toString()
+        var flow = program.flows.get(valueFlowName)
+        if (flow == null) throw VirtelException("Flow not found by name: "+valueFlowName)
+        var value = flow.nGetVar(args.get(1), DataType.VAR)
+        nPutVar(args.get(1), DataType.VAR,value)
+    }
+
+    /** var export (valueFlowName) (varName)
+     * */
+    fun varExport(args: MutableList<String>) {
+        var valueFlowName = nGetVar(args.get(0), DataType.VAR).toString()
+        var flow = program.flows.get(valueFlowName)
+        if (flow == null) throw VirtelException("Flow not found by name: "+valueFlowName)
+        var value = nGetVar(args.get(1), DataType.VAR)
+        flow.nPutVar(args.get(1), DataType.VAR, value)
+    }
+
+
+
     /** lst new (lstName)
      * */
     fun lstNew(args: MutableList<String>) {
@@ -283,6 +313,29 @@ class Flow(
         var list = nGetVar(args.get(0), DataType.LIST) as MutableList<Any>
         nPutVar(args.get(1), DataType.VAR, list.toString())
     }
+
+    /** lst import (valueFlowName) (varName)
+     * */
+    fun lstImport(args: MutableList<String>) {
+        var valueFlowName = nGetVar(args.get(0), DataType.VAR).toString()
+        var flow = program.flows.get(valueFlowName)
+        if (flow == null) throw VirtelException("Flow not found by name: "+valueFlowName)
+        var value = flow.nGetVar(args.get(1), DataType.LIST)
+        nPutVar(args.get(1), DataType.LIST,value)
+    }
+
+    /** lst export (valueFlowName) (varName)
+     * */
+    fun lstExport(args: MutableList<String>) {
+        var valueFlowName = nGetVar(args.get(0), DataType.VAR).toString()
+        var flow = program.flows.get(valueFlowName)
+        if (flow == null) throw VirtelException("Flow not found by name: "+valueFlowName)
+        var value = nGetVar(args.get(1), DataType.LIST)
+        flow.nPutVar(args.get(1), DataType.LIST, value)
+    }
+
+
+
 
     /** str cut (first) (last) (value) (newVarName)
      * */
@@ -763,18 +816,20 @@ class Flow(
         var expr = nGetVar(args.get(0), DataType.VAR).toString()
         var file = nGetVar(args.get(1), DataType.VAR).toString()
         while (expr.equals("true")) {
+            if (!run) break
+            if (!runCycle) break
             runFile(file)
             expr = nGetVar(args.get(0), DataType.VAR).toString()
         }
     }
 
-    /** run flow (file)
+    /** run flow (file) (varNewFlowName)
      * */
     fun runFlow(args: MutableList<String>) {
         var file = nGetVar(args.get(0), DataType.VAR).toString()
-        var flowName = nGetNameOfNextFlow(file)
-        program.runFlow(file,flowName)
-
+        var (flowName, flow) = program.runFlow(file)
+        nPutVar(args.get(1), DataType.VAR, flowName)
+        CoroutineScope(Job()).launch { flow.start() }
     }
 
 
@@ -789,8 +844,17 @@ class Flow(
     /** run break ()
      * */
     fun runBreak(args: MutableList<String>) {
+        runCycle = false
+    }
+
+
+    /** run stop ()
+     * */
+    fun runStop(args: MutableList<String>) {
+        run = false
 
     }
+
 
     /** srv new (port) (newVarName)
      * */
@@ -820,66 +884,53 @@ class Flow(
                 server.routes.forEach {
                     when (it.method) {
                         "get" -> get(it.route) {
-                            var flowName = nGetNameOfNextFlow(it.file)
+                            var (flowName, thr) = nRunFlow(mutableListOf("\""+it.file+"\""))
+                            var flow = program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
                             call.parameters.toMap().forEach {
-                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.VAR,it.value
-                                            .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                                flow.nPutVar(
+                                    it.key,
+                                    DataType.VAR,
+                                    it.value[0]
+                                )
                             }
-
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
-                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
-                            var response = nGetVar(it.resVar,DataType.VAR).toString()
+                            thr.start()
+                            thr.join()
                             call.respondText {
-                                response
+                                flow.nGetVar(it.resVar,DataType.VAR).toString()
                             }
                         }
 
                         "post" -> post(it.route) {
-                            var flowName = nGetNameOfNextFlow(it.file)
+                            var (flowName, thr) = nRunFlow(mutableListOf("\""+it.file+"\""))
+                            var flow = program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
                             call.parameters.toMap().forEach {
-                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.VAR,it.value
-                                    .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                                flow.nPutVar(
+                                    it.key,
+                                    DataType.VAR,
+                                    it.value[0]
+                                )
                             }
-
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
-
-                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
-                            var response = nGetVar(it.resVar,DataType.VAR).toString()
+                            thr.start()
+                            thr.join()
                             call.respondText {
-                                response
+                                flow.nGetVar(it.resVar,DataType.VAR).toString()
                             }
                         }
 
                         "delete" -> delete(it.route) {
-                            var flowName = nGetNameOfNextFlow(it.file)
+                            var (flowName, thr) = nRunFlow(mutableListOf("\""+it.file+"\""))
+                            var flow = program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
                             call.parameters.toMap().forEach {
-                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.VAR,it.value
-                                    .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                                flow.nPutVar(
+                                    it.key,
+                                    DataType.VAR,
+                                    it.value[0]
+                                )
                             }
-
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
-                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
-                            var response = nGetVar(it.resVar,DataType.VAR).toString()
+                            thr.start()
+                            thr.join()
                             call.respondText {
-                                response
+                                flow.nGetVar(it.resVar,DataType.VAR).toString()
                             }
                         }
                     }
@@ -1023,6 +1074,7 @@ class Flow(
                     "install" -> sysInstall(step.args)
                     "pack" -> sysPack(step.args)
                     "log" -> sysLog(step.args)
+                    "clear" -> sysClear(step.args)
                 }
                 "dtm" -> when (step.cmd) {
                     "now" -> dtmNow(step.args)
@@ -1046,6 +1098,8 @@ class Flow(
                     "set" -> varSet(step.args)
                     "get" -> varGet(step.args)
                     "del" -> varDel(step.args)
+                    "import" -> varImport(step.args)
+                    "export" -> varExport(step.args)
                 }
 
                 "lst" -> when (step.cmd) {
@@ -1055,6 +1109,8 @@ class Flow(
                     "del" -> lstDel(step.args)
                     "len" -> lstLen(step.args)
                     "var" -> lstVar(step.args)
+                    "import" -> lstImport(step.args)
+                    "export" -> lstExport(step.args)
                 }
 
                 "str" -> when (step.cmd) {
@@ -1112,6 +1168,8 @@ class Flow(
                     "while" -> runWhile(step.args)
                     "flow" -> runFlow(step.args)
                     "pause" -> runPause(step.args)
+                    "break" -> runBreak(step.args)
+                    "stop" -> runStop(step.args)
                 }
 
                 "srv" -> when (step.cmd) {
@@ -1290,11 +1348,15 @@ class Flow(
         }
         return model
     }
-    fun nGetNameOfNextFlow(file:String):String{
-        var splitByDot = file.split(".").toMutableList()
-        splitByDot.removeLast()
-        return splitByDot.joinToString(".")+"-"+program.flows.size
+
+    /** run flow (file) (varNewFlowName)
+     * */
+    fun nRunFlow(args: MutableList<String>):Pair<String, Thread> {
+        var file = nGetVar(args.get(0), DataType.VAR).toString()
+        var (flowName, flow) = program.runFlow(file)
+        return Pair(flowName, flow)
     }
+
 }
 
 data class Step(
