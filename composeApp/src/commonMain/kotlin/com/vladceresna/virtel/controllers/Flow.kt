@@ -50,8 +50,9 @@ import kotlin.math.roundToInt
  * - value/var (or variable with it): tryGet: any name
  * - varName (var need to write/save in): clear using: newVarName, newListName
  *
- * Flow params format:
- * app.id-flow-1-varname
+ * Flows format:
+ * flow-0
+ * flow-1
  * **/
 class Flow(
     var program: Program,
@@ -575,21 +576,26 @@ class Flow(
     }
 
 
-    /** scr new (newVarName) (viewType) (weight) (size) (parent)
+    /** scr new (idName) (viewType) (weight) (size) (parent)
      *      (weight) = x>0 or 0 if without
      * */
     fun scrNew(args: MutableList<String>) {
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
+        var parentName = nGetVar(args.get(4), DataType.VAR).toString()
+
         var parent = programModel.widgets.find {
-            it.name == args.get(4)
+            it.name == parentName
         }
-        if(parent == null) throw VirtelException("Parent widget not found by name: "+args.get(4))
+
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
+        if(parent == null) throw VirtelException("Parent widget not found by name: "+parentName)
 
         var newModel = WidgetModel(
             programModel,
-            args.get(0),
+            name,
             when(nGetVar(args.get(1), DataType.VAR)){
                 "view" -> {WidgetType.VIEW}
                 "text" -> {WidgetType.TEXT}
@@ -628,14 +634,16 @@ class Flow(
         programModel.widgets.add(newModel)
     }
 
-    /** scr del (newVarName)
+    /** scr del (idName)
      * */
     fun scrDel(args: MutableList<String>) {
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
         var widget = programModel.widgets.find {
-            it.name == args.get(0)
+            it.name == name
         }
         if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
 
@@ -644,7 +652,7 @@ class Flow(
 
     }
 
-    /** scr set (newVarName) (property) (value)
+    /** scr set (idName) (property) (value)
      * (property) = (weight) (variant) (title) (value)
      *             (foreground) (background) (onClick) (parent)
      *             (paddingTop) (paddingRight) (paddingBottom) (paddingLeft)
@@ -655,8 +663,10 @@ class Flow(
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
         var widget = programModel.widgets.find {
-            it.name == args.get(0)
+            it.name == name
         }
         if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
 
@@ -703,20 +713,22 @@ class Flow(
 
     }
 
-    /** scr get (newVarName) (viewVarName) (property)
+    /** scr get (idName) (property) (newVarName)
      * */
     fun scrGet(args: MutableList<String>) {
-        var property = nGetVar(args.get(2), DataType.VAR).toString()
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
+        var property = nGetVar(args.get(1), DataType.VAR).toString()
 
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
         var widget = programModel.widgets.find {
-            it.name == args.get(1)
+            it.name == name
         }
-        if(widget == null) throw VirtelException("Widget not found by name: "+args.get(1))
+        if(widget == null) throw VirtelException("Widget not found by name: "+name)
 
-        nPutVar( args.get(0), DataType.VAR, when (property) {
+        nPutVar( args.get(2), DataType.VAR, when (property) {
                 "weight" -> widget.weight.value.toString()
                 "variant" -> widget.variant.value
                 "title" -> widget.title.value
@@ -725,7 +737,7 @@ class Flow(
                 "background" -> widget.background.value
                 "onClick" -> widget.onClick.value
                 "parent" -> (programModel.widgets.find {
-                    it.name == args.get(2)
+                    it.name == args.get(1)
                 } as WidgetModel).name
                 "paddingTop" ->    widget.paddingTop.value
                 "paddingRight" ->  widget.paddingRight.value
@@ -822,14 +834,41 @@ class Flow(
             expr = nGetVar(args.get(0), DataType.VAR).toString()
         }
     }
+    /** run each (valueList) (itemVarName) (file)
+     * */
+    fun runEach(args: MutableList<String>) {
+        var list = nGetVar(args.get(0), DataType.LIST) as MutableList<String>
+        var file = nGetVar(args.get(2), DataType.VAR).toString()
+        for (index in 0..(list.size-1)) {
+            if (!run) break
+            if (!runCycle) break
+            nPutVar(args.get(1), DataType.VAR, list[index])
+            nPutVar(args.get(1)+"Index", DataType.VAR, index)
+            runFile(file)
+        }
+    }
+
+    /** run for (first) (last) (indexVarName) (file)
+     * */
+    fun runFor(args: MutableList<String>) {
+        var first = nGetVar(args.get(0), DataType.VAR).toString().toInt()
+        var last = nGetVar(args.get(1), DataType.VAR).toString().toInt()
+        var file = nGetVar(args.get(3), DataType.VAR).toString()
+        for (index in first..last) {
+            if (!run) break
+            if (!runCycle) break
+            nPutVar(args.get(2), DataType.VAR, index)
+            runFile(file)
+        }
+    }
 
     /** run flow (file) (varNewFlowName)
      * */
     fun runFlow(args: MutableList<String>) {
         var file = nGetVar(args.get(0), DataType.VAR).toString()
-        var (flowName, flow) = program.runFlow(file)
+        var (flowName, thr) = program.runFlow(file)
         nPutVar(args.get(1), DataType.VAR, flowName)
-        CoroutineScope(Job()).launch { flow.start() }
+        CoroutineScope(Job()).launch { thr.start() }
     }
 
 
@@ -1166,6 +1205,8 @@ class Flow(
                     "one" -> runOne(step.args)
                     "if" -> runIf(step.args)
                     "while" -> runWhile(step.args)
+                    "each" -> runEach(step.args)
+                    "for" -> runFor(step.args)
                     "flow" -> runFlow(step.args)
                     "pause" -> runPause(step.args)
                     "break" -> runBreak(step.args)
