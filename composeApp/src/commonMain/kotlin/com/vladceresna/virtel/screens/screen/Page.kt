@@ -108,7 +108,8 @@ fun Page(
             }
             IconButton(onClick = {
                 try {
-                    pageModel.settingsClick.value()
+                    //pageModel.settingsClick.value()
+                    VirtelSystem.appsScreen.value = true
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

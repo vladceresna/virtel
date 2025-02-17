@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.controllers
 
+import androidx.compose.runtime.mutableStateMapOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -7,7 +8,7 @@ import okio.Path.Companion.toPath
 
 
 data class Program(var path: String){
-    var store:DataStore = DataStore(this)
+
 
 
     var config:HashMap<String, String> = hashMapOf()
@@ -18,7 +19,7 @@ data class Program(var path: String){
     lateinit var appId: String
     lateinit var appName: String
 
-    var flows:MutableMap<String, Flow> = mutableMapOf()
+    var flows = mutableStateMapOf<String,Flow>()
 
 
 
@@ -29,17 +30,27 @@ data class Program(var path: String){
     }
     fun run(){
         status = ProgramStatus.BACKGROUND
-        runFlow("/start.steps", "main")
-    }
-    fun runFlow(fileName:String, flowName:String){
-        var flow = Flow(this, flowName,Step(false))
-        flows.put(flowName, flow)
+        var (flowName, thr) = runFlow("/start.steps")
         CoroutineScope(Job()).launch {
-            status = ProgramStatus.SCREEN
-            flow.runFile(fileName)
-            flows.remove(flowName)
-            if (flows.isEmpty()) destroy()
+            thr.start()
         }
+    }
+    fun runFlow(fileName:String): Pair<String,Thread> {
+        var flowName:String
+        var flow:Flow
+        synchronized(flows){
+            flowName = "flow-${flows.size}"
+            flow = Flow(this, flowName,Step(false))
+            flows.put(flowName, flow)
+        }
+
+        return Pair(
+            flowName,
+            Thread {
+                status = ProgramStatus.SCREEN
+                flow.runFile(fileName)
+            }
+        )
     }
     fun destroy(){
         status = ProgramStatus.DISABLED
