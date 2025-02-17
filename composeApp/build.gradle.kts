@@ -1,5 +1,6 @@
 
 import io.gitlab.trixnity.gradle.CargoHost
+import io.gitlab.trixnity.gradle.cargo.dsl.android
 import io.gitlab.trixnity.gradle.cargo.dsl.jvm
 import io.gitlab.trixnity.gradle.cargo.rust.targets.RustWindowsTarget
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
@@ -31,9 +32,19 @@ cargo {
             jvm = rustTarget == CargoHost.current.hostTarget
         }
     }
+    builds.android {
+        ndkLibraries.addAll("c++_shared")
+    }
 }
 
 uniffi {
+
+
+    bindgenFromGitRevision(
+        repository = "https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings",
+        revision = "a97a6a0f5cd243d4a41acedf8d57fe33cb3da5e8"
+    )
+
     if (CargoHost.Platform.Windows.isCurrent) {
         generateFromUdl {
             namespace = "vnative"
