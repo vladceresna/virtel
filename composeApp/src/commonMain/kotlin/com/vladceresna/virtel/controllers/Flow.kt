@@ -391,7 +391,7 @@ class Flow(
     fun matPlus(args: MutableList<String>) {
         var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
         var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
-        nPutVar(args.get(2), DataType.VAR, (uniffi.vnative.add(a.toUInt(),b.toUInt())).toString())
+        nPutVar(args.get(2), DataType.VAR, (vnative.add(a.toUInt(),b.toUInt())).toString())
     }
 
     /** mat minus (a) (b) (newVarName)
@@ -1017,9 +1017,10 @@ class Flow(
         var text = nGetVar(args.get(0), DataType.VAR).toString()
         var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
         if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
-            if(args.size == 2) uniffi.vnative.ttsSayLang(text, ttsFile, args.get(1))
-            else uniffi.vnative.ttsSay(text, ttsFile)
-        } else uniffi.vnative.playMp3(ttsFile)
+            if(args.size == 2) vnative.ttsSayLang(text, ttsFile, args.get(1))
+            else vnative.ttsSay(text, ttsFile)
+        } else vnative.playMp3(ttsFile)
+        var m = vnative.Storage("")
     }
 
 

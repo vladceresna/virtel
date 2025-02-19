@@ -39,11 +39,10 @@ cargo {
 
 uniffi {
 
-
-    bindgenFromGitRevision(
+    /*bindgenFromGitRevision(
         repository = "https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings",
         revision = "a97a6a0f5cd243d4a41acedf8d57fe33cb3da5e8"
-    )
+    )*/
 
     if (CargoHost.Platform.Windows.isCurrent) {
         generateFromUdl {
