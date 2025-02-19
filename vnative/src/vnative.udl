@@ -3,4 +3,12 @@ namespace vnative {
   void tts_say_lang(string text, string path, string language);
   void tts_say(string text, string path);
   void play_mp3(string path);
+  
 };
+interface Storage {
+  constructor(string path);
+  void set(string name, string value);
+  string get(string name);
+  void del(string name);
+};
+

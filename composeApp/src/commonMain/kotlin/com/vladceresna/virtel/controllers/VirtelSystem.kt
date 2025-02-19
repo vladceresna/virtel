@@ -71,8 +71,8 @@ data object VirtelSystem {
                 var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
                 if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
                     //toSpeech(text, labs, ttsFile)
-                    vnative.ttsSayLang(text, ttsFile, "uk")
-                } else vnative.playMp3(ttsFile)
+                    uniffi.vnative.ttsSayLang(text, ttsFile, "uk")
+                } else uniffi.vnative.playMp3(ttsFile)
             } catch (e: Exception) {
             }
         }

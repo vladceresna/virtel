@@ -52,7 +52,10 @@ uniffi {
             udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
         }
     } else {
-        generateFromLibrary()
+        generateFromUdl {
+            namespace = "vnative"
+            udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
+        }
     }
 }
 
@@ -65,7 +68,7 @@ kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
     jvm("desktop")
