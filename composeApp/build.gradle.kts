@@ -19,7 +19,7 @@ plugins {
     alias(libs.plugins.kotlinAtomicFU)
 }
 
-var version = "2.3.0"
+var version = "3.0.0"//alpha
 
 
 
@@ -65,9 +65,9 @@ uniffi {
 kotlin {
 
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        @OptIn(ExperimentalKotlinGradlePluginApi::class  )
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_11)
         }
     }
     jvm("desktop")
