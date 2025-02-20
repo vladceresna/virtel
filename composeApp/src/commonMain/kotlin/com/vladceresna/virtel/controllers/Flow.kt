@@ -356,7 +356,7 @@ class Flow(
     /** lst var (lstName) (newVarName)
      * */
     fun lstVar(args: MutableList<String>) {
-        var list = nGetVar(args.get(0), DataType.LIST) as MutableList<Any>
+        var list = nGetVar(args.get(0), DataType.LIST) as MutableList<String>
         nPutVar(args.get(1), DataType.VAR, Json.encodeToString(list))
     }
 
