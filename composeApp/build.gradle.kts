@@ -17,6 +17,8 @@ plugins {
     alias(libs.plugins.cargoKotlinMultiplatform)
     alias(libs.plugins.uniffiKotlinMultiplatform)
     alias(libs.plugins.kotlinAtomicFU)
+
+    kotlin("plugin.serialization") version "2.1.10"
 }
 
 var version = "3.0.0"//alpha
@@ -132,13 +134,14 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.lifecycle.viewmodel.compose)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
             implementation("io.ktor:ktor-server-cio:3.0.0-rc-1")
-            implementation("com.squareup.okio:okio:3.9.1")
-
+            implementation("io.ktor:ktor-server-websockets:3.0.0-rc-1")
             implementation(libs.ktor.client.okhttp)
 
+            implementation("com.squareup.okio:okio:3.9.1")
 
             implementation("io.coil-kt.coil3:coil-compose:3.0.0-alpha06")
             implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
@@ -147,6 +150,11 @@ kotlin {
             implementation("com.github.terrakok:adaptivestack:1.0.0")
 
             // TODO: Other ui theme
+
+
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+
+
 
 
 

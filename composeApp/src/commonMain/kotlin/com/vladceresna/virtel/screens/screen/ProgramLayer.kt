@@ -63,6 +63,7 @@ fun ProgramLayer(
                             )
                         }
                         IconButton(onClick = {
+                            programViewModel.program.storage.stop()
                             programViewModel.program.flows.forEach { (t, u) -> u.run = false }
                             programViewModel.program.flows.clear()
                             VirtelSystem.screenModel

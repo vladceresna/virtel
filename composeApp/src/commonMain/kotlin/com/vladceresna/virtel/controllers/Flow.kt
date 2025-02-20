@@ -17,6 +17,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpMethod
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -38,9 +39,12 @@ import kotlinx.datetime.format.DateTimeFormat
 import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import okio.IOException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
+import java.util.Collections
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.roundToInt
 
@@ -127,6 +131,40 @@ class Flow(
         store.data.clear()
         program.flows.remove(flowName)
     }
+    
+    /** sys backup (filePath)
+     * */
+    fun sysBackup(args: MutableList<String>) {
+        var filePath = nGetVar(args.get(0), DataType.VAR).toString()
+        backupSystem(filePath)
+    }
+
+    /** sys restore (filePath)
+     * */
+    fun sysRestore(args: MutableList<String>) {
+        var filePath = nGetVar(args.get(0), DataType.VAR).toString()
+        restoreSystem(filePath)
+    }
+
+
+
+    /** zip archive (folderPath) (newZipFilePath)
+     * */
+    fun zipArchive(args: MutableList<String>) {
+        var folderPath = nGetVar(args.get(0), DataType.VAR).toString()
+        var newZipFilePath = nGetVar(args.get(1), DataType.VAR).toString()
+        archiveToZip(folderPath, newZipFilePath)
+    }
+
+    /** zip extract (zipFilePath) (folderPath)
+     * */
+    fun zipExtract(args: MutableList<String>) {
+        var zipFilePath = nGetVar(args.get(0), DataType.VAR).toString()
+        var folderPath = nGetVar(args.get(1), DataType.VAR).toString()
+        extractZip(zipFilePath, folderPath)
+    }
+    
+
 
 
     /** dtm now (newVarName)
@@ -262,6 +300,13 @@ class Flow(
         flow.nPutVar(args.get(1), DataType.VAR, value)
     }
 
+    /** var list (varName) (newListVarName)
+     * */
+    fun varList(args: MutableList<String>) {
+        var list = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.LIST, Json.decodeFromString<MutableList<String>>(list))
+    }
+
 
 
     /** lst new (lstName)
@@ -312,7 +357,7 @@ class Flow(
      * */
     fun lstVar(args: MutableList<String>) {
         var list = nGetVar(args.get(0), DataType.LIST) as MutableList<Any>
-        nPutVar(args.get(1), DataType.VAR, list.toString())
+        nPutVar(args.get(1), DataType.VAR, Json.encodeToString(list))
     }
 
     /** lst import (valueFlowName) (varName)
@@ -334,6 +379,36 @@ class Flow(
         var value = nGetVar(args.get(1), DataType.LIST)
         flow.nPutVar(args.get(1), DataType.LIST, value)
     }
+
+
+
+
+
+
+    /** stg set (name) (value)
+     * */
+    fun stgSet(args: MutableList<String>) {
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+        var value = nGetVar(args.get(1), DataType.VAR).toString()
+        program.storage.set(name, value)
+    }
+
+    /** stg get (name) (newVarName)
+     * */
+    fun stgGet(args: MutableList<String>) {
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR, program.storage.get(name))
+    }
+
+    /** stg del (name)
+     * */
+    fun stgDel(args: MutableList<String>) {
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+        program.storage.del(name)
+    }
+
+
+
 
 
 
@@ -895,11 +970,10 @@ class Flow(
     }
 
 
-    /** srv new (port) (newVarName)
+    /** srv new (newVarName)
      * */
     fun srvNew(args: MutableList<String>) {
-        var port = nGetVar(args.get(0), DataType.VAR).toString()
-        nPutVar(args.get(1), DataType.SERVER, EmbeddedServer(port))
+        nPutVar(args.get(0), DataType.SERVER, EmbeddedServer())
     }
 
     /** srv add (method) (route) (file) (resVarName) (newVarName)
@@ -913,12 +987,14 @@ class Flow(
         nPutVar(args.get(4), DataType.SERVER, server)
     }
 
-    /** srv run (newVarName)
+    /** srv run (port) (newVarName)
      * */
     fun srvRun(args: MutableList<String>) {
+
+        var port = nGetVar(args.get(0), DataType.VAR).toString()
         var server = nGetVar(args.get(0), DataType.SERVER) as EmbeddedServer
 
-        embeddedServer(CIO, server.port.toInt()) {
+        var embServer = embeddedServer(CIO, port.toInt()) {
             routing {
                 server.routes.forEach {
                     when (it.method) {
@@ -949,6 +1025,11 @@ class Flow(
                                     it.value[0]
                                 )
                             }
+                            flow.nPutVar(
+                                "server-body",
+                                DataType.VAR,
+                                call.receiveText()
+                            )
                             thr.start()
                             thr.join()
                             call.respondText {
@@ -975,8 +1056,29 @@ class Flow(
                     }
                 }
             }
-        }.start()
+        }
+
+        server.stopFuns.put(port.toInt(), embServer::stop)
+
+        embServer.start()
+        CoroutineScope(Job()).launch {
+            while (run){
+                delay(100)
+            }
+            embServer.stop()
+        }
     }
+
+    /** srv stop (port) (newVarName)
+     * */
+    fun srvStop(args: MutableList<String>) {
+        var port = nGetVar(args.get(0), DataType.VAR).toString().toInt()
+        var server = nGetVar(args.get(1), DataType.SERVER) as EmbeddedServer
+        var func = server.stopFuns.get(port) ?: throw VirtelException("Virtel Error: Server not found: "+port)
+        func()
+    }
+
+
 
     /** clt req (method) (url) (body) (newVarNameStatus) (newVarNameBody)
      * */
@@ -999,6 +1101,14 @@ class Flow(
         }
 
     }
+
+
+
+
+
+
+
+
 
     /** tts say2 (text)
      * */
@@ -1115,6 +1225,12 @@ class Flow(
                     "pack" -> sysPack(step.args)
                     "log" -> sysLog(step.args)
                     "clear" -> sysClear(step.args)
+                    "backup" -> sysBackup(step.args)
+                    "restore" -> sysRestore(step.args)
+                }
+                "zip" -> when (step.cmd) {
+                    "archive" -> zipArchive(step.args)
+                    "extract" -> zipExtract(step.args)
                 }
                 "dtm" -> when (step.cmd) {
                     "now" -> dtmNow(step.args)
@@ -1140,6 +1256,7 @@ class Flow(
                     "del" -> varDel(step.args)
                     "import" -> varImport(step.args)
                     "export" -> varExport(step.args)
+                    "list" -> varList(step.args)
                 }
 
                 "lst" -> when (step.cmd) {
@@ -1151,6 +1268,11 @@ class Flow(
                     "var" -> lstVar(step.args)
                     "import" -> lstImport(step.args)
                     "export" -> lstExport(step.args)
+                }
+                "stg" -> when (step.cmd) {
+                    "set" -> stgSet(step.args)
+                    "get" -> stgGet(step.args)
+                    "del" -> stgDel(step.args)
                 }
 
                 "str" -> when (step.cmd) {
@@ -1218,6 +1340,7 @@ class Flow(
                     "new" -> srvNew(step.args)
                     "add" -> srvAdd(step.args)
                     "run" -> srvRun(step.args)
+                    "stop" -> srvStop(step.args)
                 }
 
                 "clt" -> when (step.cmd) {

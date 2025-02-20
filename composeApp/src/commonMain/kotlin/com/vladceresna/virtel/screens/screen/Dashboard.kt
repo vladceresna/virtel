@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.terrakok.adaptivestack.HorizontalAdaptiveStack
+import com.vladceresna.virtel.controllers.FileSystem
 import com.vladceresna.virtel.controllers.Flow
 import com.vladceresna.virtel.controllers.Logger
 import com.vladceresna.virtel.controllers.Program
@@ -403,12 +404,17 @@ fun Dashboard(
                                     Logger.readLine.value = false
                                     Logger.afterReadLine(value)
                                 } else {
-                                    var program = Program("")
-                                    program.appId = "vladceresna.virtel.console"
-                                    program.appName = "Console"
+                                    var program = Program(
+                                        FileSystem.programsPath+
+                                        "/vladceresna.virtel.terminal"
+                                    )
+                                    program.appId = "vladceresna.virtel.terminal"
+                                    program.appName = "Terminal"
                                     program.status = ProgramStatus.BACKGROUND
+                                    program.setStorage()
                                     var flow = Flow(program, "main", Step(false))
                                     flow.runCode(value, "/start.steps")
+                                    program.storage.stop()
                                 }
                             }
                         }){ Text("Send") }

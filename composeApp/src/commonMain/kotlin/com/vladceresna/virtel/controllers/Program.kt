@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import okio.Path.Companion.toPath
+import vnative.Storage
 
 
 data class Program(var path: String){
@@ -21,6 +22,8 @@ data class Program(var path: String){
 
     var flows = mutableStateMapOf<String,Flow>()
 
+    lateinit var storage:Storage
+
 
 
     fun scan(){
@@ -30,11 +33,23 @@ data class Program(var path: String){
     }
     fun run(){
         status = ProgramStatus.BACKGROUND
+
+        setStorage()
+
         var (flowName, thr) = runFlow("/start.steps")
         CoroutineScope(Job()).launch {
+            status = ProgramStatus.SCREEN
             thr.start()
         }
     }
+    fun setStorage(){
+        storage = Storage(FileSystem.programsPath +
+                "/" +appId+
+                FileSystem.srData+
+                FileSystem.srStorageFile
+        )
+    }
+
     fun runFlow(fileName:String): Pair<String,Thread> {
         var flowName:String
         var flow:Flow

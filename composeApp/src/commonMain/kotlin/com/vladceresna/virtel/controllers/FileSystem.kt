@@ -15,6 +15,8 @@ data object FileSystem {
     val srStart = "/start.steps"
     val srConfig = "/config.toml"
     val srCache = "/cache"
+    val srData = "/data"
+    val srStorageFile = "/storage.json"
 
     lateinit var osHomeDir: String
     lateinit var systemPath: String

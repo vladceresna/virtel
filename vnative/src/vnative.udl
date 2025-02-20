@@ -7,6 +7,7 @@ namespace vnative {
 };
 interface Storage {
   constructor(string path);
+  void stop();
   void set(string name, string value);
   string get(string name);
   void del(string name);
