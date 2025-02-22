@@ -10,4 +10,5 @@ plugins {
     alias(libs.plugins.uniffiKotlinMultiplatform) apply false
     alias(libs.plugins.kotlinAtomicFU) apply false
     alias(libs.plugins.kotlinAndroid) apply false
+    alias(libs.plugins.jetbrains.kotlin.jvm) apply false
 }

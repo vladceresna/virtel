@@ -17,6 +17,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpMethod
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -38,9 +39,12 @@ import kotlinx.datetime.format.DateTimeFormat
 import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import okio.IOException
 import okio.Path.Companion.toPath
 import okio.SYSTEM
+import java.util.Collections
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.roundToInt
 
@@ -50,15 +54,18 @@ import kotlin.math.roundToInt
  * - value/var (or variable with it): tryGet: any name
  * - varName (var need to write/save in): clear using: newVarName, newListName
  *
- * Flow params format:
- * app.id-flow-1-varname
+ * Flows format:
+ * flow-0
+ * flow-1
  * **/
 class Flow(
     var program: Program,
     var flowName: String,
     var currentStep: Step
 ) {
-
+    var store:DataStore = DataStore(this)
+    var run = true
+    var runCycle = true
 
     /** sys apps (newListName)
      * */
@@ -117,6 +124,47 @@ class Flow(
         var packAppId = nGetVar(args.get(0), DataType.VAR).toString()
         nPutVar(args.get(1), DataType.VAR, VarInstaller.toVar(packAppId))
     }
+
+    /** sys clear (newVarName)
+     * */
+    fun sysClear(args: MutableList<String>) {
+        store.data.clear()
+        program.flows.remove(flowName)
+    }
+    
+    /** sys backup (filePath)
+     * */
+    fun sysBackup(args: MutableList<String>) {
+        var filePath = nGetVar(args.get(0), DataType.VAR).toString()
+        backupSystem(filePath)
+    }
+
+    /** sys restore (filePath)
+     * */
+    fun sysRestore(args: MutableList<String>) {
+        var filePath = nGetVar(args.get(0), DataType.VAR).toString()
+        restoreSystem(filePath)
+    }
+
+
+
+    /** zip archive (folderPath) (newZipFilePath)
+     * */
+    fun zipArchive(args: MutableList<String>) {
+        var folderPath = nGetVar(args.get(0), DataType.VAR).toString()
+        var newZipFilePath = nGetVar(args.get(1), DataType.VAR).toString()
+        archiveToZip(folderPath, newZipFilePath)
+    }
+
+    /** zip extract (zipFilePath) (folderPath)
+     * */
+    fun zipExtract(args: MutableList<String>) {
+        var zipFilePath = nGetVar(args.get(0), DataType.VAR).toString()
+        var folderPath = nGetVar(args.get(1), DataType.VAR).toString()
+        extractZip(zipFilePath, folderPath)
+    }
+    
+
 
 
     /** dtm now (newVarName)
@@ -204,8 +252,8 @@ class Flow(
     /** ref del (newRefName)
      * */
     fun refDel(args: MutableList<String>) {
-        program.store.data.items.remove(
-            Data(DataType.REF, args.get(0), nGetVar(args.get(0), DataType.REF)))
+        store.data.remove(
+            Pair(args.get(0), DataType.REF), nGetVar(args.get(0), DataType.REF))
     }
 
     /** var set (value) (newVarName)
@@ -228,9 +276,38 @@ class Flow(
     /** var del (newVarName)
      * */
     fun varDel(args: MutableList<String>) {
-        program.store.data.items.remove(
-            Data(DataType.VAR, args.get(0), nGetVar(args.get(0), DataType.VAR)))
+        store.data.remove(Pair(args.get(0), DataType.VAR),
+            nGetVar(args.get(0), DataType.VAR))
     }
+
+    /** var import (valueFlowName) (varName)
+     * */
+    fun varImport(args: MutableList<String>) {
+        var valueFlowName = nGetVar(args.get(0), DataType.VAR).toString()
+        var flow = program.flows.get(valueFlowName)
+        if (flow == null) throw VirtelException("Flow not found by name: "+valueFlowName)
+        var value = flow.nGetVar(args.get(1), DataType.VAR)
+        nPutVar(args.get(1), DataType.VAR,value)
+    }
+
+    /** var export (valueFlowName) (varName)
+     * */
+    fun varExport(args: MutableList<String>) {
+        var valueFlowName = nGetVar(args.get(0), DataType.VAR).toString()
+        var flow = program.flows.get(valueFlowName)
+        if (flow == null) throw VirtelException("Flow not found by name: "+valueFlowName)
+        var value = nGetVar(args.get(1), DataType.VAR)
+        flow.nPutVar(args.get(1), DataType.VAR, value)
+    }
+
+    /** var list (varName) (newListVarName)
+     * */
+    fun varList(args: MutableList<String>) {
+        var list = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.LIST, Json.decodeFromString<MutableList<String>>(list))
+    }
+
+
 
     /** lst new (lstName)
      * */
@@ -260,7 +337,7 @@ class Flow(
     fun lstDel(args: MutableList<String>) {
         var list = nGetVar(args.get(0), DataType.LIST) as MutableList<Any>
         var index = nGetVar(args.get(1), DataType.VAR).toString().toInt()
-        program.store.data.items.remove(Data(DataType.LIST,args.get(0), list))
+        store.data.remove(Pair(args.get(0),DataType.LIST), list)
         list.remove(list.get(index))
         nPutVar(args.get(0), DataType.LIST, list)
     }
@@ -279,9 +356,62 @@ class Flow(
     /** lst var (lstName) (newVarName)
      * */
     fun lstVar(args: MutableList<String>) {
-        var list = nGetVar(args.get(0), DataType.LIST) as MutableList<Any>
-        nPutVar(args.get(1), DataType.VAR, list.toString())
+        var list = nGetVar(args.get(0), DataType.LIST) as MutableList<String>
+        nPutVar(args.get(1), DataType.VAR, Json.encodeToString(list))
     }
+
+    /** lst import (valueFlowName) (varName)
+     * */
+    fun lstImport(args: MutableList<String>) {
+        var valueFlowName = nGetVar(args.get(0), DataType.VAR).toString()
+        var flow = program.flows.get(valueFlowName)
+        if (flow == null) throw VirtelException("Flow not found by name: "+valueFlowName)
+        var value = flow.nGetVar(args.get(1), DataType.LIST)
+        nPutVar(args.get(1), DataType.LIST,value)
+    }
+
+    /** lst export (valueFlowName) (varName)
+     * */
+    fun lstExport(args: MutableList<String>) {
+        var valueFlowName = nGetVar(args.get(0), DataType.VAR).toString()
+        var flow = program.flows.get(valueFlowName)
+        if (flow == null) throw VirtelException("Flow not found by name: "+valueFlowName)
+        var value = nGetVar(args.get(1), DataType.LIST)
+        flow.nPutVar(args.get(1), DataType.LIST, value)
+    }
+
+
+
+
+
+
+    /** stg set (name) (value)
+     * */
+    fun stgSet(args: MutableList<String>) {
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+        var value = nGetVar(args.get(1), DataType.VAR).toString()
+        program.storage.set(name, value)
+    }
+
+    /** stg get (name) (newVarName)
+     * */
+    fun stgGet(args: MutableList<String>) {
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR, program.storage.get(name))
+    }
+
+    /** stg del (name)
+     * */
+    fun stgDel(args: MutableList<String>) {
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+        program.storage.del(name)
+    }
+
+
+
+
+
+
 
     /** str cut (first) (last) (value) (newVarName)
      * */
@@ -521,21 +651,26 @@ class Flow(
     }
 
 
-    /** scr new (newVarName) (viewType) (weight) (size) (parent)
+    /** scr new (idName) (viewType) (weight) (size) (parent)
      *      (weight) = x>0 or 0 if without
      * */
     fun scrNew(args: MutableList<String>) {
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
+        var parentName = nGetVar(args.get(4), DataType.VAR).toString()
+
         var parent = programModel.widgets.find {
-            it.name == args.get(4)
+            it.name == parentName
         }
-        if(parent == null) throw VirtelException("Parent widget not found by name: "+args.get(4))
+
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
+        if(parent == null) throw VirtelException("Parent widget not found by name: "+parentName)
 
         var newModel = WidgetModel(
             programModel,
-            args.get(0),
+            name,
             when(nGetVar(args.get(1), DataType.VAR)){
                 "view" -> {WidgetType.VIEW}
                 "text" -> {WidgetType.TEXT}
@@ -574,14 +709,16 @@ class Flow(
         programModel.widgets.add(newModel)
     }
 
-    /** scr del (newVarName)
+    /** scr del (idName)
      * */
     fun scrDel(args: MutableList<String>) {
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
         var widget = programModel.widgets.find {
-            it.name == args.get(0)
+            it.name == name
         }
         if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
 
@@ -590,7 +727,7 @@ class Flow(
 
     }
 
-    /** scr set (newVarName) (property) (value)
+    /** scr set (idName) (property) (value)
      * (property) = (weight) (variant) (title) (value)
      *             (foreground) (background) (onClick) (parent)
      *             (paddingTop) (paddingRight) (paddingBottom) (paddingLeft)
@@ -601,8 +738,10 @@ class Flow(
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
         var widget = programModel.widgets.find {
-            it.name == args.get(0)
+            it.name == name
         }
         if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
 
@@ -649,20 +788,22 @@ class Flow(
 
     }
 
-    /** scr get (newVarName) (viewVarName) (property)
+    /** scr get (idName) (property) (newVarName)
      * */
     fun scrGet(args: MutableList<String>) {
-        var property = nGetVar(args.get(2), DataType.VAR).toString()
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
+        var property = nGetVar(args.get(1), DataType.VAR).toString()
 
         var programModel = nGetProgramModel()
         if (programModel == null) throw VirtelException("System Program View Model error")
 
         var widget = programModel.widgets.find {
-            it.name == args.get(1)
+            it.name == name
         }
-        if(widget == null) throw VirtelException("Widget not found by name: "+args.get(1))
+        if(widget == null) throw VirtelException("Widget not found by name: "+name)
 
-        nPutVar( args.get(0), DataType.VAR, when (property) {
+        nPutVar( args.get(2), DataType.VAR, when (property) {
                 "weight" -> widget.weight.value.toString()
                 "variant" -> widget.variant.value
                 "title" -> widget.title.value
@@ -671,7 +812,7 @@ class Flow(
                 "background" -> widget.background.value
                 "onClick" -> widget.onClick.value
                 "parent" -> (programModel.widgets.find {
-                    it.name == args.get(2)
+                    it.name == args.get(1)
                 } as WidgetModel).name
                 "paddingTop" ->    widget.paddingTop.value
                 "paddingRight" ->  widget.paddingRight.value
@@ -762,20 +903,49 @@ class Flow(
         var expr = nGetVar(args.get(0), DataType.VAR).toString()
         var file = nGetVar(args.get(1), DataType.VAR).toString()
         while (expr.equals("true")) {
+            if (!run) break
+            if (!runCycle) break
             runFile(file)
             expr = nGetVar(args.get(0), DataType.VAR).toString()
         }
     }
+    /** run each (valueList) (itemVarName) (file)
+     * */
+    fun runEach(args: MutableList<String>) {
+        var list = nGetVar(args.get(0), DataType.LIST) as MutableList<String>
+        var file = nGetVar(args.get(2), DataType.VAR).toString()
+        for (index in 0..(list.size-1)) {
+            if (!run) break
+            if (!runCycle) break
+            nPutVar(args.get(1), DataType.VAR, list[index])
+            nPutVar(args.get(1)+"Index", DataType.VAR, index)
+            runFile(file)
+        }
+    }
 
-    /** run flow (file)
+    /** run for (first) (last) (indexVarName) (file)
+     * */
+    fun runFor(args: MutableList<String>) {
+        var first = nGetVar(args.get(0), DataType.VAR).toString().toInt()
+        var last = nGetVar(args.get(1), DataType.VAR).toString().toInt()
+        var file = nGetVar(args.get(3), DataType.VAR).toString()
+        for (index in first..last) {
+            if (!run) break
+            if (!runCycle) break
+            nPutVar(args.get(2), DataType.VAR, index)
+            runFile(file)
+        }
+    }
+
+    /** run flow (file) (varNewFlowName)
      * */
     fun runFlow(args: MutableList<String>) {
         var file = nGetVar(args.get(0), DataType.VAR).toString()
-        var flowName = nGetNameOfNextFlow(file)
-        program.runFlow(file,flowName)
-
-        //CoroutineScope(Job()).launch { runOne(args) }
+        var (flowName, thr) = program.runFlow(file)
+        nPutVar(args.get(1), DataType.VAR, flowName)
+        CoroutineScope(Job()).launch { thr.start() }
     }
+
 
     /** run pause (time)
      * */
@@ -784,11 +954,26 @@ class Flow(
         runBlocking { delay(time.toLong()) }
     }
 
-    /** srv new (port) (newVarName)
+
+    /** run break ()
+     * */
+    fun runBreak(args: MutableList<String>) {
+        runCycle = false
+    }
+
+
+    /** run stop ()
+     * */
+    fun runStop(args: MutableList<String>) {
+        run = false
+
+    }
+
+
+    /** srv new (newVarName)
      * */
     fun srvNew(args: MutableList<String>) {
-        var port = nGetVar(args.get(0), DataType.VAR).toString()
-        nPutVar(args.get(1), DataType.SERVER, EmbeddedServer(port))
+        nPutVar(args.get(0), DataType.SERVER, EmbeddedServer())
     }
 
     /** srv add (method) (route) (file) (resVarName) (newVarName)
@@ -802,82 +987,98 @@ class Flow(
         nPutVar(args.get(4), DataType.SERVER, server)
     }
 
-    /** srv run (newVarName)
+    /** srv run (port) (newVarName)
      * */
     fun srvRun(args: MutableList<String>) {
+
+        var port = nGetVar(args.get(0), DataType.VAR).toString()
         var server = nGetVar(args.get(0), DataType.SERVER) as EmbeddedServer
 
-        embeddedServer(CIO, server.port.toInt()) {
+        var embServer = embeddedServer(CIO, port.toInt()) {
             routing {
                 server.routes.forEach {
                     when (it.method) {
                         "get" -> get(it.route) {
-                            var flowName = nGetNameOfNextFlow(it.file)
+                            var (flowName, thr) = nRunFlow(mutableListOf("\""+it.file+"\""))
+                            var flow = program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
                             call.parameters.toMap().forEach {
-                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.VAR,it.value
-                                            .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                                flow.nPutVar(
+                                    it.key,
+                                    DataType.VAR,
+                                    it.value[0]
+                                )
                             }
-
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
-                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
-                            var response = nGetVar(it.resVar,DataType.VAR).toString()
+                            thr.start()
+                            thr.join()
                             call.respondText {
-                                response
+                                flow.nGetVar(it.resVar,DataType.VAR).toString()
                             }
                         }
 
                         "post" -> post(it.route) {
-                            var flowName = nGetNameOfNextFlow(it.file)
+                            var (flowName, thr) = nRunFlow(mutableListOf("\""+it.file+"\""))
+                            var flow = program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
                             call.parameters.toMap().forEach {
-                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.VAR,it.value
-                                    .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                                flow.nPutVar(
+                                    it.key,
+                                    DataType.VAR,
+                                    it.value[0]
+                                )
                             }
-
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
-                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
-                            var response = nGetVar(it.resVar,DataType.VAR).toString()
+                            flow.nPutVar(
+                                "server-body",
+                                DataType.VAR,
+                                call.receiveText()
+                            )
+                            thr.start()
+                            thr.join()
                             call.respondText {
-                                response
+                                flow.nGetVar(it.resVar,DataType.VAR).toString()
                             }
                         }
 
                         "delete" -> delete(it.route) {
-                            var flowName = nGetNameOfNextFlow(it.file)
+                            var (flowName, thr) = nRunFlow(mutableListOf("\""+it.file+"\""))
+                            var flow = program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
                             call.parameters.toMap().forEach {
-                                nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                        +"-parameters-"+it.key,DataType.VAR,it.value
-                                    .toString().substring(1,it.value.toString().length-1)) // TODO: Sometimes may be Critical Bug
+                                flow.nPutVar(
+                                    it.key,
+                                    DataType.VAR,
+                                    it.value[0]
+                                )
                             }
-
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-server",DataType.SERVER,server) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-route",DataType.VAR,it.route) // TODO: Sometimes may be Critical Bug
-                            nPutVar(program.appId+"-"+flowName // TODO: Sometimes may be Critical Bug
-                                    +"-method",DataType.VAR,it.method) // TODO: Sometimes may be Critical Bug
-                            runFlow(mutableListOf("\""+it.file+"\"")) // TODO: Sometimes may be Critical Bug
-                            var response = nGetVar(it.resVar,DataType.VAR).toString()
+                            thr.start()
+                            thr.join()
                             call.respondText {
-                                response
+                                flow.nGetVar(it.resVar,DataType.VAR).toString()
                             }
                         }
                     }
                 }
             }
-        }.start()
+        }
+
+        server.stopFuns.put(port.toInt(), embServer::stop)
+
+        embServer.start()
+        CoroutineScope(Job()).launch {
+            while (run){
+                delay(100)
+            }
+            embServer.stop()
+        }
     }
+
+    /** srv stop (port) (newVarName)
+     * */
+    fun srvStop(args: MutableList<String>) {
+        var port = nGetVar(args.get(0), DataType.VAR).toString().toInt()
+        var server = nGetVar(args.get(1), DataType.SERVER) as EmbeddedServer
+        var func = server.stopFuns.get(port) ?: throw VirtelException("Virtel Error: Server not found: "+port)
+        func()
+    }
+
+
 
     /** clt req (method) (url) (body) (newVarNameStatus) (newVarNameBody)
      * */
@@ -901,6 +1102,14 @@ class Flow(
 
     }
 
+
+
+
+
+
+
+
+
     /** tts say2 (text)
      * */
     fun ttsSay2(args: MutableList<String>) {
@@ -921,6 +1130,7 @@ class Flow(
             if(args.size == 2) vnative.ttsSayLang(text, ttsFile, args.get(1))
             else vnative.ttsSay(text, ttsFile)
         } else vnative.playMp3(ttsFile)
+        var m = vnative.Storage("")
     }
 
 
@@ -996,7 +1206,7 @@ class Flow(
             step.args.forEach {
                 fromRefsArgs.add(
                     try {
-                        program.store.get(it, DataType.REF)!!.value.toString()
+                        store.get(it, DataType.REF)!!.toString()
                     }catch(e:Exception){
                         it
                     }
@@ -1014,6 +1224,13 @@ class Flow(
                     "install" -> sysInstall(step.args)
                     "pack" -> sysPack(step.args)
                     "log" -> sysLog(step.args)
+                    "clear" -> sysClear(step.args)
+                    "backup" -> sysBackup(step.args)
+                    "restore" -> sysRestore(step.args)
+                }
+                "zip" -> when (step.cmd) {
+                    "archive" -> zipArchive(step.args)
+                    "extract" -> zipExtract(step.args)
                 }
                 "dtm" -> when (step.cmd) {
                     "now" -> dtmNow(step.args)
@@ -1037,6 +1254,9 @@ class Flow(
                     "set" -> varSet(step.args)
                     "get" -> varGet(step.args)
                     "del" -> varDel(step.args)
+                    "import" -> varImport(step.args)
+                    "export" -> varExport(step.args)
+                    "list" -> varList(step.args)
                 }
 
                 "lst" -> when (step.cmd) {
@@ -1046,6 +1266,13 @@ class Flow(
                     "del" -> lstDel(step.args)
                     "len" -> lstLen(step.args)
                     "var" -> lstVar(step.args)
+                    "import" -> lstImport(step.args)
+                    "export" -> lstExport(step.args)
+                }
+                "stg" -> when (step.cmd) {
+                    "set" -> stgSet(step.args)
+                    "get" -> stgGet(step.args)
+                    "del" -> stgDel(step.args)
                 }
 
                 "str" -> when (step.cmd) {
@@ -1101,14 +1328,19 @@ class Flow(
                     "one" -> runOne(step.args)
                     "if" -> runIf(step.args)
                     "while" -> runWhile(step.args)
+                    "each" -> runEach(step.args)
+                    "for" -> runFor(step.args)
                     "flow" -> runFlow(step.args)
                     "pause" -> runPause(step.args)
+                    "break" -> runBreak(step.args)
+                    "stop" -> runStop(step.args)
                 }
 
                 "srv" -> when (step.cmd) {
                     "new" -> srvNew(step.args)
                     "add" -> srvAdd(step.args)
                     "run" -> srvRun(step.args)
+                    "stop" -> srvStop(step.args)
                 }
 
                 "clt" -> when (step.cmd) {
@@ -1181,6 +1413,7 @@ class Flow(
         { readUtf8() }
         runCode(code,fileName)
     }
+
     fun runCode(code: String, fileName: String) {
         try {
             var lineNumber = 0
@@ -1191,6 +1424,11 @@ class Flow(
             var displayer = false
             //lexing
             for (i in code.indices) {
+                if (!run) {
+                    store.data.clear()
+                    program.flows.remove(flowName)
+                    break
+                }
                 when (val c = code[i]) {
                     ' ' -> {
                         if (inValue) {
@@ -1256,14 +1494,14 @@ class Flow(
 
 
     fun nGetVar(name: String, type: DataType): Any {
-        var gottenVar = program.store.getVar(name, type)
+        var gottenVar = store.getVar(name, type)
         if (gottenVar != null){
             return gottenVar
         }
         cslError(mutableListOf("\"Variable not found: $name\""))
         return ""
     }
-    fun nPutVar(name: String, type: DataType, value: Any) = program.store.putVar(name, type, value)
+    fun nPutVar(name: String, type: DataType, value: Any) = store.putVar(name, type, value)
     fun nGetProgramModel():ProgramViewModel? {
         var model:ProgramViewModel? = null
         for (pageModel in VirtelSystem.screenModel.pageModels) {
@@ -1275,11 +1513,15 @@ class Flow(
         }
         return model
     }
-    fun nGetNameOfNextFlow(file:String):String{
-        var splitByDot = file.split(".").toMutableList()
-        splitByDot.removeLast()
-        return splitByDot.joinToString(".")+"-"+program.flows.size
+
+    /** run flow (file) (varNewFlowName)
+     * */
+    fun nRunFlow(args: MutableList<String>):Pair<String, Thread> {
+        var file = nGetVar(args.get(0), DataType.VAR).toString()
+        var (flowName, flow) = program.runFlow(file)
+        return Pair(flowName, flow)
     }
+
 }
 
 data class Step(

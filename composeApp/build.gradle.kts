@@ -17,9 +17,11 @@ plugins {
     alias(libs.plugins.cargoKotlinMultiplatform)
     alias(libs.plugins.uniffiKotlinMultiplatform)
     alias(libs.plugins.kotlinAtomicFU)
+
+    kotlin("plugin.serialization") version "2.1.10"
 }
 
-var version = "2.3.0"
+var version = "3.0.0"//alpha
 
 
 
@@ -39,11 +41,10 @@ cargo {
 
 uniffi {
 
-
-    bindgenFromGitRevision(
+    /*bindgenFromGitRevision(
         repository = "https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings",
         revision = "a97a6a0f5cd243d4a41acedf8d57fe33cb3da5e8"
-    )
+    )*/
 
     if (CargoHost.Platform.Windows.isCurrent) {
         generateFromUdl {
@@ -52,7 +53,10 @@ uniffi {
             udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
         }
     } else {
-        generateFromLibrary()
+        generateFromUdl {
+            namespace = "vnative"
+            udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
+        }
     }
 }
 
@@ -63,7 +67,7 @@ uniffi {
 kotlin {
 
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        @OptIn(ExperimentalKotlinGradlePluginApi::class  )
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -110,13 +114,6 @@ kotlin {
             api(libs.moko.permissions.compose)
 
 
-                /*val editorVersion = "0.23.2"
-                implementation("io.github.Rosemoe.sora-editor:editor:$editorVersion")
-                implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
-                implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
-                */
-
-
         }
 
         commonMain.dependencies {
@@ -130,13 +127,14 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.lifecycle.viewmodel.compose)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
             implementation("io.ktor:ktor-server-cio:3.0.0-rc-1")
-            implementation("com.squareup.okio:okio:3.9.1")
-
+            implementation("io.ktor:ktor-server-websockets:3.0.0-rc-1")
             implementation(libs.ktor.client.okhttp)
 
+            implementation("com.squareup.okio:okio:3.9.1")
 
             implementation("io.coil-kt.coil3:coil-compose:3.0.0-alpha06")
             implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
@@ -145,6 +143,8 @@ kotlin {
             implementation("com.github.terrakok:adaptivestack:1.0.0")
 
             // TODO: Other ui theme
+
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
 
 
 
@@ -157,8 +157,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
 
             implementation("javazoom:jlayer:1.0.1")
-
-            implementation("com.fifesoft:rsyntaxtextarea:3.1.3")
 
             implementation("ai.picovoice:picovoice-java:3.0.3")
 
@@ -218,7 +216,11 @@ compose.desktop {
         mainClass = "com.vladceresna.virtel.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg,
+                TargetFormat.Exe,
+                TargetFormat.Deb,
+                TargetFormat.Rpm,
+                TargetFormat.AppImage)
             packageName = "com.vladceresna.virtel"
             packageVersion = version
 

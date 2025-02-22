@@ -1,18 +1,13 @@
 package com.vladceresna.virtel.controllers
 
-import com.vladceresna.virtel.lib.MutexHashSet
-
+import androidx.compose.runtime.mutableStateMapOf
 
 class DataStore(
-    var program: Program,
+    var flow:Flow,
 ) {
-    var data: MutexHashSet<Data> = MutexHashSet()
-
-    fun get(name: String, type: DataType): Data? {
-        return if(name == "u" && type == DataType.VAR) Data(DataType.VAR, name, "") // nullability in command var u
-        else data.find {
-            it.type == type && it.name == name
-        }
+    var data = mutableStateMapOf<Pair<String,DataType>,Any>()
+    fun get(name: String, type: DataType): Any? {
+        return data[Pair(name,type)]
     }
     fun unwrap(varName:String):String{
         return if (varName.startsWith("\"") && varName.endsWith("\""))
@@ -22,21 +17,13 @@ class DataStore(
     fun getVar(name:String, type: DataType):Any? {
         var unwrappedName = unwrap(name)
         return if(unwrappedName.equals(name)){
-            get(unwrappedName, type)?.value
+            get(unwrappedName, type)
         } else unwrappedName // text
     }
     fun putVar(name: String, type: DataType, value: Any){
-        var newData = Data(type,name,value)
-        data.put(newData){t1,t2 -> t1.name.equals(t2.name) && t1.type.equals(t2.type) }
+        data.put(Pair(name,type),value)
     }
 }
-
-
-data class Data(
-    var type: DataType,
-    var name: String, // appId.name as com.vladceresna.launcher.name
-    var value: Any
-)
 
 enum class DataType{
     REF,VAR,LIST,VIEW,SERVER

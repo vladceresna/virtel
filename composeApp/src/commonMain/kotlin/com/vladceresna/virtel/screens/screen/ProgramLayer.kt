@@ -63,7 +63,9 @@ fun ProgramLayer(
                             )
                         }
                         IconButton(onClick = {
-                            programViewModel.program.store.data.items.clear()
+                            programViewModel.program.storage.stop()
+                            programViewModel.program.flows.forEach { (t, u) -> u.run = false }
+                            programViewModel.program.flows.clear()
                             VirtelSystem.screenModel
                                 .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
                                 .programViewModels.remove(programViewModel)
@@ -126,8 +128,7 @@ fun ProgramLayer(
                             }
                         ) {
                             Text(
-                                text = "Restart",
-                                color = Color.White
+                                text = "Restart"
                             )
                         }
                     }

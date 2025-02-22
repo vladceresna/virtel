@@ -1,8 +1,8 @@
 package com.vladceresna.virtel.controllers
 
 data class EmbeddedServer(
-    var port:String = "8080",
-    var routes:MutableSet<Route> = mutableSetOf()
+    var routes:MutableSet<Route> = mutableSetOf(),
+    var stopFuns:HashMap<Int,() -> Unit> = hashMapOf()
 )
 
 data class Route(

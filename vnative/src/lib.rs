@@ -1,6 +1,7 @@
 
 uniffi::include_scaffolding!("vnative");
 
+use crate::storage::Storage;
 use gtts::save_to_file;
 use whichlang::detect_language;
 use std::{fs::File,io::BufReader};
@@ -8,6 +9,7 @@ use rodio::{Decoder, OutputStream, source::Source};
 
 
 mod gtts;
+mod storage;
 
 
 

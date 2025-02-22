@@ -1,5 +1,6 @@
 package com.vladceresna.virtel.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -31,6 +33,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -40,13 +43,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import com.vladceresna.virtel.controllers.DataType
 import com.vladceresna.virtel.controllers.Log
+import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.log
+import com.vladceresna.virtel.other.VirtelException
 import com.vladceresna.virtel.other.makeError
 import com.vladceresna.virtel.screens.model.WidgetModel
 import com.vladceresna.virtel.screens.model.WidgetType
@@ -134,9 +141,25 @@ fun Widget(model: WidgetModel, modifier: Modifier){
     var onClick: () -> Unit = {}
     if (!model.onClick.value.equals("")){
         modifierClickable = modifier.clickable {
-            model.programViewModel.program.runFlow(model.onClick.value, model.onClick.value) }
+            var (flowName, thr) = model.programViewModel.program.runFlow(model.onClick.value)
+            var flow = model.programViewModel.program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
+            flow.nPutVar(
+                "viewName",
+                DataType.VAR,
+                model.name
+            )
+            thr.start()
+        }
         onClick = {
-            model.programViewModel.program.runFlow(model.onClick.value, model.onClick.value) }
+            var (flowName, thr) = model.programViewModel.program.runFlow(model.onClick.value)
+            var flow = model.programViewModel.program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
+            flow.nPutVar(
+                "viewName",
+                DataType.VAR,
+                model.name
+            )
+            thr.start()
+        }
     }
     //println("${model.widgetType} ${model.title.value}")
     when (model.widgetType) {
@@ -227,18 +250,29 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             }
         }
         WidgetType.CARD -> {
-            ElevatedCard(modifierClickable,
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-                ) {
-                Column(modifierClickable) {
-                    model.childs.forEach {
-                        SizedWidget(
-                            it,
-                            if (it.weight.value != 0f) {
-                                Modifier.weight(it.weight.value)
-                            } else Modifier
+            Column (
+                Modifier.padding(10.dp,5.dp).fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .clickable {
+                        var (flowName, thr) = model.programViewModel.program.runFlow(model.onClick.value)
+                        var flow = model.programViewModel.program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
+                        flow.nPutVar(
+                            "viewName",
+                            DataType.VAR,
+                            model.name
                         )
+                        thr.start()
                     }
+                    .padding(10.dp)
+            ) {
+                model.childs.forEach {
+                    SizedWidget(
+                        it,
+                        if (it.weight.value != 0f) {
+                            Modifier.weight(it.weight.value)
+                        } else Modifier
+                    )
                 }
             }
         }
