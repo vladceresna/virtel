@@ -26,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +49,12 @@ import com.vladceresna.virtel.controllers.Programs
 import com.vladceresna.virtel.controllers.Step
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.screens.model.ScreenModel
+
+import dev.snipme.highlights.model.SyntaxThemes
+import com.vladceresna.virtel.lib.kodeview.CodeEditText
+import dev.snipme.highlights.Highlights
+import dev.snipme.highlights.model.SyntaxLanguage
+import dev.snipme.highlights.model.SyntaxTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -384,19 +389,41 @@ fun Dashboard(
                 Row(
                     Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow),
                 ) {
+
                     var value by remember { mutableStateOf("") }
-                    TextField(
-                        modifier = Modifier.weight(1f),
-                        label = { Text("Write command") },
-                        supportingText = { Text("Steps. Example: csl write \"Hello world\";") },
-                        prefix =
-                        { if(Logger.readLine.value){
-                            Text("#")
-                        } else {
-                            Text(">")
-                        }},
-                        value = value, onValueChange = { value = it }
-                    )
+
+
+                        CodeEditText(
+                            modifier = Modifier.weight(1f),
+                            highlights = Highlights.Builder()
+                                .code(value)
+                                .theme(SyntaxTheme(
+                                    key = "virtel",
+                                    code = 0x00F8C6,
+                                    keyword = 0x1FD02B,
+                                    string = 0xFFD66D,
+                                    literal = 0xD7351D,
+                                    comment = 0x67E667,
+                                    metadata = 0xD7351D,
+                                    multilineComment = 0x67E667,
+                                    punctuation = 0xD28080,
+                                    mark = 0xD28080
+                                ))
+                                .language(SyntaxLanguage.STEPS)
+                                .build(),
+                            label = { Text("Write command") },
+                            onValueChange = { value = it },
+                            supportingText = { Text("Steps. Ex.: csl write \"Hello world\";") },
+                            prefix = {
+                                if (Logger.readLine.value) {
+                                    Text("#")
+                                } else {
+                                    Text(">")
+                                }
+                            }
+                        )
+
+
                     Button(modifier = Modifier.padding(10.dp,0.dp),
                         onClick = {
                             CoroutineScope(Job()).launch {
@@ -417,7 +444,8 @@ fun Dashboard(
                                     program.storage.stop()
                                 }
                             }
-                        }){ Text("Send") }
+                        }
+                    ) { Text("Send") }
                 }
             }
         }

@@ -23,6 +23,7 @@ moko = "0.18.0"
 lifecycleViewModel = "2.8.3"
 lifecycleViewModelCompose = "2.8.2"
 junitJupiter = "5.8.1"
+jetbrainsKotlinJvm = "1.9.0"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -62,3 +63,4 @@ cargoKotlinMultiplatform = { id = "io.gitlab.trixnity.cargo.kotlin.multiplatform
 uniffiKotlinMultiplatform = { id = "io.gitlab.trixnity.uniffi.kotlin.multiplatform", version = "0.1.0" }
 kotlinAtomicFU = { id = "org.jetbrains.kotlin.plugin.atomicfu", version.ref = "kotlin" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin1922" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }

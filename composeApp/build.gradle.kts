@@ -114,13 +114,6 @@ kotlin {
             api(libs.moko.permissions.compose)
 
 
-                /*val editorVersion = "0.23.2"
-                implementation("io.github.Rosemoe.sora-editor:editor:$editorVersion")
-                implementation("io.github.Rosemoe.sora-editor:language-textmate:$editorVersion")
-                implementation("io.github.Rosemoe.sora-editor:language-treesitter:$editorVersion")
-                */
-
-
         }
 
         commonMain.dependencies {
@@ -151,10 +144,7 @@ kotlin {
 
             // TODO: Other ui theme
 
-
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
-
-
 
 
 
@@ -167,8 +157,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
 
             implementation("javazoom:jlayer:1.0.1")
-
-            implementation("com.fifesoft:rsyntaxtextarea:3.1.3")
 
             implementation("ai.picovoice:picovoice-java:3.0.3")
 
@@ -228,7 +216,11 @@ compose.desktop {
         mainClass = "com.vladceresna.virtel.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg,
+                TargetFormat.Exe,
+                TargetFormat.Deb,
+                TargetFormat.Rpm,
+                TargetFormat.AppImage)
             packageName = "com.vladceresna.virtel"
             packageVersion = version
 
