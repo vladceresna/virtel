@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 
@@ -27,7 +28,7 @@ fun CodeEditText(
     enabled: Boolean = true,
     readOnly: Boolean = false,
     handleIndentations: Boolean = true,
-    textStyle: TextStyle = LocalTextStyle.current,
+    textStyle: TextStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
     prefix: @Composable (() -> Unit)? = null,
     suffix: @Composable (() -> Unit)? = null,
     supportingText: @Composable (() -> Unit)? = null,
@@ -109,5 +110,6 @@ fun CodeEditText(
         minLines = minLines,
         interactionSource = interactionSource,
         colors = colors,
+
     )
 }

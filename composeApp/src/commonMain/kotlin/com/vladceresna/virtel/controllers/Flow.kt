@@ -398,11 +398,7 @@ class Flow(
     fun stgGet(args: MutableList<String>) {
         var name = nGetVar(args.get(0), DataType.VAR).toString()
         nPutVar(args.get(1), DataType.VAR,
-            try {
-                program.storage.get(name)
-            } catch (e:Exception) {
-                ""
-            }
+            program.storage.get(name)
         )
     }
 
@@ -410,11 +406,7 @@ class Flow(
      * */
     fun stgDel(args: MutableList<String>) {
         var name = nGetVar(args.get(0), DataType.VAR).toString()
-        try {
-            program.storage.del(name)
-        } catch (e:Exception) {
-            throw VirtelException("Storage not found by name: "+name)
-        }
+        program.storage.del(name)
     }
 
 
@@ -1002,7 +994,7 @@ class Flow(
     fun srvRun(args: MutableList<String>) {
 
         var port = nGetVar(args.get(0), DataType.VAR).toString()
-        var server = nGetVar(args.get(0), DataType.SERVER) as EmbeddedServer
+        var server = nGetVar(args.get(1), DataType.SERVER) as EmbeddedServer
 
         var embServer = embeddedServer(CIO, port.toInt()) {
             routing {
@@ -1395,6 +1387,7 @@ class Flow(
                     it.isErrorHappened.value = true
                 }
             } catch (k:Exception){k.printStackTrace()}
+            run = false
             return true // erroring
         } catch (e: VirtelException) {
             if (program.debugMode) {
@@ -1409,6 +1402,7 @@ class Flow(
                     it.isErrorHappened.value = true
                 }
             } catch (k:Exception){k.printStackTrace()}
+            run = false
             return true // erroring
         }
     }
