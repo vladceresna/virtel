@@ -397,14 +397,24 @@ class Flow(
      * */
     fun stgGet(args: MutableList<String>) {
         var name = nGetVar(args.get(0), DataType.VAR).toString()
-        nPutVar(args.get(1), DataType.VAR, program.storage.get(name))
+        nPutVar(args.get(1), DataType.VAR,
+            try {
+                program.storage.get(name)
+            } catch (e:Exception) {
+                ""
+            }
+        )
     }
 
     /** stg del (name)
      * */
     fun stgDel(args: MutableList<String>) {
         var name = nGetVar(args.get(0), DataType.VAR).toString()
-        program.storage.del(name)
+        try {
+            program.storage.del(name)
+        } catch (e:Exception) {
+            throw VirtelException("Storage not found by name: "+name)
+        }
     }
 
 
