@@ -21,7 +21,7 @@ plugins {
     kotlin("plugin.serialization") version "2.1.10"
 }
 
-var version = "3.0.0"//alpha
+var version = "3.1.0"//beta
 
 
 
