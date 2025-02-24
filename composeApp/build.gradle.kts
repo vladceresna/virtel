@@ -160,6 +160,8 @@ kotlin {
 
             implementation("ai.picovoice:picovoice-java:3.0.3")
 
+            implementation("ch.qos.logback:logback-classic:1.5.6")
+
         }
     }
 }

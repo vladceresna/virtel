@@ -71,7 +71,10 @@ pub struct Storage {
 
     pub fn get(&self, name: String) -> String {
         let data = self.data.lock().unwrap();
-        data.get(&name).cloned().unwrap()
+        return match data.get(&name).cloned() {
+            Some(value) => value,
+            None => "".to_string(),
+        };
     }
 
     pub fn del(&self, name: String) {

@@ -1,7 +1,9 @@
 package com.vladceresna.virtel.screens
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,7 +41,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +63,11 @@ import com.vladceresna.virtel.other.VirtelException
 import com.vladceresna.virtel.other.makeError
 import com.vladceresna.virtel.screens.model.WidgetModel
 import com.vladceresna.virtel.screens.model.WidgetType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,6 +124,30 @@ fun Widget(model: WidgetModel, modifier: Modifier){
 
     if(model.scrollable.value){
         var scrollState = rememberScrollState()
+
+        var changes by remember { mutableStateOf(false) }
+
+        LaunchedEffect(scrollState.isScrollInProgress) {
+            CoroutineScope(Job()).launch {
+                if (!scrollState.isScrollInProgress) {
+                    model.scrollableState.value = scrollState.value
+                    changes = false
+                } else {
+                    changes = true
+                }
+            }
+        }
+        SideEffect {
+            CoroutineScope(Job()).launch {
+                if (!scrollState.isScrollInProgress){
+                    while (changes) {}
+                    scrollState.scrollTo(model.scrollableState.value)
+                }
+            }
+        }
+
+
+
         when(model.widgetType){
             WidgetType.COLUMN -> modifierClickable = modifierClickable.verticalScroll(scrollState)
             WidgetType.ROW -> modifierClickable = modifierClickable.horizontalScroll(scrollState)
@@ -209,8 +244,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
                 )
             }
         }
-        WidgetType.ROW -> Box(modifierClickable) {
-            Row(
+        WidgetType.ROW -> Row(
                 modifier = modifierClickable,
                 horizontalArrangement = arrangementHorizontal,
                 verticalAlignment = alignmentVertical
@@ -223,9 +257,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
                     )
                 }
             }
-        }
-        WidgetType.COLUMN -> Box(modifierClickable) {
-            Column(
+        WidgetType.COLUMN -> Column(
                 modifier = modifierClickable,
                 verticalArrangement = arrangementVertical,
                 horizontalAlignment = alignmentHorizontal
@@ -239,7 +271,6 @@ fun Widget(model: WidgetModel, modifier: Modifier){
                     )
                 }
             }
-        }
         WidgetType.ADAPTIVE -> {
             if(model.childs.size == 2) {
                 Adaptive(
