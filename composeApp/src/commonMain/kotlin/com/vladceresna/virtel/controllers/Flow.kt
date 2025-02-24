@@ -14,7 +14,9 @@ import com.vladceresna.virtel.screens.model.WidgetType
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.request.receiveText
@@ -711,6 +713,71 @@ class Flow(
         programModel.widgets.add(newModel)
     }
 
+
+
+    /** scr stop (idName)
+     * */
+    fun scrStop(args: MutableList<String>) {
+        var programModel = nGetProgramModel()
+        if (programModel == null) throw VirtelException("System Program View Model error")
+
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
+        var widget = programModel.widgets.find {
+            it.name == name
+        }
+        if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
+
+
+        widget.pause.value = true
+    }
+
+    /** scr resume (idName)
+     * */
+    fun scrResume(args: MutableList<String>) {
+        var programModel = nGetProgramModel()
+        if (programModel == null) throw VirtelException("System Program View Model error")
+
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
+        var widget = programModel.widgets.find {
+            it.name == name
+        }
+        if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
+
+
+        widget.pause.value = false
+    }
+
+
+
+    /** scr clear (idName)
+     * */
+    fun scrClear(args: MutableList<String>) {
+        var programModel = nGetProgramModel()
+        if (programModel == null) throw VirtelException("System Program View Model error")
+
+        var name = nGetVar(args.get(0), DataType.VAR).toString()
+
+        var widget = programModel.widgets.find {
+            it.name == name
+        }
+        if(widget == null) throw VirtelException("Widget not found by name: "+args.get(0))
+
+        fun deleteWidget(it: WidgetModel) {
+            it.childs.forEach {
+                deleteWidget(it)
+            }
+            it.childs.clear()
+            programModel.widgets.remove(it)
+        }
+        widget.childs.forEach {
+            deleteWidget(it)
+        }
+        widget.childs.clear()
+
+    }
+
     /** scr del (idName)
      * */
     fun scrDel(args: MutableList<String>) {
@@ -1085,18 +1152,21 @@ class Flow(
     /** clt req (method) (url) (body) (newVarNameStatus) (newVarNameBody)
      * */
     fun cltReq(args: MutableList<String>) {
-        var method = nGetVar(args.get(0), DataType.VAR).toString()
+        var methodInput = nGetVar(args.get(0), DataType.VAR).toString()
         var url = nGetVar(args.get(1), DataType.VAR).toString()
         var body = nGetVar(args.get(2), DataType.VAR).toString()
         runBlocking {
             var response = getHttpClient().request(url) {
-                when (method) {
+                if (body != "") {
+                    contentType(ContentType.Text.Plain)
+                    setBody(body)
+                }
+                method = when (methodInput) {
                     "post" -> HttpMethod.Post
+                    "get" -> HttpMethod.Get
                     "delete" -> HttpMethod.Delete
-                    "put" -> HttpMethod.Put
                     else -> HttpMethod.Get
                 }
-                setBody(body)
             }
             nPutVar(args.get(4), DataType.VAR, response.bodyAsText())
             nPutVar(args.get(3), DataType.VAR, response.status.toString())
@@ -1318,6 +1388,9 @@ class Flow(
 
                 "scr" -> when (step.cmd) {
                     "new" -> scrNew(step.args)
+                    "stop" -> scrStop(step.args)
+                    "resume" -> scrResume(step.args)
+                    "clear" -> scrClear(step.args)
                     "del" -> scrDel(step.args)
                     "set" -> scrSet(step.args)
                     "get" -> scrGet(step.args)

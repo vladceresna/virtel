@@ -1,8 +1,12 @@
 package com.vladceresna.virtel.screens.model
 
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.Program
@@ -63,12 +67,20 @@ data class WidgetModel(
     var marginBottom:MutableState<Dp> = mutableStateOf(0.dp),
     var marginLeft:MutableState<Dp> = mutableStateOf(0.dp),
     var scrollable:MutableState<Boolean> = mutableStateOf(false),
+
+    var scrollableState: MutableState<Int> = mutableStateOf(0),
+
     var size:MutableState<String> = mutableStateOf(""),
     var align:MutableState<String> = mutableStateOf(""),
     var justify:MutableState<String> = mutableStateOf(""),
 
-    var childs:MutableList<WidgetModel> = mutableStateListOf()
-)
+    var childs:MutableList<WidgetModel> = mutableStateListOf(),
+
+    var pause:MutableState<Boolean> = mutableStateOf(false)
+) {
+
+    var rememberScrollStateWidget = ScrollState(initial = 0)
+}
 
 enum class WidgetType{
     VIEW, ADAPTIVE, COLUMN, ROW, LIST, BUTTON, TEXT, IMAGE, INPUT, CARD, TOP_BAR, BOTTOM_BAR
