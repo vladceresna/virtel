@@ -426,12 +426,14 @@ class Flow(
         nPutVar(args.get(3), DataType.VAR, value.substring(first, second))
     }
 
-    /** str add (firstStr) (secondStr) (newVarName)
+    /** str add (firstStr) (secondStr) (someStr) (lastStr) (newVarName)
      * */
     fun strAdd(args: MutableList<String>) {
-        var firstStr = nGetVar(args.get(0), DataType.VAR).toString()
-        var secondStr = nGetVar(args.get(1), DataType.VAR).toString()
-        nPutVar(args.get(2), DataType.VAR, firstStr + secondStr)
+        var sum = ""
+        for(i in 0..args.size-2) {
+            sum += nGetVar(args.get(i), DataType.VAR).toString()
+        }
+        nPutVar(args.get(args.size-1), DataType.VAR, sum)
     }
 
     /** str len (value) (newVarName)
@@ -465,36 +467,53 @@ class Flow(
         nPutVar(args.get(2), DataType.LIST, valueStr.split(regexStr).toMutableList())
     }
 
-    /** mat plus (a) (b) (newVarName)
+
+    /** mat calc (expression) (newVarName)
+     *
+    fun matCalc(args: MutableList<String>) {
+        var value = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR, value)
+    }*/
+
+
+    /** mat plus (a) (b) (someNum c) (lastNum) (newVarName)
      * */
     fun matPlus(args: MutableList<String>) {
-        var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
-        var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
-        nPutVar(args.get(2), DataType.VAR, (vnative.add(a.toUInt(),b.toUInt())).toString())
+        var sum = 0.0
+        for(i in 0..args.size-2) {
+            sum += nGetVar(args.get(i), DataType.VAR).toString().toDouble()
+        }
+        nPutVar(args.get(args.size-1), DataType.VAR, sum.toString())
     }
 
-    /** mat minus (a) (b) (newVarName)
+    /** mat minus (a) (b) (someNum c) (lastNum) (newVarName)
      * */
     fun matMinus(args: MutableList<String>) {
-        var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
-        var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
-        nPutVar(args.get(2), DataType.VAR, a - b)
+        var sum = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
+        for(i in 1..args.size-2) {
+            sum -= nGetVar(args.get(i), DataType.VAR).toString().toDouble()
+        }
+        nPutVar(args.get(args.size-1), DataType.VAR, sum.toString())
     }
 
-    /** mat mult (a) (b) (newVarName)
+    /** mat mult (a) (b) (someNum c) (lastNum) (newVarName)
      * */
     fun matMult(args: MutableList<String>) {
-        var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
-        var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
-        nPutVar(args.get(2), DataType.VAR, a * b)
+        var sum = 1.0
+        for(i in 0..args.size-2) {
+            sum *= nGetVar(args.get(i), DataType.VAR).toString().toDouble()
+        }
+        nPutVar(args.get(args.size-1), DataType.VAR, sum.toString())
     }
 
-    /** mat div (a) (b) (newVarName)
+    /** mat div (a) (b) (someNum c) (lastNum) (newVarName)
      * */
     fun matDiv(args: MutableList<String>) {
-        var a = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
-        var b = nGetVar(args.get(1), DataType.VAR).toString().toDouble()
-        nPutVar(args.get(2), DataType.VAR, a / b)
+        var sum = nGetVar(args.get(0), DataType.VAR).toString().toDouble()
+        for(i in 1..args.size-2) {
+            sum /= nGetVar(args.get(i), DataType.VAR).toString().toDouble()
+        }
+        nPutVar(args.get(args.size-1), DataType.VAR, sum.toString())
     }
 
     /** mat eqs (a) (b) (newVarName)
@@ -1449,6 +1468,9 @@ class Flow(
         } catch (e: IndexOutOfBoundsException) {
             if (program.debugMode) {
                 e.printStackTrace()
+                log("Not all need arguments provided for this command: " +
+                        step.mod + " " +
+                        step.cmd, Log.ERROR)
             }
             try {
                 (nGetProgramModel()!!).also {
@@ -1465,6 +1487,27 @@ class Flow(
         } catch (e: VirtelException) {
             if (program.debugMode) {
                 e.printStackTrace()
+                log("Error in command: " +
+                        step.mod + " " +
+                        step.cmd + ". Message: " + e.message.toString(), Log.ERROR)
+            }
+            try {
+                (nGetProgramModel()!!).also {
+                    it.errorMessage.value = "On line ${step.line} in file " + step.fileName +
+                            " in application with appId: ${step.appId}\n\n" +
+                            e.message.toString() +
+                            "\nIf you`re developer, please, check documentation for it"
+                    it.isErrorHappened.value = true
+                }
+            } catch (k:Exception){k.printStackTrace()}
+            run = false
+            return true // erroring
+        } catch (e:Exception){
+            if (program.debugMode) {
+                e.printStackTrace()
+                log("Unknown Virtel System Error in command: " +
+                        step.mod + " " +
+                        step.cmd + ". Message: " + e.message.toString(), Log.ERROR)
             }
             try {
                 (nGetProgramModel()!!).also {

@@ -6,6 +6,7 @@ import okio.SYSTEM
 object VarInstaller {
     fun install(appId: String, varContent: String){
         var appCodePath = FileSystem.programsPath+"/"+appId+"/code"
+        okio.FileSystem.SYSTEM.createDirectories((appCodePath+"/").toPath())
 
         var fileName = ""
         var fileContent = ""
