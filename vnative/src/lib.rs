@@ -10,7 +10,7 @@ use rodio::{Decoder, OutputStream, source::Source};
 
 mod gtts;
 mod storage;
-
+mod crypto;
 
 
 fn add(a: u32, b: u32) -> u32 {
