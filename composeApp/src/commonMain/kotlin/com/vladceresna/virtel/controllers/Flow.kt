@@ -721,6 +721,10 @@ class Flow(
                 newModel.paddingRight.value = value
                 newModel.paddingBottom.value = value
                 newModel.paddingLeft.value = value
+                newModel.marginTop.value = value
+                newModel.marginRight.value = value
+                newModel.marginBottom.value = value
+                newModel.marginLeft.value = value
             }
             WidgetType.BUTTON -> {
                 newModel.variant.value = "primary"
@@ -1209,7 +1213,6 @@ class Flow(
             if(args.size == 2) ttsSayLang(text, ttsFile, args.get(1))
             else ttsSay(text, ttsFile)
         } else playMp3(ttsFile)
-        var m = Storage("")
     }
 
 
@@ -1646,24 +1649,22 @@ class Flow(
             } catch (k:Exception){k.printStackTrace()}
             run = false
             return true // erroring
+        } catch (e: InternalException){
+            if (program.debugMode) {
+                e.printStackTrace()
+                log("Unknown Virtel System Error in command: " +
+                        step.mod + " " +
+                        step.cmd + ". Message: " + e.message.toString(), Log.WARNING)
+            }
+            return false
         } catch (e:Exception){
             if (program.debugMode) {
                 e.printStackTrace()
                 log("Unknown Virtel System Error in command: " +
                         step.mod + " " +
-                        step.cmd + ". Message: " + e.message.toString(), Log.ERROR)
+                        step.cmd + ". Message: " + e.message.toString(), Log.WARNING)
             }
-            try {
-                (nGetProgramModel()!!).also {
-                    it.errorMessage.value = "On line ${step.line} in file " + step.fileName +
-                            " in application with appId: ${step.appId}\n\n" +
-                            e.message.toString() +
-                            "\nIf you`re developer, please, check documentation for it"
-                    it.isErrorHappened.value = true
-                }
-            } catch (k:Exception){k.printStackTrace()}
-            run = false
-            return true // erroring
+            return false
         }
     }
 
