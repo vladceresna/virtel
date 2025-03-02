@@ -21,7 +21,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun LoadingScreen(){
     Column(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerHighest),
         Arrangement.Center,
         Alignment.CenterHorizontally
     ) {
@@ -39,7 +39,7 @@ fun LoadingScreen(){
             color = Color.hsv(135f, 0.8f,0.3f)
         )
         Text(
-            text = "If loading is too long, try to check your\n internet connection and restart the app",
+            text = "If loading is too long, try to check your internet connection and restart the app",
             fontSize = 10.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onBackground

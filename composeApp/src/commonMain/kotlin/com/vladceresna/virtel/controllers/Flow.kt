@@ -49,7 +49,7 @@ import okio.SYSTEM
 import java.util.Collections
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.roundToInt
-
+import vnative.*
 
 /**
  * In exectime:
@@ -952,19 +952,7 @@ class Flow(
     fun scrPage(args: MutableList<String>){
         VirtelSystem.screenModel.pageModels.add(PageModel())
     }
-    /** scr theme (themeName)
-     * (themeName) = (dark) (light)
-     * */
-    fun scrTheme(args: MutableList<String>){
-        var theme = nGetVar(args.get(0),DataType.VAR)
-        when(theme){
-            "light" -> VirtelSystem.darkTheme.value = false
-            "dark" -> VirtelSystem.darkTheme.value = true
-            else -> throw VirtelException("This is not a theme name: "+ theme+". In arg-var expression: "+args.get(0))
-        }
 
-
-    }
     
 
 
@@ -1218,10 +1206,10 @@ class Flow(
         var text = nGetVar(args.get(0), DataType.VAR).toString()
         var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
         if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
-            if(args.size == 2) vnative.ttsSayLang(text, ttsFile, args.get(1))
-            else vnative.ttsSay(text, ttsFile)
-        } else vnative.playMp3(ttsFile)
-        var m = vnative.Storage("")
+            if(args.size == 2) ttsSayLang(text, ttsFile, args.get(1))
+            else ttsSay(text, ttsFile)
+        } else playMp3(ttsFile)
+        var m = Storage("")
     }
 
 
@@ -1284,6 +1272,144 @@ class Flow(
         var text = nGetVar(args.get(0), DataType.VAR).toString()
         nPutVar(args.get(1), DataType.VAR, giveAnswer(text))
     }
+
+
+
+
+
+    /** crt aes-enc (text) (key) (newVarName)
+     * */
+    fun crtAesEncrypt(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        var key = nGetVar(args.get(1), DataType.VAR).toString()
+        nPutVar(args.get(2), DataType.VAR, aesEncrypt(text, key))
+    }
+    /** crt aes-dec (text) (key) (newVarName)
+     * */
+    fun crtAesDecrypt(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        var key = nGetVar(args.get(1), DataType.VAR).toString()
+        nPutVar(args.get(2), DataType.VAR, aesDecrypt(text, key))
+    }
+
+
+    /** crt base64-enc (text) (newVarName)
+     * */
+    fun crtBase64Encrypt(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR, base64Encode(text))
+    }
+    /** crt base64-dec (text) (newVarName)
+     * */
+    fun crtBase64Decrypt(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR, base64Decode(text))
+    }
+
+
+    /** crt hmac-enc (text) (key) (newVarName)
+     * */
+    fun crtHmacEncrypt(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        var key = nGetVar(args.get(1), DataType.VAR).toString()
+        nPutVar(args.get(2), DataType.VAR, hmacEncrypt(text, key))
+    }
+    /** crt hmac-ver (text) (mac) (key) (newVarName)
+     * */
+    fun crtHmacVerify(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        var mac = nGetVar(args.get(1), DataType.VAR).toString()
+        var key = nGetVar(args.get(2), DataType.VAR).toString()
+        nPutVar(args.get(3), DataType.VAR, hmacVerify(text, mac, key))
+    }
+
+
+    /** crt kem-pair (publicNewVarName) (privateNewVarName)
+     * */
+    fun crtKemPair(args: MutableList<String>) {
+        var kemPair = kemPair()
+        nPutVar(args.get(0), DataType.VAR, kemPair.get(0))
+        nPutVar(args.get(1), DataType.VAR, kemPair.get(1))
+    }
+    /** crt kem-enc (publicKey) (ciphertextNewVarName) (sharedKeyNewVarName)
+     * */
+    fun crtKemEncapsulate(args: MutableList<String>) {
+        var publicKey = nGetVar(args.get(0), DataType.VAR).toString()
+        var kemEnc = kemEncapsulatePublic(publicKey)
+        nPutVar(args.get(1), DataType.VAR, kemEnc.get(0))
+        nPutVar(args.get(2), DataType.VAR, kemEnc.get(1))
+    }
+    /** crt kem-dec (ciphertext) (privateKey) (sharedKeyNewVarName)
+     * */
+    fun crtKemDecapsulate(args: MutableList<String>) {
+        var ciphertext = nGetVar(args.get(0), DataType.VAR).toString()
+        var privateKey = nGetVar(args.get(1), DataType.VAR).toString()
+        var kemDec = kemDecapsulatePrivate(ciphertext, privateKey)
+        nPutVar(args.get(2), DataType.VAR, kemDec)
+    }
+
+
+    /** crt dsa pair (publicNewVarName) (privateNewVarName)
+     * */
+    fun crtDsaPair(args: MutableList<String>) {
+        var dsaPair = dsaPair()
+        nPutVar(args.get(0), DataType.VAR, dsaPair.get(0))
+        nPutVar(args.get(1), DataType.VAR, dsaPair.get(1))
+    }
+    /** crt dsa sign (message) (publicKey) (privateKey) (signatureNewVarName)
+     * */
+    fun crtDsaSign(args: MutableList<String>) {
+        var message = nGetVar(args.get(0), DataType.VAR).toString()
+        var publicKey = nGetVar(args.get(1), DataType.VAR).toString()
+        var privateKey = nGetVar(args.get(2), DataType.VAR).toString()
+        var dsaSign = dsaSign(message, publicKey, privateKey)
+        nPutVar(args.get(3), DataType.VAR, dsaSign)
+    }
+    /** crt dsa verify (message) (signature) (publicKey) (newVarName)
+     * */
+    fun crtDsaVerify(args: MutableList<String>) {
+        var message = nGetVar(args.get(0), DataType.VAR).toString()
+        var signature = nGetVar(args.get(1), DataType.VAR).toString()
+        var publicKey = nGetVar(args.get(2), DataType.VAR).toString()
+        nPutVar(args.get(3), DataType.VAR, dsaVerify(message, signature, publicKey))
+    }
+
+
+    /** crt sha256 (text) (newVarName)
+     * */
+    fun crtSha256(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR, sha256Encrypt(text))
+    }
+    /** crt sha512 (text) (newVarName)
+     * */
+    fun crtSha512(args: MutableList<String>) {
+        var text = nGetVar(args.get(0), DataType.VAR).toString()
+        nPutVar(args.get(1), DataType.VAR, sha512Encrypt(text))
+    }
+
+
+    /** crt jwt-enc (payload) (secret) (newVarName)
+     * */
+    fun crtJwtEncrypt(args: MutableList<String>) {
+        var payload = nGetVar(args.get(0), DataType.VAR).toString()
+        var secret = nGetVar(args.get(1), DataType.VAR).toString()
+        nPutVar(args.get(2), DataType.VAR, jwtEncrypt("1.0.0", payload, secret))
+    }
+    /** crt jwt-ver (token) (secret) (newVarName)
+     * */
+    fun crtJwtVerify(args: MutableList<String>) {
+        var token = nGetVar(args.get(0), DataType.VAR).toString()
+        var secret = nGetVar(args.get(1), DataType.VAR).toString()
+        nPutVar(args.get(2), DataType.VAR, jwtVerify(token, secret))
+    }
+
+
+
+
+
+
+
 
 
     /**parser**/
@@ -1415,7 +1541,6 @@ class Flow(
                     "get" -> scrGet(step.args)
                     "nav" -> scrNav(step.args)
                     "page" -> scrPage(step.args)
-                    "theme" -> scrTheme(step.args)
                 }
 
                 "run" -> when (step.cmd) {
@@ -1461,6 +1586,25 @@ class Flow(
 
                 "llm" -> when (step.cmd) {
                     "ask" -> llmAsk(step.args)
+                }
+
+                "crt" -> when (step.cmd) {
+                    "aes-enc" -> crtAesEncrypt(step.args)
+                    "aes-dec" -> crtAesDecrypt(step.args)
+                    "base64-enc" -> crtBase64Encrypt(step.args)
+                    "base64-dec" -> crtBase64Decrypt(step.args)
+                    "hmac-enc" -> crtHmacEncrypt(step.args)
+                    "hmac-ver" -> crtHmacVerify(step.args)
+                    "sha256" -> crtSha256(step.args)
+                    "sha512" -> crtSha512(step.args)
+                    "kem-pair" -> crtKemPair(step.args)
+                    "kem-enc" -> crtKemEncapsulate(step.args)
+                    "kem-dec" -> crtKemDecapsulate(step.args)
+                    "dsa-pair" -> crtDsaPair(step.args)
+                    "dsa-sign" -> crtDsaSign(step.args)
+                    "dsa-verify" -> crtDsaVerify(step.args)
+                    "jwt-enc" -> crtJwtEncrypt(step.args)
+                    "jwt-ver" -> crtJwtVerify(step.args)
                 }
                 else -> throw VirtelException("This is not a Virtel module: ${step.mod}")
             }

@@ -90,11 +90,7 @@ fun ScreenPager(
     })
 
     Column (
-        if (VirtelSystem.darkTheme.value) {
-            Modifier.background(Color(0,20,5)).fillMaxSize()
-        } else {
-            Modifier.fillMaxSize()
-        }
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerLowest)
     ) {
         var appsScreen = remember { VirtelSystem.appsScreen }
 
@@ -114,12 +110,14 @@ fun ScreenPager(
 
                 Page(
                     screenModel.pageModels[page], Modifier.fillMaxSize()
-                        .clip(RoundedCornerShape(20.dp)).weight(1F), pagerState
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .weight(1F), pagerState
                 )
             }
         } else{
             Dashboard(
-                modifier = Modifier.padding(10.dp,10.dp,10.dp,0.dp)
+                modifier = Modifier.padding(10.dp,10.dp,10.dp,10.dp)
                     .weight(1F).fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.background)
                     .padding(PaddingValues(horizontal = 5.dp, vertical = 5.dp)),
@@ -127,10 +125,10 @@ fun ScreenPager(
             )
         }
 
-        Row(
+        /*Row(
             Modifier
                 .fillMaxWidth()
-                .pointerInput(Unit) {
+                *//*.pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent()
@@ -139,6 +137,9 @@ fun ScreenPager(
                             }
                         }
                     }
+                }*//*
+                .clickable {
+                    VirtelSystem.appsScreen.value = !VirtelSystem.appsScreen.value
                 }
             ,
             horizontalArrangement = Arrangement.Center
@@ -156,7 +157,7 @@ fun ScreenPager(
 
                 )
             }
-        }
+        }*/
     }
 }
 
@@ -166,12 +167,5 @@ fun getColorOfIcon():Color{
         Color(255,255,255)
     } else {
         Color(0,0,0)
-    }
-}
-fun getColorOfBackground():Color{
-    return if(VirtelSystem.darkTheme.value){
-        Color(0,10,0)
-    } else {
-        Color(200,255,230)
     }
 }

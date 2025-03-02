@@ -1,6 +1,8 @@
 package com.vladceresna.virtel.screens.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -46,39 +48,46 @@ fun ProgramLayer(
         Scaffold(
             modifier.fillMaxSize(),
             topBar = {
-                TopAppBar(
-                    title = { Text(programViewModel.program.appName.first().uppercaseChar()+
-                            programViewModel.program.appName.drop(1),
-                        fontWeight = FontWeight.Black) },
-                    actions = {
-                        IconButton(onClick = {
-                            VirtelSystem.screenModel
-                                .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
-                                .programViewModels.remove(programViewModel)
-                        }) {
-                            Icon(
-                                vectorResource(Res.drawable.baseline_close_fullscreen_24),
-                                contentDescription = "close",
-                                tint = MaterialTheme.colorScheme.onBackground
+                Box {
+                    TopAppBar(
+                        modifier = Modifier,
+                        title = {
+                            Text(
+                                programViewModel.program.appName.first().uppercaseChar() +
+                                        programViewModel.program.appName.drop(1),
+                                fontWeight = FontWeight.Black
                             )
+                        },
+                        actions = {
+                            IconButton(onClick = {
+                                VirtelSystem.screenModel
+                                    .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
+                                    .programViewModels.remove(programViewModel)
+                            }) {
+                                Icon(
+                                    vectorResource(Res.drawable.baseline_close_fullscreen_24),
+                                    contentDescription = "close",
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            IconButton(onClick = {
+                                programViewModel.program.storage.stop()
+                                programViewModel.program.flows.forEach { (t, u) -> u.run = false }
+                                programViewModel.program.flows.clear()
+                                VirtelSystem.screenModel
+                                    .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
+                                    .programViewModels.remove(programViewModel)
+                                //TODO: need to stop program work
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "close",
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
                         }
-                        IconButton(onClick = {
-                            programViewModel.program.storage.stop()
-                            programViewModel.program.flows.forEach { (t, u) -> u.run = false }
-                            programViewModel.program.flows.clear()
-                            VirtelSystem.screenModel
-                                .pageModels[VirtelSystem.screenModel.currentPageIndex.value]
-                                .programViewModels.remove(programViewModel)
-                            //TODO: need to stop program work
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "close",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    }
-                )
+                    )
+                }
             },
             bottomBar = {
                 var bottomData = programViewModel.widgets.find {
@@ -92,7 +101,9 @@ fun ProgramLayer(
         ) {
             if (!programViewModel.isErrorHappened.value) {
                 Column (
-                    modifier = Modifier.fillMaxSize().padding(
+                    modifier = Modifier.fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(
                         10.dp, 64.dp, 10.dp,
                         if (!programViewModel.widgets.find {
                                 it.name == "bottom"

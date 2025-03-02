@@ -15,6 +15,14 @@ rodio = { version = "0.20.1", features = ["cpal-shared-stdcxx"] }
 whichlang = "0.1.0"
 serde_json = "1.0.138"
 serde = "1.0.217"
+pqc_kyber = "0.7.1"
+crystals-dilithium = "1.0.0"
+sha3 = "0.10.8"
+hex = "0.4.3"
+rand = "0.8.3"
+aes-gcm = "0.10.3"
+base64 = "0.22.1"
+
 
 [build-dependencies]
 uniffi = { version = "0.25.3", features = ["build"] }

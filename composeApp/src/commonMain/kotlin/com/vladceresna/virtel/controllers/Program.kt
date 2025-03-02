@@ -1,6 +1,7 @@
 package com.vladceresna.virtel.controllers
 
 import androidx.compose.runtime.mutableStateMapOf
+import com.vladceresna.virtel.other.makeError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -62,8 +63,12 @@ data class Program(var path: String){
         return Pair(
             flowName,
             Thread {
-                status = ProgramStatus.SCREEN
-                flow.runFile(fileName)
+                try {
+                    status = ProgramStatus.SCREEN
+                    flow.runFile(fileName)
+                } catch (e: Exception) {
+                    log("Error in program $appId", Log.ERROR)
+                }
             }
         )
     }
