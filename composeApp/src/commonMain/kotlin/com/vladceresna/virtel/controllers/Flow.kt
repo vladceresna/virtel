@@ -703,7 +703,7 @@ class Flow(
                 "adaptive" -> {WidgetType.ADAPTIVE}
                 "row" -> {WidgetType.ROW}
                 "card" -> {WidgetType.CARD}
-                "topBar" -> {WidgetType.TOP_BAR}
+                "image" -> {WidgetType.IMAGE}
                 "bottomBar" -> {WidgetType.BOTTOM_BAR}
                 else -> {throw VirtelException("Variable "+args.get(1)+" contains unexpected widget type")} },
             try {
@@ -716,7 +716,7 @@ class Flow(
 
         when (newModel.widgetType) {
             WidgetType.CARD -> {
-                var value = 20.dp
+                var value = 25.dp
                 newModel.paddingTop.value = value
                 newModel.paddingRight.value = value
                 newModel.paddingBottom.value = value

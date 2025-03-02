@@ -27,7 +27,7 @@ fun main() = application() {
             position = WindowPosition(Alignment.Center)
         ),
         alwaysOnTop = true,
-        onKeyEvent = {
+        /*onKeyEvent = {
             when (it.key) {
                 androidx.compose.ui.input.key.Key.DirectionUp -> {
                     VirtelSystem.appsScreen.value = true
@@ -39,7 +39,7 @@ fun main() = application() {
                 }
                 else -> false
             }
-        }
+        }*/
     ) {
         App()
     }

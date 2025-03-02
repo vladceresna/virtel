@@ -52,7 +52,7 @@ data class WidgetModel(
     var name:String,
     var widgetType: WidgetType = WidgetType.VIEW,
     var weight:MutableState<Float> = mutableStateOf(1F), // float
-    var variant: MutableState<String> = mutableStateOf(""), // primary/secondary/tertiary/destructive
+    var variant: MutableState<String> = mutableStateOf("tertiary"), // primary/secondary/tertiary/destructive
     var title: MutableState<String> = mutableStateOf(""),
     var value: MutableState<String> = mutableStateOf(""),
     var foreground: MutableState<String> = mutableStateOf(""),
