@@ -176,24 +176,34 @@ fun Widget(model: WidgetModel, modifier: Modifier){
     var onClick: () -> Unit = {}
     if (!model.onClick.value.equals("")){
         modifierClickable = modifier.clickable {
-            var (flowName, thr) = model.programViewModel.program.runFlow(model.onClick.value)
-            var flow = model.programViewModel.program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
-            flow.nPutVar(
-                "viewName",
-                DataType.VAR,
-                model.name
-            )
-            thr.start()
+            try {
+                var (flowName, thr) = model.programViewModel.program.runFlow(model.onClick.value)
+                var flow = model.programViewModel.program.flows.get(flowName)
+                    ?: throw VirtelException("Virtel Error: Flow not found: " + flowName)
+                flow.nPutVar(
+                    "viewName",
+                    DataType.VAR,
+                    model.name
+                )
+                thr.start()
+            } catch (e: Exception) {
+                makeError(model.programViewModel, e.message.toString())
+            }
         }
         onClick = {
-            var (flowName, thr) = model.programViewModel.program.runFlow(model.onClick.value)
-            var flow = model.programViewModel.program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)
-            flow.nPutVar(
-                "viewName",
-                DataType.VAR,
-                model.name
-            )
-            thr.start()
+            try {
+                var (flowName, thr) = model.programViewModel.program.runFlow(model.onClick.value)
+                var flow = model.programViewModel.program.flows.get(flowName)
+                    ?: throw VirtelException("Virtel Error: Flow not found: " + flowName)
+                flow.nPutVar(
+                    "viewName",
+                    DataType.VAR,
+                    model.name
+                )
+                thr.start()
+            } catch (e: Exception) {
+                makeError(model.programViewModel, e.message.toString())
+            }
         }
     }
     //println("${model.widgetType} ${model.title.value}")
@@ -284,7 +294,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             Column (
                 Modifier.padding(10.dp,5.dp).fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
                     .clickable {
                         var (flowName, thr) = model.programViewModel.program.runFlow(model.onClick.value)
                         var flow = model.programViewModel.program.flows.get(flowName) ?: throw VirtelException("Virtel Error: Flow not found: "+flowName)

@@ -2,6 +2,9 @@
 uniffi::include_scaffolding!("vnative");
 
 use crate::storage::Storage;
+
+use crate::crypto::*;
+
 use gtts::save_to_file;
 use whichlang::detect_language;
 use std::{fs::File,io::BufReader};

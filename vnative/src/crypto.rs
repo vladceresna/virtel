@@ -13,33 +13,33 @@ use rand::rngs::OsRng;
 
 
 /// public, private
-fn kem_pair() -> Vec<String> {
+pub fn kem_pair() -> Vec<String> {
     let mut rng = rand::thread_rng();
     let keys_bob = pqc_kyber::keypair(&mut rng).unwrap();
     Vec::from([hex::encode(keys_bob.public), hex::encode(keys_bob.secret)])
 }
 /// ciphertext, shared_secret
-fn kem_encapsulate_public(public_key: String) -> Vec<String> {
+pub fn kem_encapsulate_public(public_key: String) -> Vec<String> {
     let mut rng = rand::thread_rng();
     let (ciphertext, shared_secret_alice) = pqc_kyber::encapsulate(
         &hex::decode(public_key).unwrap(), &mut rng).unwrap();
     Vec::from([hex::encode(ciphertext),hex::encode(shared_secret_alice)])
 }
-fn kem_decapsulate_private(ciphertext: String, secret_key: String) -> String {
+pub fn kem_decapsulate_private(ciphertext: String, secret_key: String) -> String {
     let shared_secret_bob = pqc_kyber::decapsulate(&hex::decode(ciphertext).unwrap(), &hex::decode(secret_key).unwrap()).unwrap();
     hex::encode(shared_secret_bob)
 }
 
 /// public, secret
-fn dsa_pair() -> Vec<String> {
+pub fn dsa_pair() -> Vec<String> {
     let keys = Keypair::generate(None); // TODO: Some()
     Vec::from([hex::encode(keys.public.bytes), hex::encode(keys.secret.bytes)])
 }
-fn dsa_sign(msg: String, public_key: String, secret_key: String) -> String {
+pub fn dsa_sign(msg: String, public_key: String, secret_key: String) -> String {
     let keys = keypair_from(public_key, secret_key);
     hex::encode(keys.sign(msg.as_bytes()))
 }
-fn dsa_verify(msg: String, sig: String, public_key: String) -> bool {
+pub fn dsa_verify(msg: String, sig: String, public_key: String) -> bool {
     let public = PublicKey {
         bytes: hex::decode(public_key).unwrap().try_into().unwrap()
     };
@@ -49,31 +49,31 @@ fn dsa_verify(msg: String, sig: String, public_key: String) -> bool {
     )
 }
 
-fn base64_encode(open_text: String) -> String {
+pub fn base64_encode(open_text: String) -> String {
     BASE64_STANDARD.encode(open_text.as_bytes())
 }
-fn base64_decode(ciphertext: String) -> String {
+pub fn base64_decode(ciphertext: String) -> String {
     String::from_utf8(
         BASE64_STANDARD.decode(ciphertext.as_bytes()).unwrap()
     ).unwrap()
 }
 
 
-fn sha512_encrypt(open_text: String) -> String {
+pub fn sha512_encrypt(open_text: String) -> String {
     let mut hasher = Sha3_512::new();
     hasher.update(open_text.as_bytes());
     hex::encode(hasher.finalize())
 }
-fn sha256_encrypt(open_text: String) -> String {
+pub fn sha256_encrypt(open_text: String) -> String {
     let mut hasher = Sha3_256::new();
     hasher.update(open_text.as_bytes());
     hex::encode(hasher.finalize())
 }
 
-fn hmac_encrypt(open_text: String, code: String) -> String {
+pub fn hmac_encrypt(open_text: String, code: String) -> String {
     sha512_encrypt(format!("{}<@hmac divider>{}",open_text,code))
 }
-fn hmac_verify(open_text: String, mac: String, code:String) -> bool {
+pub fn hmac_verify(open_text: String, mac: String, code:String) -> bool {
     if hmac_encrypt(open_text, code).eq(&mac) {
         return true;
     }
@@ -82,7 +82,7 @@ fn hmac_verify(open_text: String, mac: String, code:String) -> bool {
 
 
 
-fn aes_encrypt(plaintext: String, key_str: String) -> String {
+pub fn aes_encrypt(plaintext: String, key_str: String) -> String {
     let mut hasher = Sha3_256::new();
     hasher.update(key_str.as_bytes());
     let hashed_key_bytes = hasher.finalize();
@@ -99,7 +99,7 @@ fn aes_encrypt(plaintext: String, key_str: String) -> String {
 
     encode(combined)
 }
-fn aes_decrypt(encrypted_text: String, key_str: String) -> String {
+pub fn aes_decrypt(encrypted_text: String, key_str: String) -> String {
     let mut hasher = Sha3_256::new();
     hasher.update(key_str.as_bytes());
     let hashed_key_bytes = hasher.finalize();
@@ -115,7 +115,7 @@ fn aes_decrypt(encrypted_text: String, key_str: String) -> String {
     String::from_utf8(plaintext_bytes).unwrap()
 }
 
-fn jwt_encrypt(version: String, data: String, secret: String) -> String {
+pub fn jwt_encrypt(version: String, data: String, secret: String) -> String {
     format!(
         "{}.{}.{}",
         base64_encode(version.clone()),
@@ -132,8 +132,8 @@ fn jwt_encrypt(version: String, data: String, secret: String) -> String {
         )
     )
 }
-fn jwt_verify(vwt: String, secret: String) -> String {
-    let vwt_arr = vwt.split('.').collect::<Vec<&str>>();
+pub fn jwt_verify(jwt: String, secret: String) -> String {
+    let vwt_arr = jwt.split('.').collect::<Vec<&str>>();
     let sig = base64_decode(vwt_arr.get(2).unwrap().to_string());
     let new_sig = hmac_encrypt(
         format!(
