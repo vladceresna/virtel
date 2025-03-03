@@ -6,6 +6,8 @@ import com.vladceresna.virtel.ai.giveAnswer
 import com.vladceresna.virtel.ai.toSpeech
 import com.vladceresna.virtel.controllers.VirtelSystem.labs
 import com.vladceresna.virtel.getHttpClient
+import com.vladceresna.virtel.openSettings
+import com.vladceresna.virtel.openApp
 import com.vladceresna.virtel.other.VirtelException
 import com.vladceresna.virtel.screens.model.PageModel
 import com.vladceresna.virtel.screens.model.ProgramViewModel
@@ -154,6 +156,19 @@ class Flow(
     fun sysInlife(args: MutableList<String>) {
         var value = nGetVar(args.get(0), DataType.VAR).toString()
         inlife = value.toBoolean()
+    }
+
+    /** sys settings ""
+     * */
+    fun sysSettings(args: MutableList<String>) {
+        openSettings()
+    }
+
+    /** sys open-app (appId)
+     * */
+    fun sysOpenApp(args: MutableList<String>) {
+        var appId = nGetVar(args.get(0), DataType.VAR).toString()
+        openApp(appId)
     }
 
 
@@ -1478,6 +1493,9 @@ class Flow(
                     "clear" -> sysClear(step.args)
                     "backup" -> sysBackup(step.args)
                     "restore" -> sysRestore(step.args)
+                    "inlife" -> sysInlife(step.args)
+                    "settings" -> sysSettings(step.args)
+                    "open-app" -> sysOpenApp(step.args)
                 }
                 "zip" -> when (step.cmd) {
                     "archive" -> zipArchive(step.args)

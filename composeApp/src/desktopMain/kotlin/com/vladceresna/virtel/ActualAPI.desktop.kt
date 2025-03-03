@@ -8,3 +8,6 @@ actual fun isFileExists(path: String): Boolean = File(path).exists()
 actual fun getHttpClient(): HttpClient {
     return HttpClient(OkHttp)
 }
+actual fun openSettings() {}
+
+actual fun openApp(packageName: String) {}
