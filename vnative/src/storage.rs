@@ -55,12 +55,12 @@ pub struct Storage {
             {if !*(working.clone().lock().unwrap()) {
                 break;
             }}
-            thread::sleep(Duration::from_millis(50));
+            thread::sleep(Duration::from_millis(10));
         });
     }
     pub fn stop(&self){
         *self.working.lock().unwrap() = false;
-        thread::sleep(Duration::from_millis(1000));
+        thread::sleep(Duration::from_millis(30));
     }
 
     pub fn set(&self, name: String, value: String) {

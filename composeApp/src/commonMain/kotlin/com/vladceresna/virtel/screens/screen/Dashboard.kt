@@ -4,6 +4,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -60,6 +64,7 @@ import dev.snipme.highlights.model.SyntaxLanguage
 import dev.snipme.highlights.model.SyntaxTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okio.Path.Companion.toPath
 import org.jetbrains.compose.resources.vectorResource
@@ -436,7 +441,7 @@ fun Dashboard(
                         .padding(5.dp, 5.dp)
                         .clip(RoundedCornerShape(20.dp))
                 ) {
-                    var scrollState = rememberScrollState(0)
+                    var scrollState = rememberLazyListState()
                     Row(
                         modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow).padding(20.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -459,21 +464,35 @@ fun Dashboard(
                             )
                         }
                     }
-                    Column(
-                        Modifier.verticalScroll(scrollState)
-                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                            .padding(20.dp).weight(1f).animateContentSize().fillMaxWidth(),
+                    LazyColumn(
+                        state = scrollState,
+                        modifier = Modifier.weight(1f).background(MaterialTheme.colorScheme.surfaceContainerLow)
+                            .padding(20.dp).animateContentSize().fillMaxWidth(),
                         verticalArrangement = Arrangement.Bottom
                     ) {
-
-                        Logger.logs.forEach {
-                            Text(text = it, color = MaterialTheme.colorScheme.onSurface)
+                        items(Logger.logs.size) { index ->
+                            Text(text = Logger.logs.get(index), color = MaterialTheme.colorScheme.onSurface)
                         }
-                        LaunchedEffect(Logger.logs.size) {
-                            scrollState.animateScrollTo(Int.MAX_VALUE)
-                        }
-
                     }
+                    LaunchedEffect(Logger.logs.size) {
+
+                        fun isEditTagItemFullyVisible(lazyListState: LazyListState, editTagItemIndex: Int): Boolean {
+                            with(lazyListState.layoutInfo) {
+                                val editingTagItemVisibleInfo = visibleItemsInfo.find { it.index == editTagItemIndex }
+                                return if (editingTagItemVisibleInfo == null) {
+                                    false
+                                } else {
+                                    viewportEndOffset - editingTagItemVisibleInfo.offset >= editingTagItemVisibleInfo.size
+                                }
+                            }
+                        }
+
+                        delay(300)
+                        if (!isEditTagItemFullyVisible(scrollState, Logger.logs.size-1)) {
+                            scrollState.animateScrollToItem(Logger.logs.size-1)
+                        }
+                    }
+
                     Row(
                         Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow),
                     ) {
