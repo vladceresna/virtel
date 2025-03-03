@@ -282,7 +282,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
                 }
             }
         }
-        WidgetType.INPUT -> Box {
+        WidgetType.INPUT -> {
             var mutValue by remember { model.value }
             OutlinedTextField(
                 label = { Text(text = model.title.value) },
@@ -294,7 +294,6 @@ fun Widget(model: WidgetModel, modifier: Modifier){
                 }
             )
         }
-
         WidgetType.ROW -> Row(
             modifier,
             arrangementHorizontal,
