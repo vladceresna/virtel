@@ -186,24 +186,7 @@ fun Page(
                     }
                 )
             }
-            Box (
-                Modifier.clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                IconButton(onClick = {
-                    try {
-                        Programs.startProgram("vladceresna.virtel.launcher")
-                        //pageModel.homeClick.value()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }) {
-                    Icon(
-                        Icons.Filled.Home, contentDescription = "Localized description",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
+
             /*IconButton(onClick = {
                 try {
                     pageModel.backClick.value()
@@ -217,24 +200,7 @@ fun Page(
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }*/
-            Box (
-                Modifier.clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                IconButton(onClick = {
-                    try {
-                        //pageModel.settingsClick.value()
-                        VirtelSystem.appsScreen.value = true
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }) {
-                    Icon(
-                        Icons.Filled.Settings, contentDescription = "Localized description",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
+
         }
     }
 }
