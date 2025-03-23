@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -121,7 +122,8 @@ fun ScreenPager(
                     .weight(1F).fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.background)
                     .padding(PaddingValues(horizontal = 5.dp, vertical = 5.dp)),
-                screenModel
+                screenModel,
+                pagerState
             )
         }
 
@@ -158,14 +160,5 @@ fun ScreenPager(
                 )
             }
         }*/
-    }
-}
-
-
-fun getColorOfIcon():Color{
-    return if(VirtelSystem.darkTheme.value){
-        Color(255,255,255)
-    } else {
-        Color(0,0,0)
     }
 }

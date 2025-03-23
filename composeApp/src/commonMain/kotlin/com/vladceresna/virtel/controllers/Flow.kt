@@ -1207,7 +1207,7 @@ class Flow(
 
 
 
-    /** clt req (method) (url) (body) (newVarNameStatus) (newVarNameBody)
+    /** clt req (method) (url) (body) /type/ (newVarNameStatus) (newVarNameBody)
      * */
     fun cltReq(args: MutableList<String>) {
         var methodInput = nGetVar(args.get(0), DataType.VAR).toString()

@@ -2,11 +2,13 @@ package com.vladceresna.virtel.screens.screen
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -75,7 +78,8 @@ import virtel.composeapp.generated.resources.baseline_close_fullscreen_24
 @Composable
 fun Dashboard(
     modifier:Modifier = Modifier,
-    screenModel: ScreenModel
+    screenModel: ScreenModel,
+    pagerState: PagerState
 ){
 
 
@@ -129,23 +133,30 @@ fun Dashboard(
                                 )
                             }
                         }
-                        screenModel.pageModels.get(screenModel.currentPageIndex.value)
-                            .programViewModels.forEachIndexed { index, it ->
+                        screenModel.pageModels.forEachIndexed { index, pageModel ->
+                            pageModel.programViewModels.forEachIndexed { programViewModelIndex, it ->
                                 Column(
                                     Modifier.padding(10.dp, 5.dp).fillMaxWidth()
                                         .clip(RoundedCornerShape(20.dp))
                                         .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                         .clickable {
                                             VirtelSystem.appsScreen.value = false
-                                            screenModel.pageModels.get(screenModel.currentPageIndex.value)
-                                                .programViewModels.removeAt(index)
-                                            screenModel.pageModels.get(screenModel.currentPageIndex.value)
+                                            screenModel.pageModels.get(index)
+                                                .programViewModels.removeAt(programViewModelIndex)
+                                            screenModel.pageModels.get(index)
                                                 .programViewModels.add(it)
+                                            CoroutineScope(Job()).launch {
+                                                pagerState.scrollToPage(index)
+                                            }
                                         }
                                         .padding(10.dp)
                                 ) {
                                     val open = remember { mutableStateOf(false) }
-                                    Row {
+                                    Row(
+                                        Modifier,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
                                         Column(
                                             Modifier.weight(1f)
                                         ) {
@@ -158,6 +169,19 @@ fun Dashboard(
                                             Text(
                                                 it.program.appId,
                                                 color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                        Column (
+                                            Modifier.fillMaxHeight(),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ){
+                                            Text(
+                                                index.toString(),
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.fillMaxHeight(),
+                                                fontSize = 20.sp,
+                                                fontWeight = FontWeight.Black
                                             )
                                         }
                                         var icon =
@@ -324,6 +348,7 @@ fun Dashboard(
 
                                 }
                             }
+                        }
                     }
                 }
             }
