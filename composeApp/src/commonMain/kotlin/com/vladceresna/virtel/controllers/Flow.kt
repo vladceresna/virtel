@@ -13,6 +13,7 @@ import com.vladceresna.virtel.screens.model.PageModel
 import com.vladceresna.virtel.screens.model.ProgramViewModel
 import com.vladceresna.virtel.screens.model.WidgetModel
 import com.vladceresna.virtel.screens.model.WidgetType
+import io.ktor.client.request.accept
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -1206,16 +1207,27 @@ class Flow(
 
 
 
-    /** clt req (method) (url) (body) (newVarNameStatus) (newVarNameBody)
+    /** clt req (method) (url) (body) /type/ (newVarNameStatus) (newVarNameBody)
      * */
     fun cltReq(args: MutableList<String>) {
         var methodInput = nGetVar(args.get(0), DataType.VAR).toString()
         var url = nGetVar(args.get(1), DataType.VAR).toString()
         var body = nGetVar(args.get(2), DataType.VAR).toString()
+        var type:String
+        try {
+            type = nGetVar(args.get(3), DataType.VAR).toString()
+        } catch (e: Exception) {
+            type = ""
+        }
         runBlocking {
             var response = getHttpClient().request(url) {
                 if (body != "") {
-                    contentType(ContentType.Text.Plain)
+                    if (type == "json") {
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Application.Json)
+                    } else {
+                        contentType(ContentType.Text.Plain)
+                    }
                     setBody(body)
                 }
                 method = when (methodInput) {
@@ -1225,8 +1237,8 @@ class Flow(
                     else -> HttpMethod.Get
                 }
             }
-            nPutVar(args.get(4), DataType.VAR, response.bodyAsText())
-            nPutVar(args.get(3), DataType.VAR, response.status.toString())
+            nPutVar(args.get(args.size-1), DataType.VAR, response.bodyAsText())
+            nPutVar(args.get(args.size-2), DataType.VAR, response.status.toString())
         }
 
     }
