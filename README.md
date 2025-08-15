@@ -7,11 +7,15 @@
 </p>
 
 -------------
-`❓` Virtel is the fastest, the most secure and safe virtual enviroment. Best suited for mathematical calculations, development or deployment of applications and servers, though can be used for any purpose. We call it the **operating system**.
+Virtel is the fastest, the most secure and safe crossplatform customized virtual enviroment. Best suited for mathematical calculations, development or deployment of applications and servers, though can be used for any purpose. We call it the operating system.
 
-`🎯` What is the point of Virtel? Our goal is pretty simple: instead of writing software for different platforms separately or adding compatibility with other OS(es) later, we want people to write programs via **Virtel** - this **allows your code to run on practically any machine**, as Virtel is specifically made to be compatible with most platforms.
+Built on the Kotlin Multiplatform framework and the Rust language, Virtel provides a unique approach to programming through its own language, Steps, which allows for concise and efficient code writing. With Virtel, users can develop cross-platform applications that run seamlessly on any device, ensuring consistency and ease of use.
 
 Please see last releases on Releases page and join our Discord server: https://discord.gg/hNSyTvuy2v .
+
+The primary goal of Virtel is to offer a transparent and user-friendly environment where developers can focus on their ideas without being overwhelmed by complex setups or bulky frameworks. By integrating features like multithreading, multitasking, and a built-in terminal, Virtel empowers users to create powerful yet compact applications.
+
+Whether you're building a simple HTTP server or a complex system, Virtel's modular design and extensive libraries make it an ideal choice for developers of all levels. The system's emphasis on minimalism and performance ensures that applications built with Virtel are both efficient and easy to maintain.
 
 --------------
 ### We need help!
