@@ -4,6 +4,11 @@
 </p>
 
 <p align="center">
+  <img alt="License: GPL-3" src="https://img.shields.io/badge/License-GPL--3-red?style=flat-square">
+  <img alt="Kotlin: 2.0" src="https://img.shields.io/badge/Kotlin-2.0-orange?style=flat-square">
+  <img alt="Rust: 2021" src="https://img.shields.io/badge/Rust-2021-purple?style=flat-square">
+  
+
 </p>
 
 -------------
