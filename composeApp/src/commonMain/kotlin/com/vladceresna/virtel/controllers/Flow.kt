@@ -52,7 +52,7 @@ import okio.SYSTEM
 import java.util.Collections
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.roundToInt
-import vnative.*
+import uniffi.vnative.*
 
 /**
  * In exectime:

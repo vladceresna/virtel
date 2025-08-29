@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okio.Path.Companion.toPath
 import okio.SYSTEM
+import uniffi.vnative.*
 
 data object VirtelSystem {
 
@@ -71,8 +72,8 @@ data object VirtelSystem {
                 var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
                 if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
                     //toSpeech(text, labs, ttsFile)
-                    vnative.ttsSayLang(text, ttsFile, "uk")
-                } else vnative.playMp3(ttsFile)
+                    ttsSayLang(text, ttsFile, "uk")
+                } else playMp3(ttsFile)
             } catch (e: Exception) {
             }
         }

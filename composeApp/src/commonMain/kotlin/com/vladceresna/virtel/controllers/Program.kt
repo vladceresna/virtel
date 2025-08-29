@@ -6,7 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import okio.Path.Companion.toPath
-import vnative.Storage
+import uniffi.vnative.Storage
 
 
 data class Program(var path: String){
