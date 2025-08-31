@@ -18,13 +18,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.AddCircle
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +32,10 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.controllers.Programs
 import com.vladceresna.virtel.controllers.VirtelSystem
+import com.vladceresna.virtel.icons.ChevronLeft
+import com.vladceresna.virtel.icons.ChevronRight
+import com.vladceresna.virtel.icons.CirclePlus
+import com.vladceresna.virtel.icons.Trash2
 import com.vladceresna.virtel.screens.model.PageModel
 import kotlinx.coroutines.runBlocking
 
@@ -70,7 +67,7 @@ fun Page(
                                 .background(MaterialTheme.colorScheme.surfaceContainer)
                     ) {
                             Icon(
-                                imageVector = Icons.Outlined.AddCircle,
+                                imageVector = CirclePlus,
                                 contentDescription = "Plus",
                                 modifier = Modifier.size(150.dp),
                                 tint = MaterialTheme.colorScheme.onBackground
@@ -90,7 +87,7 @@ fun Page(
                                 .background(MaterialTheme.colorScheme.surfaceContainer)
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Delete,
+                                imageVector = Trash2,
                                 contentDescription = "Delete",
                                 modifier = Modifier.size(150.dp),
                                 tint = MaterialTheme.colorScheme.onBackground
@@ -117,7 +114,7 @@ fun Page(
                     }
                 }) {
                     Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        ChevronLeft,
                         contentDescription = "Localized description",
                         tint = MaterialTheme.colorScheme.onBackground
                     )
@@ -132,7 +129,7 @@ fun Page(
                     }
                 ) {
                     Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        ChevronRight,
                         contentDescription = "Localized description",
                         tint = MaterialTheme.colorScheme.onBackground
                     )

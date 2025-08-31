@@ -1,6 +1,5 @@
 package com.vladceresna.virtel.controllers
 
-import ai.picovoice.picovoice.Picovoice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch

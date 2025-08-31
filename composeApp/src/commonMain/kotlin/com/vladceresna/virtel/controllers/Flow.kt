@@ -1,11 +1,10 @@
 package com.vladceresna.virtel.controllers
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.vladceresna.virtel.ai.giveAnswer
-import com.vladceresna.virtel.ai.toSpeech
-import com.vladceresna.virtel.controllers.VirtelSystem.labs
 import com.vladceresna.virtel.getHttpClient
+import com.vladceresna.virtel.lib.colorFromHex
 import com.vladceresna.virtel.openSettings
 import com.vladceresna.virtel.openApp
 import com.vladceresna.virtel.other.VirtelException
@@ -170,6 +169,12 @@ class Flow(
     fun sysOpenApp(args: MutableList<String>) {
         var appId = nGetVar(args.get(0), DataType.VAR).toString()
         openApp(appId)
+    }
+
+    /** sys color (NewColor)
+     * */
+    fun sysColor(args: MutableList<String>){
+        VirtelSystem.seedColor.value = colorFromHex(nGetVar(args.get(0), DataType.VAR).toString())
     }
 
 
@@ -1251,16 +1256,7 @@ class Flow(
 
 
 
-    /** tts say2 (text)
-     * */
-    fun ttsSay2(args: MutableList<String>) {
-        var text = nGetVar(args.get(0), DataType.VAR).toString()
-        var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
-        if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
-            toSpeech(text, labs, ttsFile)
-        }
-        playMP3(ttsFile)
-    }
+
 
     /** tts say (text) \language\
      * */
@@ -1326,16 +1322,6 @@ class Flow(
             "wav" -> playWAV(path)
         }
     }
-
-    /** llm ask (text) (newResVarName)
-     * */
-    fun llmAsk(args: MutableList<String>) {
-        var text = nGetVar(args.get(0), DataType.VAR).toString()
-        nPutVar(args.get(1), DataType.VAR, giveAnswer(text))
-    }
-
-
-
 
 
     /** crt aes-enc (text) (key) (newVarName)
@@ -1508,6 +1494,7 @@ class Flow(
                     "inlife" -> sysInlife(step.args)
                     "settings" -> sysSettings(step.args)
                     "open-app" -> sysOpenApp(step.args)
+                    "color" -> sysColor(step.args)
                 }
                 "zip" -> when (step.cmd) {
                     "archive" -> zipArchive(step.args)
@@ -1632,7 +1619,6 @@ class Flow(
 
                 "tts" -> when (step.cmd) {
                     "say" -> ttsSay(step.args)
-                    "say2" -> ttsSay2(step.args)
                 }
 
                 "stt" -> when (step.cmd) {
@@ -1648,9 +1634,6 @@ class Flow(
                     "play" -> sprPlay(step.args)
                 }
 
-                "llm" -> when (step.cmd) {
-                    "ask" -> llmAsk(step.args)
-                }
 
                 "crt" -> when (step.cmd) {
                     "aes-enc" -> crtAesEncrypt(step.args)

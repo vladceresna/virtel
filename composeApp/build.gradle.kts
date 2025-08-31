@@ -1,4 +1,5 @@
 
+import com.android.utils.cxx.os.exe
 import gobley.gradle.GobleyHost
 import gobley.gradle.cargo.dsl.android
 import gobley.gradle.cargo.dsl.jvm
@@ -103,8 +104,6 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
-            implementation("javazoom:jlayer:1.0.1")
-            implementation("ai.picovoice:picollm-android:1.1.0")
 
 
 
@@ -126,6 +125,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.lifecycle.viewmodel.compose)
+            implementation("com.materialkolor:material-kolor:3.0.0")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
             implementation(libs.ktor.client.core)
@@ -155,10 +155,6 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-
-            implementation("javazoom:jlayer:1.0.1")
-
-            implementation("ai.picovoice:picovoice-java:3.0.3")
 
             //implementation("ch.qos.logback:logback-classic:1.5.6")
 
@@ -226,14 +222,20 @@ compose.desktop {
             packageName = "com.vladceresna.virtel"
             packageVersion = version
 
+
             macOS {
                 iconFile.set(project.file("res/logo.icns"))
             }
             windows {
                 iconFile.set(project.file("res/logo.ico"))
+                shortcut = true
+                menu = true
+                menuGroup = "Virtel / Universal Runtime"
             }
             linux {
                 iconFile.set(project.file("res/logo.png"))
+                shortcut = true
+                menuGroup = "Virtel / Universal Runtime"
             }
 
         }

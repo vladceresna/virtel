@@ -1,9 +1,10 @@
 package com.vladceresna.virtel.controllers
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.modifier.modifierLocalMapOf
 import com.vladceresna.virtel.getHomePath
-import com.vladceresna.virtel.ai.toSpeech
+import com.vladceresna.virtel.lib.colorFromHex
 import com.vladceresna.virtel.other.VirtelException
 import com.vladceresna.virtel.screens.model.ScreenModel
 import com.vladceresna.virtel.screens.model.VirtelScreenViewModel
@@ -33,6 +34,8 @@ data object VirtelSystem {
     var vosk = ""
     var native = ""//android stt/tts
 
+    var seedColor = mutableStateOf(Color(100, 100, 100))
+
     var echo = false
 
 
@@ -43,8 +46,6 @@ data object VirtelSystem {
 
     var isSaying = false
 
-
-    var isSawHello = false
 
 
 
@@ -64,19 +65,7 @@ data object VirtelSystem {
         Programs.scanPrograms()
         log("Virtel Launcher starting...", Log.INFO)
 
-        CoroutineScope(Job()).launch {
 
-            isSawHello = true
-            try {
-                var text = "Вітаю!"
-                var ttsFile = FileSystem.userFilesPath + "/virtel/tts-cache/$text.mp3"
-                if (!okio.FileSystem.SYSTEM.exists(ttsFile.toPath())) {
-                    //toSpeech(text, labs, ttsFile)
-                    ttsSayLang(text, ttsFile, "uk")
-                } else playMp3(ttsFile)
-            } catch (e: Exception) {
-            }
-        }
         CoroutineScope(Job()).launch {
             Programs.startProgram("vladceresna.virtel.launcher")
         }
@@ -100,6 +89,10 @@ data object VirtelSystem {
                     "llm" -> {llm = pair.get(1).trim().replace("$",FileSystem.systemPath)}
                     "vosk" -> {vosk = pair.get(1).trim().replace("$",FileSystem.systemPath)}
                     "native" -> {native = pair.get(1).trim()}
+                    "seedColor" -> {
+                        seedColor.value = colorFromHex(pair.get(1).trim())
+                        println(seedColor.toString())
+                    }
                     else -> {}
                 }
             }

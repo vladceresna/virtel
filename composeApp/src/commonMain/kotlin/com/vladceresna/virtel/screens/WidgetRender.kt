@@ -20,12 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
@@ -66,6 +60,7 @@ import com.vladceresna.virtel.controllers.DataType
 import com.vladceresna.virtel.controllers.Log
 import com.vladceresna.virtel.controllers.VirtelSystem
 import com.vladceresna.virtel.controllers.log
+import com.vladceresna.virtel.icons.*
 import com.vladceresna.virtel.other.VirtelException
 import com.vladceresna.virtel.other.makeError
 import com.vladceresna.virtel.screens.model.WidgetModel
@@ -301,7 +296,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
         ) {
             model.childs.forEach {
                 SizedWidget(it,
-                    if(it.weight.value != 0f) {
+                    if(it.weight.value > 0f) {
                         Modifier.weight(it.weight.value)
                     } else Modifier
                 )
@@ -315,7 +310,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             model.childs.forEach {
                 SizedWidget(
                     it,
-                    if (it.weight.value != 0f) {
+                    if (it.weight.value > 0f) {
                         Modifier.weight(it.weight.value)
                     } else Modifier
                 )
@@ -329,7 +324,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             model.childs.forEach {
                 SizedWidget(
                     it,
-                    if (it.weight.value != 0f) {
+                    if (it.weight.value > 0f) {
                         Modifier.weight(it.weight.value)
                     } else Modifier
                 )
@@ -343,7 +338,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
             model.childs.forEach {
                 SizedWidget(
                     it,
-                    if (it.weight.value != 0f) {
+                    if (it.weight.value > 0f) {
                         Modifier.weight(it.weight.value)
                     } else Modifier
                 )
@@ -369,7 +364,7 @@ fun Widget(model: WidgetModel, modifier: Modifier){
                         containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                         elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                     ) {
-                        Icon(Icons.Filled.Menu, "Localized description")
+                        Icon(Ellipsis, "Localized description")
                     }
                 }
             }
@@ -381,8 +376,8 @@ fun Widget(model: WidgetModel, modifier: Modifier){
 @Composable
 fun IconRenderer(name: String):ImageVector{
     return when(name){
-        "check" -> Icons.Filled.Check
-        else -> Icons.Filled.Menu
+        "check" -> Check
+        else -> Ellipsis
     }
 }
 
