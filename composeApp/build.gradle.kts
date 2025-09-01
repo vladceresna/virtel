@@ -114,6 +114,9 @@ kotlin {
             api(libs.moko.permissions.compose)
 
 
+            implementation("dev.icerock.moko:permissions-microphone:0.20.1")
+            implementation("dev.icerock.moko:permissions-storage:0.20.1")
+
         }
 
         commonMain.dependencies {

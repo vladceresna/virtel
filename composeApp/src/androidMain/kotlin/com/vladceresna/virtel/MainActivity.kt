@@ -110,11 +110,11 @@ fun VirtelApp() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if ((viewModel.recordAudioState == PermissionState.Granted &&
-            viewModel.storageState == PermissionState.Granted) ||
+            viewModel.mediaAudioState == PermissionState.Granted) ||
             android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             App()
         } else if (viewModel.recordAudioState == PermissionState.DeniedAlways ||
-            viewModel.storageState == PermissionState.DeniedAlways) {
+            viewModel.mediaAudioState == PermissionState.DeniedAlways) {
             Text(
                 text = "Virtel",
                 fontSize = 100.sp,
