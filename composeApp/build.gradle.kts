@@ -106,7 +106,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
 
-
+            implementation("io.coil-kt.coil3:coil-svg:3.3.0")
 
             implementation(libs.lifecycle.viewmodel)
             implementation(libs.lifecycle.viewmodel.compose)
@@ -140,8 +140,8 @@ kotlin {
 
             implementation("com.squareup.okio:okio:3.9.1")
 
-            implementation("io.coil-kt.coil3:coil-compose:3.0.0-alpha06")
-            implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
+            implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.3.0")
 
 
             implementation("com.github.terrakok:adaptivestack:1.0.0")

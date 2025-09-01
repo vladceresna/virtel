@@ -2,6 +2,7 @@ package com.vladceresna.virtel
 
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,21 +34,12 @@ import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 
 class MainActivity : ComponentActivity() {
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.let {
-                it.hide(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
-            }
-        } else {
-            window.decorView.systemUiVisibility = (android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or android.view.View.SYSTEM_UI_FLAG_FULLSCREEN)
+        // Defer the execution of UI changes until the window is fully initialized
+        window.decorView.post {
+            hideSystemBars()
         }
 
         VirtelSystem.applicationContext = applicationContext
@@ -55,37 +47,32 @@ class MainActivity : ComponentActivity() {
         setContent {
             VirtelApp()
         }
-
     }
+
     override fun onResume() {
         super.onResume()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.let {
-                it.hide(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
-            }
-        } else {
-            window.decorView.systemUiVisibility = (android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or android.view.View.SYSTEM_UI_FLAG_FULLSCREEN)
-        }
+        hideSystemBars()
     }
 
     override fun onRestart() {
         super.onRestart()
+        hideSystemBars()
+    }
+
+    // Extracted the logic into a separate function for reusability and clarity
+    private fun hideSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let {
                 it.hide(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
             }
         } else {
-            window.decorView.systemUiVisibility = (android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or android.view.View.SYSTEM_UI_FLAG_FULLSCREEN)
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN)
         }
     }
 }
@@ -110,7 +97,7 @@ fun VirtelApp() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if ((viewModel.recordAudioState == PermissionState.Granted &&
-            viewModel.mediaAudioState == PermissionState.Granted) ||
+                    viewModel.mediaAudioState == PermissionState.Granted) ||
             android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             App()
         } else if (viewModel.recordAudioState == PermissionState.DeniedAlways ||
