@@ -1,4 +1,4 @@
-package com.example.compose
+package com.vladceresna.virtel.theme
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF006E19)

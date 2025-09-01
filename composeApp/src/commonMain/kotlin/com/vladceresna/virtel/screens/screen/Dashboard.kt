@@ -22,10 +22,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -46,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,6 +55,11 @@ import com.vladceresna.virtel.controllers.ProgramStatus
 import com.vladceresna.virtel.controllers.Programs
 import com.vladceresna.virtel.controllers.Step
 import com.vladceresna.virtel.controllers.VirtelSystem
+import com.vladceresna.virtel.icons.ChevronDown
+import com.vladceresna.virtel.icons.ChevronLeft
+import com.vladceresna.virtel.icons.Delete
+import com.vladceresna.virtel.icons.Expand
+import com.vladceresna.virtel.icons.Trash2
 import com.vladceresna.virtel.screens.model.ScreenModel
 
 import dev.snipme.highlights.model.SyntaxThemes
@@ -72,8 +74,6 @@ import kotlinx.coroutines.launch
 import okio.Path.Companion.toPath
 import org.jetbrains.compose.resources.vectorResource
 import virtel.composeapp.generated.resources.Res
-import virtel.composeapp.generated.resources.baseline_close_fullscreen_24
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dashboard(
@@ -112,7 +112,7 @@ fun Dashboard(
                             .padding(10.dp).weight(1f).animateContentSize().fillMaxWidth()
                     ) {
                         Row(
-                            modifier = Modifier.padding(10.dp),
+                            modifier = Modifier.padding(10.dp, 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
@@ -127,7 +127,7 @@ fun Dashboard(
                                 terminal = !terminal
                             }) {
                                 Icon(
-                                    imageVector = vectorResource(Res.drawable.baseline_close_fullscreen_24),
+                                    imageVector = Expand,
                                     contentDescription = "Fullscreen",
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
@@ -176,23 +176,29 @@ fun Dashboard(
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             verticalArrangement = Arrangement.Center
                                         ){
-                                            Text(
-                                                index.toString(),
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                modifier = Modifier.fillMaxHeight(),
-                                                fontSize = 20.sp,
-                                                fontWeight = FontWeight.Black
-                                            )
+                                            Box(
+                                                Modifier
+                                                    .clip(RoundedCornerShape(5.dp))
+                                                    .padding(10.dp)
+                                            ) {
+                                                Text(
+                                                    index.toString(),
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    modifier = Modifier.fillMaxHeight(),
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.Black
+                                                )
+                                            }
                                         }
                                         var icon =
-                                            remember { mutableStateOf(Icons.Filled.KeyboardArrowDown) }
+                                            remember { mutableStateOf(ChevronDown) }
                                         IconButton(onClick = {
-                                            if (icon.value == Icons.Filled.KeyboardArrowDown) {
+                                            if (icon.value == ChevronDown) {
                                                 icon.value =
-                                                    Icons.AutoMirrored.Filled.KeyboardArrowLeft
+                                                    ChevronLeft
                                                 open.value = true
                                             } else {
-                                                icon.value = Icons.Filled.KeyboardArrowDown
+                                                icon.value = ChevronDown
                                                 open.value = false
                                             }
                                         }) {
@@ -239,21 +245,21 @@ fun Dashboard(
                                                         items.remove(t)
                                                     }) {
                                                         Icon(
-                                                            imageVector = Icons.Filled.Delete,
+                                                            imageVector = Trash2,
                                                             contentDescription = "Close",
                                                             tint = MaterialTheme.colorScheme.onSurface
                                                         )
                                                     }
                                                     var iconInFlow =
-                                                        remember { mutableStateOf(Icons.Filled.KeyboardArrowDown) }
+                                                        remember { mutableStateOf(ChevronDown) }
                                                     IconButton(onClick = {
-                                                        if (iconInFlow.value == Icons.Filled.KeyboardArrowDown) {
+                                                        if (iconInFlow.value == ChevronDown) {
                                                             iconInFlow.value =
-                                                                Icons.AutoMirrored.Filled.KeyboardArrowLeft
+                                                                ChevronLeft
                                                             openFlow.value = true
                                                         } else {
                                                             iconInFlow.value =
-                                                                Icons.Filled.KeyboardArrowDown
+                                                                ChevronDown
                                                             openFlow.value = false
                                                         }
                                                     }) {
@@ -299,14 +305,13 @@ fun Dashboard(
                                                                 Text(
                                                                     " ( " + it.key.second.toString() + " )",
                                                                     Modifier.weight(1f),
-                                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                                    fontWeight = FontWeight.W100
+                                                                    color = MaterialTheme.colorScheme.onSurface
                                                                 )
                                                                 IconButton({
                                                                     u.store.data.remove(it.key)
                                                                 }) {
                                                                     Icon(
-                                                                        imageVector = Icons.Filled.Delete,
+                                                                        imageVector = Delete,
                                                                         contentDescription = "Close",
                                                                         tint = MaterialTheme.colorScheme.onSurface
                                                                     )
@@ -335,8 +340,7 @@ fun Dashboard(
                                                                 Text(
                                                                     it.value.toString(),
                                                                     Modifier,
-                                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                                    fontWeight = FontWeight.W100
+                                                                    color = MaterialTheme.colorScheme.onSurface
                                                                 )
                                                             }
                                                         }
@@ -366,7 +370,7 @@ fun Dashboard(
                             .padding(10.dp).weight(1f).animateContentSize().fillMaxWidth()
                     ) {
                         Row(
-                            modifier = Modifier.padding(10.dp),
+                            modifier = Modifier.padding(10.dp, 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
@@ -381,7 +385,7 @@ fun Dashboard(
                                 terminal = !terminal
                             }) {
                                 Icon(
-                                    imageVector = vectorResource(Res.drawable.baseline_close_fullscreen_24),
+                                    imageVector = Expand,
                                     contentDescription = "Fullscreen",
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
@@ -412,7 +416,7 @@ fun Dashboard(
                                     showDialog = true
                                 }) {
                                     Icon(
-                                        imageVector = Icons.Filled.Delete,
+                                        imageVector = Trash2,
                                         contentDescription = "Close",
                                         tint = MaterialTheme.colorScheme.onSurface
                                     )
@@ -468,7 +472,7 @@ fun Dashboard(
                 ) {
                     var scrollState = rememberLazyListState()
                     Row(
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow).padding(20.dp),
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow).padding(20.dp, 15.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
@@ -483,7 +487,7 @@ fun Dashboard(
                             terminal = true
                         }) {
                             Icon(
-                                imageVector = vectorResource(Res.drawable.baseline_close_fullscreen_24),
+                                imageVector = Expand,
                                 contentDescription = "Fullscreen",
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
@@ -492,7 +496,7 @@ fun Dashboard(
                     LazyColumn(
                         state = scrollState,
                         modifier = Modifier.weight(1f).background(MaterialTheme.colorScheme.surfaceContainerLow)
-                            .padding(20.dp).animateContentSize().fillMaxWidth(),
+                            .padding(20.dp, 0.dp).animateContentSize().fillMaxWidth(),
                         verticalArrangement = Arrangement.Bottom
                     ) {
                         items(Logger.logs.size) { index ->
@@ -545,9 +549,8 @@ fun Dashboard(
                                 )
                                 .language(SyntaxLanguage.STEPS)
                                 .build(),
-                            label = { Text("Write command") },
+                            label = { Text("csl write \"Hello world\";") },
                             onValueChange = { value = it },
-                            supportingText = { Text("Steps. Ex.: csl write \"Hello world\";") },
                             prefix = {
                                 if (Logger.readLine.value) {
                                     Text("#")

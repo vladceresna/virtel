@@ -1,8 +1,11 @@
 
-import io.gitlab.trixnity.gradle.CargoHost
-import io.gitlab.trixnity.gradle.cargo.dsl.android
-import io.gitlab.trixnity.gradle.cargo.dsl.jvm
-import io.gitlab.trixnity.gradle.cargo.rust.targets.RustWindowsTarget
+import com.android.builder.dexing.isProguardRule
+import com.android.utils.cxx.os.exe
+import gobley.gradle.GobleyHost
+import gobley.gradle.cargo.dsl.android
+import gobley.gradle.cargo.dsl.jvm
+import gobley.gradle.rust.targets.RustWindowsTarget
+import org.gradle.kotlin.dsl.android
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -14,51 +17,50 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
 
-    alias(libs.plugins.cargoKotlinMultiplatform)
-    alias(libs.plugins.uniffiKotlinMultiplatform)
-    alias(libs.plugins.kotlinAtomicFU)
+    id("dev.gobley.cargo") version "0.3.4"
+    id("dev.gobley.uniffi") version "0.3.4"
+    kotlin("plugin.atomicfu") version libs.versions.kotlin
 
     kotlin("plugin.serialization") version "2.1.10"
 }
 
-var version = "3.2.1"//beta
+var version = "3.4.0"//beta
 
 
 
 cargo {
     packageDirectory = project.layout.projectDirectory.dir("../vnative")
+    //If you specifically need to handle Windows (e.g., preferring MinGW over Visual C++), use this instead:
     builds.jvm {
-        if (CargoHost.Platform.Windows.isCurrent) {
-            jvm = rustTarget == RustWindowsTarget.X64
+        if (GobleyHost.Platform.Windows.isCurrent) {
+            embedRustLibrary = (rustTarget == RustWindowsTarget.X64)
         } else {
-            jvm = rustTarget == CargoHost.current.hostTarget
+            embedRustLibrary = (rustTarget == GobleyHost.current.rustTarget)
         }
     }
     builds.android {
-        ndkLibraries.addAll("c++_shared")
+        dynamicLibraries.addAll("c++_shared")
     }
 }
 
 uniffi {
 
-    /*bindgenFromGitRevision(
-        repository = "https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings",
-        revision = "a97a6a0f5cd243d4a41acedf8d57fe33cb3da5e8"
-    )*/
-
-    if (CargoHost.Platform.Windows.isCurrent) {
+    if (GobleyHost.Platform.Windows.isCurrent) {
         generateFromUdl {
             namespace = "vnative"
-            build = RustWindowsTarget.X64.friendlyName
+            cdylibName = "vnative"
+            build = RustWindowsTarget.X64
             udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
         }
     } else {
         generateFromUdl {
             namespace = "vnative"
+            cdylibName = "vnative"
             udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
         }
     }
 }
+
 
 
 
@@ -75,7 +77,7 @@ kotlin {
     jvm("desktop")
 
 
-    if (CargoHost.Platform.MacOS.isCurrent) {
+    if (GobleyHost.Platform.MacOS.isCurrent) {
         listOf(
             iosX64(),
             iosArm64(),
@@ -94,7 +96,7 @@ kotlin {
     sourceSets {
         val desktopMain by getting
 
-        if (CargoHost.Platform.MacOS.isCurrent) {
+        if (GobleyHost.Platform.MacOS.isCurrent) {
             iosMain.dependencies {
                 implementation(libs.ktor.client.darwin)
             }
@@ -103,8 +105,6 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
-            implementation("javazoom:jlayer:1.0.1")
-            implementation("ai.picovoice:picollm-android:1.1.0")
 
 
 
@@ -126,6 +126,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.lifecycle.viewmodel.compose)
+            implementation("com.materialkolor:material-kolor:3.0.0")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
             implementation(libs.ktor.client.core)
@@ -155,10 +156,6 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-
-            implementation("javazoom:jlayer:1.0.1")
-
-            implementation("ai.picovoice:picovoice-java:3.0.3")
 
             //implementation("ch.qos.logback:logback-classic:1.5.6")
 
@@ -217,6 +214,12 @@ compose.desktop {
     application {
         mainClass = "com.vladceresna.virtel.MainKt"
 
+        buildTypes.release.proguard {
+            //configurationFiles.from(project.file("proguard-desktop.pro"))
+            //optimize.set(false)
+            isEnabled.set(false)
+        }
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg,
                 TargetFormat.Exe,
@@ -231,9 +234,15 @@ compose.desktop {
             }
             windows {
                 iconFile.set(project.file("res/logo.ico"))
+                shortcut = true
+                menu = true
+                menuGroup = "Virtel / Universal Runtime"
             }
             linux {
                 iconFile.set(project.file("res/logo.png"))
+                shortcut = true
+                menuGroup = "Virtel / Universal Runtime"
+
             }
 
         }

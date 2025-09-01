@@ -1,4 +1,4 @@
-package com.example.compose
+package com.vladceresna.virtel.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,7 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import com.example.ui.theme.AppTypography
+import com.materialkolor.rememberDynamicColorScheme
 import com.vladceresna.virtel.controllers.VirtelSystem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -260,10 +260,8 @@ val unspecified_scheme = ColorFamily(
 
 @Composable
 fun AppTheme(
-    rd:Boolean = true,
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable() () -> Unit
 ) {
     var theme by remember { VirtelSystem.darkTheme }
@@ -272,21 +270,29 @@ fun AppTheme(
             theme = VirtelSystem.darkTheme.value
         }
     }
+    var seedColor by remember { VirtelSystem.seedColor }
 
+    var colorScheme = if(dynamicColor) {
+        rememberDynamicColorScheme(seedColor = seedColor, isDark = theme)
+    } else {
 
-    val colorScheme = when {
-          /*dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        when {
+            /*dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
               val context = LocalContext.current
               if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-          }*/
+            }*/
 
-          theme -> darkScheme
-          else -> lightScheme
-      }
+            theme -> darkScheme
+            else -> lightScheme
+        }
+    }
+
+
+
 
       MaterialTheme(
         colorScheme = colorScheme,
-        typography = AppTypography,
+        typography = getAppTypography(),
         content = content
       )
 }

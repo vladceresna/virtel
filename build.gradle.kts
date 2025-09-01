@@ -6,9 +6,6 @@ plugins {
     alias(libs.plugins.jetbrainsCompose) apply false
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
-    alias(libs.plugins.cargoKotlinMultiplatform) apply false
-    alias(libs.plugins.uniffiKotlinMultiplatform) apply false
-    alias(libs.plugins.kotlinAtomicFU) apply false
     alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.jetbrains.kotlin.jvm) apply false
 }

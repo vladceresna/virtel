@@ -156,7 +156,40 @@ This is a Kotlin Multiplatform project targeting Android, iOS, Desktop.
     For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
     `iosMain` would be the right folder for such calls.
 
-* `/iosApp` contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform, 
+* `/iosApp` contains iOS applications. Even if you’re shDon't even tryaring your UI with Compose Multiplatform,
   you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
+
+# How to build Virtel?
+Don't even try :)
+
+But okay, if you still want to dive into this mess, please, I'll help you do it :)
+
+Although, of course, I don't fully understand how it works myself, but still.
+
+## You need to have the following **installed**:
+
+### If you on Linux or maybe on Windows:
+
+- JDK, for example [Liberica](https://bell-sw.com/pages/downloads/#jdk-21-lts) (Java Development Kit) (You can do it via SDK MAN)
+- [Android Studio](https://developer.android.com/studio) (Yes, even for desktop builds)
+- [Rust Toolchain](https://www.rust-lang.org/tools/install)
+
+Next, via Android Studio, ensure you have installed:
+
+- Android NDK
+- Android SDK
+
+### If you on MacOS
+
+I don't know, what you need to have installed, because I don't have Macbook, so you could need the same toolchains as for Linux, but yet you will need to have XCode or something.
+
+### Common recommendations
+
+**Use LLM!!! Use LLM!!!**
+
+Every error just share to LLM as ChatGPT.
+
+Sometimes you may need to install some libraries.
+If you have installed some system library and this have been helpful for your version of your operating system - create issue and we will add it to checklist on this page.

@@ -14,19 +14,17 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.vladceresna.virtel.controllers.VirtelSystem
 
 fun main() = application() {
     Window(
         icon = BitmapPainter(useResource(
             "logo.png", ::loadImageBitmap)),
         onCloseRequest = ::exitApplication,
-        title = "Virtel",
+        title = "Virtel / Universal Runtime",
         state = rememberWindowState(
-            placement = WindowPlacement.Fullscreen,
+            placement = WindowPlacement.Maximized,
             position = WindowPosition(Alignment.Center)
         ),
-        alwaysOnTop = true,
         /*onKeyEvent = {
             when (it.key) {
                 androidx.compose.ui.input.key.Key.DirectionUp -> {
