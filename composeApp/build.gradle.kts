@@ -239,13 +239,14 @@ compose.desktop {
                 iconFile.set(project.file("res/logo.ico"))
                 shortcut = true
                 menu = true
-                menuGroup = "Virtel / Universal Runtime"
+                menuGroup = "Virtel"
+                packageName = "Virtel"
             }
             linux {
                 iconFile.set(project.file("res/logo.png"))
                 shortcut = true
                 menuGroup = "Virtel / Universal Runtime"
-
+                packageName = "Virtel"
             }
 
         }
