@@ -44,7 +44,6 @@ fun App(screenModel: VirtelScreenViewModel = viewModel<VirtelScreenViewModel>())
 
                 VirtelSystem.screenModel = screenModel.screenModel
                 VirtelSystem.start()
-                delay(10000)
                 screenModel.isLoading = false
             }
         }

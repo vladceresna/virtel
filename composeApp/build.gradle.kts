@@ -1,4 +1,5 @@
 
+import com.android.builder.dexing.isProguardRule
 import com.android.utils.cxx.os.exe
 import gobley.gradle.GobleyHost
 import gobley.gradle.cargo.dsl.android
@@ -213,6 +214,12 @@ compose.desktop {
     application {
         mainClass = "com.vladceresna.virtel.MainKt"
 
+        buildTypes.release.proguard {
+            //configurationFiles.from(project.file("proguard-desktop.pro"))
+            //optimize.set(false)
+            isEnabled.set(false)
+        }
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg,
                 TargetFormat.Exe,
@@ -221,7 +228,6 @@ compose.desktop {
                 TargetFormat.AppImage)
             packageName = "com.vladceresna.virtel"
             packageVersion = version
-
 
             macOS {
                 iconFile.set(project.file("res/logo.icns"))
@@ -236,6 +242,7 @@ compose.desktop {
                 iconFile.set(project.file("res/logo.png"))
                 shortcut = true
                 menuGroup = "Virtel / Universal Runtime"
+
             }
 
         }
