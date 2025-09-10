@@ -13,6 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Use official Ubuntu mirror
+      run: |
+        sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu/|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
+        sudo apt-get update
+
     - name: Enable universe repo
       run: sudo add-apt-repository universe
     - name: Install Linux deps
