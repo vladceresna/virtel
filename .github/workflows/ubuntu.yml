@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Enable universe repo
+      run: sudo add-apt-repository universe
     - name: Install Linux deps
       run: sudo apt-get update && sudo apt-get install -y \
          libasound2-dev pkg-config build-essential
