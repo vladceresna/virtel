@@ -8,39 +8,34 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
     steps:
-    - uses: actions/checkout@v4
-    - name: Use official Ubuntu mirror
-      run: |
-        sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu/|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
-        sudo apt-get update
+      - uses: actions/checkout@v4
 
-    - name: Enable universe repo
-      run: sudo add-apt-repository universe
-    - name: Install Linux deps
-      run: sudo apt-get update && sudo apt-get install -y \
-         libasound2-dev pkg-config build-essential
+      - name: Install Linux deps
+        run: |
+          apt-get update
+          apt-get install -y libasound2-dev pkg-config build-essential
 
-    - name: Setup JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
-    
-    - name: Setup Rust and Cargo
-      uses: moonrepo/setup-rust@v1.2.2
-        
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew composeApp:packageDeb
-      
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.6.2
-      with:
-        path: composeApp/build/compose/binaries/**/**.deb
-      
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1.2.2
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew composeApp:packageDeb
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: composeApp/build/compose/binaries/**/**.deb
