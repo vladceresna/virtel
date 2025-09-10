@@ -20,6 +20,24 @@ jobs:
           apt-get install -y \
             libasound2-dev pkg-config build-essential curl wget
 
+      - name: Install Android SDK & NDK
+        run: |
+          mkdir -p $HOME/android-sdk
+          cd $HOME/android-sdk
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/* cmdline-tools/latest/
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
+              "platform-tools" \
+              "platforms;android-33" \
+              "build-tools;33.0.2" \
+              "ndk;25.2.9519653"
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
+
+
+
       - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
