@@ -20,6 +20,16 @@ jobs:
           apt-get install -y \
             libasound2-dev pkg-config build-essential curl unzip wget git
 
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1.2.2
+
       - name: Setup Android SDK, NDK, Platform-tools
         env:
           ANDROID_HOME: ${{ github.workspace }}/android-sdk
@@ -39,18 +49,6 @@ jobs:
       
           echo "Installed SDK:"
           ls -l $ANDROID_HOME
-  
-
-
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Setup Rust
-        uses: moonrepo/setup-rust@v1.2.2
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
