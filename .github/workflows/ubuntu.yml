@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install Linux deps
       run: sudo apt-get update && sudo apt-get install -y \
-         libasound2t64 pkg-config build-essential
+         libasound2-dev pkg-config build-essential
 
     - name: Setup JDK 17
       uses: actions/setup-java@v4
