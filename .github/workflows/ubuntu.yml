@@ -79,7 +79,6 @@ jobs:
           echo "::endgroup::"
 
       - name: Upload Artifact
-        if: steps.build_deb.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           path: composeApp/build/compose/binaries/**/**.deb
