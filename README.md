@@ -11,7 +11,10 @@
 
 </p>
 
--------------
+------------
+
+[![Ubuntu CI](https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml)
+
 Virtel is the fastest, the most secure and safe crossplatform customized virtual enviroment. Best suited for mathematical calculations, development or deployment of applications and servers, though can be used for any purpose. We call it the operating system.
 
 Built on the Kotlin Multiplatform framework and the Rust language, Virtel provides a unique approach to programming through its own language, Steps, which allows for concise and efficient code writing. With Virtel, users can develop cross-platform applications that run seamlessly on any device, ensuring consistency and ease of use.
