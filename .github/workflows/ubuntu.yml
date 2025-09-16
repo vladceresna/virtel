@@ -44,7 +44,7 @@ jobs:
       
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME \
             "platform-tools" \
-            "platforms;android-34" \
+            "platforms;android-36" \
             "ndk;25.2.9519653"
       
           echo "Installed SDK:"
@@ -63,7 +63,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew composeApp:packageDeb
+        run: ./gradlew composeApp:packageDeb --stacktrace --info
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
