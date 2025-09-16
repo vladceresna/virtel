@@ -22,6 +22,8 @@ plugins {
     kotlin("plugin.atomicfu") version libs.versions.kotlin
 
     kotlin("plugin.serialization") version "2.1.10"
+
+    //id("org.graalvm.buildtools.native") version "0.11.0"
 }
 
 var version = "3.4.0"//beta
@@ -106,13 +108,16 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
 
-
+            implementation("io.coil-kt.coil3:coil-svg:3.3.0")
 
             implementation(libs.lifecycle.viewmodel)
             implementation(libs.lifecycle.viewmodel.compose)
             api(libs.moko.permissions)
             api(libs.moko.permissions.compose)
 
+
+            implementation("dev.icerock.moko:permissions-microphone:0.20.1")
+            implementation("dev.icerock.moko:permissions-storage:0.20.1")
 
         }
 
@@ -137,8 +142,8 @@ kotlin {
 
             implementation("com.squareup.okio:okio:3.9.1")
 
-            implementation("io.coil-kt.coil3:coil-compose:3.0.0-alpha06")
-            implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
+            implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.3.0")
 
 
             implementation("com.github.terrakok:adaptivestack:1.0.0")
@@ -236,13 +241,13 @@ compose.desktop {
                 iconFile.set(project.file("res/logo.ico"))
                 shortcut = true
                 menu = true
-                menuGroup = "Virtel / Universal Runtime"
+                menuGroup = "Virtel"
+                packageName = "Virtel"
             }
             linux {
                 iconFile.set(project.file("res/logo.png"))
                 shortcut = true
                 menuGroup = "Virtel / Universal Runtime"
-
             }
 
         }

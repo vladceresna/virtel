@@ -63,9 +63,23 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew composeApp:packageDeb --stacktrace --info
+        id: build_deb
+        run: ./gradlew composeApp:packageDeb
+        continue-on-error: true
+
+      - name: Print jpackage logs
+        if: steps.build_deb.outcome == 'failure'
+        run: |
+          echo "::group::jpackage Standard Output"
+          cat composeApp/build/compose/logs/packageDeb/*-out.txt
+          echo "::endgroup::"
+          
+          echo "::group::jpackage Error Log"
+          cat composeApp/build/compose/logs/packageDeb/*-err.txt
+          echo "::endgroup::"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           path: composeApp/build/compose/binaries/**/**.deb
+
