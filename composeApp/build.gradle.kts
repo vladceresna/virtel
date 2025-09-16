@@ -22,6 +22,8 @@ plugins {
     kotlin("plugin.atomicfu") version libs.versions.kotlin
 
     kotlin("plugin.serialization") version "2.1.10"
+
+    //id("org.graalvm.buildtools.native") version "0.11.0"
 }
 
 var version = "3.4.0"//beta
@@ -246,7 +248,6 @@ compose.desktop {
                 iconFile.set(project.file("res/logo.png"))
                 shortcut = true
                 menuGroup = "Virtel / Universal Runtime"
-                packageName = "Virtel"
             }
 
         }
