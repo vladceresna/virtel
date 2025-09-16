@@ -1,0 +1,71 @@
+name: Ubuntu CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux deps
+        run: |
+          apt-get update
+          apt-get install -y \
+            libasound2-dev pkg-config build-essential curl unzip wget git
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1.2.2
+
+      - name: Setup Android SDK, NDK, Platform-tools
+        env:
+          ANDROID_HOME: ${{ github.workspace }}/android-sdk
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+      
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+      
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME \
+            "platform-tools" \
+            "platforms;android-34" \
+            "ndk;25.2.9519653"
+      
+          echo "Installed SDK:"
+          ls -l $ANDROID_HOME
+
+      - name: Configure Android SDK for Gradle
+        env:
+          ANDROID_HOME: ${{ github.workspace }}/android-sdk
+        run: |
+          mkdir -p android-sdk
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew composeApp:packageDeb
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: composeApp/build/compose/binaries/**/**.deb
