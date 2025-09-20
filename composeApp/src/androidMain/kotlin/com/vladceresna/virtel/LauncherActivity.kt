@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.vladceresna.virtel.controllers.VirtelSystem
 
 class LauncherActivity : ComponentActivity() {
 

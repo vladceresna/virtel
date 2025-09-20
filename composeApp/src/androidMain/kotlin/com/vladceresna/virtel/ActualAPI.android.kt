@@ -6,7 +6,6 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat.startActivity
-import com.vladceresna.virtel.controllers.VirtelSystem
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import java.io.File

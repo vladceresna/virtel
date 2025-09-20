@@ -24,20 +24,7 @@ fun main() = application() {
         state = rememberWindowState(
             placement = WindowPlacement.Maximized,
             position = WindowPosition(Alignment.Center)
-        ),
-        /*onKeyEvent = {
-            when (it.key) {
-                androidx.compose.ui.input.key.Key.DirectionUp -> {
-                    VirtelSystem.appsScreen.value = true
-                    true
-                }
-                androidx.compose.ui.input.key.Key.DirectionDown -> {
-                    VirtelSystem.appsScreen.value = false
-                    true
-                }
-                else -> false
-            }
-        }*/
+        )
     ) {
         App()
     }

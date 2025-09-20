@@ -23,7 +23,6 @@ plugins {
 
     kotlin("plugin.serialization") version "2.1.10"
 
-    //id("org.graalvm.buildtools.native") version "0.11.0"
 }
 
 var version = "3.4.0"//beta

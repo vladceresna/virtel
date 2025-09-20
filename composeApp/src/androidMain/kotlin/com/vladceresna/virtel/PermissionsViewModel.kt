@@ -19,31 +19,17 @@ class PermissionsViewModel(
     private val controller: PermissionsController
 ) : ViewModel() {
 
-    var recordAudioState by mutableStateOf(PermissionState.NotDetermined)
-        private set
     var mediaAudioState by mutableStateOf(PermissionState.NotDetermined)
         private set
 
     init {
         viewModelScope.launch {
-            recordAudioState = controller.getPermissionState(Permission.RECORD_AUDIO)
             mediaAudioState = controller.getPermissionState(Permission.WRITE_STORAGE)
         }
     }
 
     fun provideOrRequestPermissions() {
         viewModelScope.launch {
-            try {
-                controller.providePermission(Permission.RECORD_AUDIO)
-                recordAudioState = PermissionState.Granted
-            } catch (e: DeniedAlwaysException) {
-                recordAudioState = PermissionState.DeniedAlways
-            } catch (e: DeniedException) {
-                recordAudioState = PermissionState.Denied
-            } catch (e: RequestCanceledException) {
-                e.printStackTrace()
-            }
-
             try {
                 controller.providePermission(Permission.WRITE_STORAGE)
                 mediaAudioState = PermissionState.Granted

@@ -2,7 +2,6 @@ package com.vladceresna.virtel
 
 import android.content.Context
 import android.os.Build
-import com.vladceresna.virtel.controllers.VirtelSystem
 import java.io.File
 
 class AndroidPlatform : Platform {

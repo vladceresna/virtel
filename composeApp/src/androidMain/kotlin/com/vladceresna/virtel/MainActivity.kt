@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.vladceresna.virtel.controllers.VirtelSystem
 import dev.icerock.moko.permissions.PermissionState
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
@@ -96,12 +95,10 @@ fun VirtelApp() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if ((viewModel.recordAudioState == PermissionState.Granted &&
-                    viewModel.mediaAudioState == PermissionState.Granted) ||
+        if ((viewModel.mediaAudioState == PermissionState.Granted) ||
             android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             App()
-        } else if (viewModel.recordAudioState == PermissionState.DeniedAlways ||
-            viewModel.mediaAudioState == PermissionState.DeniedAlways) {
+        } else if (viewModel.mediaAudioState == PermissionState.DeniedAlways) {
             Text(
                 text = "Virtel",
                 fontSize = 100.sp,
@@ -151,25 +148,3 @@ fun AppAndroidPreview() {
     VirtelApp()
 }
 
-
-
-/*
-@Preview
-@Composable
-fun SoraPreview(
-    viewModel: SoraViewModel = viewModel()
-){
-    Column {
-        CodeEditor(
-            modifier = Modifier
-                .fillMaxSize(),
-            state = viewModel.editorState
-        )
-    }
-}
-
-class SoraViewModel : ViewModel() {
-    val editorState by mutableStateOf(
-        CodeEditorState()
-    )
-}*/
