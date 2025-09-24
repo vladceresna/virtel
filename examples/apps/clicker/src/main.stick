@@ -1,0 +1,23 @@
+import virtel.*
+
+window = createWindow("Clicker")
+
+global count = 0
+
+// Create a Column to hold components
+column = Column()
+window.add(column) // Add the column to the window
+
+// Create a Text
+text = Text("Click the button!")
+column.add(text) // Add the text to the column
+
+// Create a Button
+button = Button("Click Me")
+column.add(button) // Add the button to the column
+
+// Add an ActionListener to the button to handle clicks
+button.addOnClickListener({ view ->
+    text.setText(count++) // Update the text on click
+})
+window.show()

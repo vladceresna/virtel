@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import com.materialkolor.rememberDynamicColorScheme
+import com.vladceresna.virtel.store.VirtelStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -263,13 +264,13 @@ fun AppTheme(
     dynamicColor: Boolean = false,
     content: @Composable() () -> Unit
 ) {
-    var theme by remember { VirtelSystem.darkTheme }
-    LaunchedEffect(VirtelSystem.darkTheme.value){
+    var theme by remember { VirtelStore.darkTheme }
+    LaunchedEffect(VirtelStore.darkTheme.value){
         CoroutineScope(Job()).launch {
-            theme = VirtelSystem.darkTheme.value
+            theme = VirtelStore.darkTheme.value
         }
     }
-    var seedColor by remember { VirtelSystem.seedColor }
+    var seedColor by remember { VirtelStore.seedColor }
 
     var colorScheme = if(dynamicColor) {
         rememberDynamicColorScheme(seedColor = seedColor, isDark = theme)

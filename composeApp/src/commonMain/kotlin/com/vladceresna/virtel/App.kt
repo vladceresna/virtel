@@ -4,6 +4,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.vladceresna.virtel.api.SystemApiImpl
+import com.vladceresna.virtel.api.UiApiImpl
 import com.vladceresna.virtel.screens.LoadingScreen
 import com.vladceresna.virtel.screens.VirtelScreen
 import com.vladceresna.virtel.theme.AppTheme
@@ -11,8 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
-
+import uniffi.vnative.VirtelCenter
 
 @Composable
 fun App(){
@@ -21,7 +22,7 @@ fun App(){
         LaunchedEffect(Unit) {
             //after first recomposition only
             CoroutineScope(Job()).launch {
-                delay(2000)
+                VirtelCenter().initialize(UiApiImpl(), SystemApiImpl())
                 isLoading = false
             }
         }

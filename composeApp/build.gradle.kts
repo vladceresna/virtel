@@ -47,17 +47,16 @@ cargo {
 uniffi {
 
     if (GobleyHost.Platform.Windows.isCurrent) {
-        generateFromUdl {
+        generateFromLibrary {
             namespace = "vnative"
             cdylibName = "vnative"
             build = RustWindowsTarget.X64
-            udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
+
         }
     } else {
-        generateFromUdl {
+        generateFromLibrary {
             namespace = "vnative"
             cdylibName = "vnative"
-            udlFile = project.layout.projectDirectory.file("../vnative/src/vnative.udl")
         }
     }
 }

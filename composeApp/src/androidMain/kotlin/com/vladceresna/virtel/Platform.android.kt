@@ -11,12 +11,12 @@ class AndroidPlatform : Platform {
 actual fun getPlatform(): Platform = AndroidPlatform()
 actual fun getHomePath(): String? {
     //return "/storage/emulated/0/Android/data/com.vladceresna.virtel/files/"
-    val file = (VirtelSystem.applicationContext as Context).getExternalFilesDir(null)
+    val file = VirtelContext.context.getExternalFilesDir(null)
     if (file != null) {
         if (!file.exists()) {
             file.mkdirs()
         }
         return file.absolutePath
     }
-    throw Exception("Your device doesnt support Virtel")
+    throw Exception("Your device doesn't support Virtel")
 }

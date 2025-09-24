@@ -27,8 +27,7 @@ class LauncherActivity : ComponentActivity() {
         }
 
 
-        VirtelSystem.applicationContext = applicationContext
-        VirtelContext.context = applicationContext
+        VirtelContext.initialize(this)
         setContent {
             VirtelApp()
         }

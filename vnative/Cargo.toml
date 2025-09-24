@@ -9,6 +9,8 @@ crate-type = ["lib", "cdylib", "staticlib"]
 
 [dependencies]
 uniffi = "0.29.4"
+thiserror = "2"
+
 percent-encoding = "2.1.0"
 serde_json = "1.0.138"
 serde = "1.0.217"
