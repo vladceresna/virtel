@@ -1,55 +1,181 @@
 package com.vladceresna.virtel.store
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import uniffi.vnative.VirtelCenter
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.vladceresna.virtel.icons.X
 
 data object UiStore {
-    var windows = mutableStateListOf<Window>(
-        Window(
-            title = "Clicker",
-            widgetsTree = mutableStateListOf(
-                Button(
-                    id = "button",
-                    onClick = {
+    val windows = mutableStateListOf<Window>()
 
-                    },
-                    childWidgets = mutableStateListOf(
-                        Text(
-                            id = "text",
-                            text = "Click me"
-                        )
-                    )
-                )
-            )
+    init {
+        val clickerWindow = Window("Clicker", 1,1)
+
+        val text = clickerWindow.createText(
+            id = "text",
+            initialText = "Click me"
         )
-    )
 
+        val button = clickerWindow.createButton(
+            id = "button",
+            childWidgets = listOf(text),
+            onClick = {
+                val textWidget = clickerWindow.findWidgetById("text") as? Text
+                val count = textWidget?.text?.split(" ")?.last()?.toIntOrNull() ?: 0
+                textWidget?.text = "Clicked! ${count + 1}"
+                VirtelStore.darkTheme.value = !VirtelStore.darkTheme.value
+            }
+        )
+
+        clickerWindow.widgetsTree.add(button)
+
+        windows.add(clickerWindow)
+
+
+        val helloWindow = Window("Hello", 1,1)
+
+        val text2 = helloWindow.createText(
+            id = "text",
+            initialText = "Hello"
+        )
+
+        helloWindow.widgetsTree.add(text2)
+
+        windows.add(helloWindow)
+
+    }
 }
-data class Window(
-    var title: String,
-    var widgetsTree: MutableList<Widget> = mutableStateListOf(),
-    var widgets: MutableList<Widget> = mutableStateListOf()
-)
+data class Window(val title: String, val x:Int, val y:Int) {
+    private val widgetMap = mutableMapOf<String, Widget>()
+    val widgetsTree = mutableStateListOf<Widget>()
+
+    fun createText(id: String, initialText: String): Text {
+        val widget = Text(id, initialText)
+        registerWidget(id, widget)
+        return widget
+    }
+
+    fun createButton(id: String, childWidgets: List<Widget>, onClick: () -> Unit): Button {
+        val widget = Button(id, mutableStateListOf(*childWidgets.toTypedArray()), onClick)
+        registerWidget(id, widget)
+        return widget
+    }
+
+    private fun registerWidget(id: String, widget: Widget) {
+        if (widgetMap.containsKey(id)) {
+            throw IllegalStateException("Widget with ID '$id' already exists!")
+        }
+        widgetMap[id] = widget
+    }
+
+    fun destroyWidget(widget: Widget) {
+        if (widget is ContainerWidget) {
+            widget.childWidgets.toList().forEach { child ->
+                destroyWidget(child)
+            }
+        }
+        widgetMap.remove(widget.id)
+        println("Destroyed widget: ${widget.id}")
+    }
+
+    fun findWidgetById(id: String): Widget? {
+        return widgetMap[id]
+    }
+
+    @Composable
+    fun render() {
+        Column(
+            modifier = Modifier.background(MaterialTheme.colorScheme.background)
+        ) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp, 20.dp, 0.dp,0.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(10.dp,10.dp)
+                ) {
+                    Text(this@Window.title,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface)
+                }
+                Box(Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .padding(10.dp,10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .clickable {
+                                UiStore.windows.remove(this@Window)
+                            }
+                            .padding(4.dp)
+                    ) {
+                        Icon(X, "Close",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }
+            Column{
+                this@Window.widgetsTree.forEach { widget ->
+                    widget.render()
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .height(20.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(0.dp, 0.dp, 20.dp,20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            ) {
+            }
+        }
+    }
+}
+
 interface Widget {
     var id: String
     @Composable
     fun render()
 }
+interface ContainerWidget: Widget {
+    var childWidgets: MutableList<Widget>
+}
 
 class Button(
     override var id: String,
-    var onClick: () -> Unit,
-    var childWidgets: MutableList<Widget> = mutableStateListOf()
-): Widget {
-
+    override var childWidgets: MutableList<Widget>,
+    var onClick: () -> Unit
+): ContainerWidget {
     @Composable
     override fun render(){
-        Button(
-            onClick
-        ){
+        Button(onClick){
             childWidgets.forEach { widget ->
                 widget.render()
             }
@@ -59,13 +185,12 @@ class Button(
 
 class Text(
     override var id: String,
-    var text: String
-): Widget {
+    initialText: String
+) : Widget {
+    var text by mutableStateOf(initialText)
 
     @Composable
-    override fun render(){
-        Text(
-            text
-        )
+    override fun render() {
+        Text(text = this.text)
     }
 }

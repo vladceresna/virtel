@@ -13,16 +13,19 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import uniffi.vnative.VirtelCenter
+import uniffi.vnative.getVirtelCenter
 
 @Composable
 fun App(){
     var isLoading by remember { mutableStateOf(true) }
     Box {
         LaunchedEffect(Unit) {
+            delay(500)
             //after first recomposition only
             CoroutineScope(Job()).launch {
-                VirtelCenter().initialize(UiApiImpl(), SystemApiImpl())
+                val virtelCenter = getVirtelCenter()
+                virtelCenter.initialize(UiApiImpl(), SystemApiImpl())
+                virtelCenter.runApp("launcher.virtel.vladceresna")
                 isLoading = false
             }
         }

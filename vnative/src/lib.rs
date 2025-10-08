@@ -6,6 +6,7 @@ mod vx;
 mod settings;
 mod center;
 mod app;
+mod apps;
 
 
 

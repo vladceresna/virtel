@@ -34,8 +34,6 @@ pub struct VM<'a> {
 
 
 impl<'a> VM<'a> {
-    // 1. Конструктор теперь принимает ССЫЛКУ на существующий Chunk.
-    //    Это решает проблему времени жизни.
     fn new(chunk: &'a Chunk) -> Self {
         Self {
             chunk, // Просто сохраняем переданную ссылку
@@ -46,7 +44,6 @@ impl<'a> VM<'a> {
 
     fn run(&mut self) -> i64 {
         loop {
-            // 2. Обращаемся к инструкциям через self.chunk
             let instruction = self.chunk.instructions[self.ip];
             self.ip += 1;
 
@@ -69,7 +66,6 @@ impl<'a> VM<'a> {
                     }
                 }
                 Instruction::Return { src } => {
-                    // 3. Возвращаем i64, как и требует сигнатура функции
                     return self.registers[src as usize].as_i64();
                 }
             }
@@ -84,9 +80,7 @@ mod tests {
 
     #[test]
     fn test_vm_simple_return() {
-        // --- ИСПРАВЛЕНИЯ В ТЕСТЕ ---
-
-        // 1. Сначала создаем Chunk, который содержит и код, и данные.
+        
         let program = Chunk {
             constants: vec![
                 Value::Number(42), // Константа 42 находится по индексу 0
