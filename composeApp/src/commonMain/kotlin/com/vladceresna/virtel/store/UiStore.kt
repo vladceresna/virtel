@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -28,10 +29,10 @@ import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.icons.X
 
 data object UiStore {
-    val windows = mutableStateListOf<Window>()
+    val windows = mutableStateMapOf<String, Window>()
 
     init {
-        val clickerWindow = Window("Clicker", 1,1)
+        val clickerWindow = Window("Clicker",Pair(1, 3), Pair(3, 5), "", true)
 
         val text = clickerWindow.createText(
             id = "text",
@@ -51,23 +52,30 @@ data object UiStore {
 
         clickerWindow.widgetsTree.add(button)
 
-        windows.add(clickerWindow)
+        windows.put("cw",clickerWindow)
 
 
-        val helloWindow = Window("Hello", 1,1)
+        windows.put("hw",Window("Hello", Pair(1,1), Pair(2,2), "", true))
 
-        val text2 = helloWindow.createText(
+        var hw = windows.get("hw")!!
+
+        val text2 = hw.createText(
             id = "text",
             initialText = "Hello"
         )
+        hw.widgetsTree.add(text2)
 
-        helloWindow.widgetsTree.add(text2)
 
-        windows.add(helloWindow)
 
     }
 }
-data class Window(val title: String, val x:Int, val y:Int) {
+data class Window(
+    var title: String,
+    var start:Pair<Int, Int>,
+    var end: Pair<Int, Int>,
+    val appId:String,
+    var visible: Boolean = false
+) {
     private val widgetMap = mutableMapOf<String, Widget>()
     val widgetsTree = mutableStateListOf<Widget>()
 
@@ -105,7 +113,7 @@ data class Window(val title: String, val x:Int, val y:Int) {
     }
 
     @Composable
-    fun render() {
+    fun render(key:String) {
         Column(
             modifier = Modifier.background(MaterialTheme.colorScheme.background)
         ) {
@@ -132,7 +140,7 @@ data class Window(val title: String, val x:Int, val y:Int) {
                             .clip(RoundedCornerShape(50.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer)
                             .clickable {
-                                UiStore.windows.remove(this@Window)
+                                UiStore.windows.remove(key)
                             }
                             .padding(4.dp)
                     ) {

@@ -19,6 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import com.vladceresna.virtel.store.UiStore
 import com.vladceresna.virtel.store.Widget
@@ -38,21 +42,18 @@ fun VirtelScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Shipmilk(windows: List<Window>){
+fun Shipmilk(windows: Map<String, Window>){
 
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Adaptive(minSize = 200.dp),
-        modifier = Modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-        contentPadding = PaddingValues(20.dp)
+    Column (
+        modifier = Modifier.fillMaxSize()
     ) {
-        items(windows, key = { it.title }) { window ->
+        for ((key, window) in windows){
             Box(
-                Modifier.clip(RoundedCornerShape(20.dp))
-            ){
-                window.render()
+                Modifier
+                    .clip(RoundedCornerShape(20.dp)),
+            ) {
+                window.render(key)
             }
-
         }
     }
 }
