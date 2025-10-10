@@ -38,6 +38,7 @@ pub fn install_app(vc_file_path: &str) -> io::Result<()> {
     Ok(())
 }
 
+
 pub fn remove_app(app_id: &str) -> io::Result<()> {
     let apps_dir = get_virtel_center().get_settings().filesystem.apps_dir.clone();
     let app_path = Path::new(apps_dir.as_str()).join(app_id);

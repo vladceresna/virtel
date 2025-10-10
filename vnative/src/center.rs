@@ -6,7 +6,7 @@ use std::{
 
 use once_cell::sync::Lazy;
 
-use crate::{app::App, settings::{FileSystem, Settings}, vx};
+use crate::{app::App, apps::install_app, settings::{FileSystem, Settings}, vx};
 
 #[derive(Debug, uniffi::Error)]
 pub enum VirtelError {
@@ -71,7 +71,7 @@ impl VirtelCenter {
             data.ui_api = Some(ui_api);
             data.system_api = Some(system_api);
 
-            data.system_api.as_ref().unwrap().get_os_home_dir().unwrap();
+
         }
         println!("VirtelCenter initialized.");
     }
