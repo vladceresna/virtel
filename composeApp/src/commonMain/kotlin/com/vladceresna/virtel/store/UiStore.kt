@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -190,6 +191,32 @@ class Button(
         }
     }
 }
+class Column(
+    override var id: String,
+    override var childWidgets: MutableList<Widget>
+): ContainerWidget {
+    @Composable
+    override fun render(){
+        Column {
+            childWidgets.forEach { widget ->
+                widget.render()
+            }
+        }
+    }
+}
+class Row(
+    override var id: String,
+    override var childWidgets: MutableList<Widget>
+): ContainerWidget {
+    @Composable
+    override fun render(){
+        Row {
+            childWidgets.forEach { widget ->
+                widget.render()
+            }
+        }
+    }
+}
 
 class Text(
     override var id: String,
@@ -200,5 +227,20 @@ class Text(
     @Composable
     override fun render() {
         Text(text = this.text)
+    }
+}
+
+class Switch(
+    override var id: String,
+    var onCheck: (checked: Boolean) -> Unit
+): Widget {
+    var checked by mutableStateOf(false)
+
+    @Composable
+    override fun render(){
+        Switch(
+            checked,
+            onCheck
+        )
     }
 }

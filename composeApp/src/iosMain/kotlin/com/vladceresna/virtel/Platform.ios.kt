@@ -8,5 +8,5 @@ class IOSPlatform: Platform {
 
 actual fun getPlatform(): Platform = IOSPlatform()
 actual fun getHomePath(): String? {
-    return null
+    return "" //TODO
 }
