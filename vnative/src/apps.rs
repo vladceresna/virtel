@@ -4,6 +4,8 @@ use std::path::Path;
 
 use crate::center::get_virtel_center;
 
+/// .vc - virtel bytecode
+/// .vs - virtel scriptcode (bytecode text interpretation)
 pub fn install_app(vc_file_path: &str) -> io::Result<()> {
     // Read the .vc file
     let vc_file_path = Path::new(vc_file_path);
@@ -18,8 +20,11 @@ pub fn install_app(vc_file_path: &str) -> io::Result<()> {
     let mut bytecode = Vec::new();
     vc_file.read_to_end(&mut bytecode)?;
 
-
-    let apps_dir = get_virtel_center().get_settings().filesystem.apps_dir.clone();
+    let apps_dir = get_virtel_center()
+        .get_settings()
+        .filesystem
+        .apps_dir
+        .clone();
 
     // Write the bytecode to the Virtel filesystem
     let apps_path = Path::new(apps_dir.as_str());
@@ -38,9 +43,12 @@ pub fn install_app(vc_file_path: &str) -> io::Result<()> {
     Ok(())
 }
 
-
 pub fn remove_app(app_id: &str) -> io::Result<()> {
-    let apps_dir = get_virtel_center().get_settings().filesystem.apps_dir.clone();
+    let apps_dir = get_virtel_center()
+        .get_settings()
+        .filesystem
+        .apps_dir
+        .clone();
     let app_path = Path::new(apps_dir.as_str()).join(app_id);
 
     if app_path.exists() {
