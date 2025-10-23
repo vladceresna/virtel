@@ -3,7 +3,8 @@ use std::vec;
 #[derive(Debug, Clone, Copy)]
 pub enum Value {
     Number(i64),
-} impl Value {
+}
+impl Value {
     fn as_i64(&self) -> i64 {
         match self {
             Value::Number(n) => *n,
@@ -19,6 +20,7 @@ pub enum Instruction {
     Add { dst: Reg, lhs: Reg, rhs: Reg },
     Mul { dst: Reg, lhs: Reg, rhs: Reg },
     Return { src: Reg },
+    Call {},
 }
 
 pub struct Chunk {
@@ -32,9 +34,8 @@ pub struct VM<'a> {
     registers: Vec<Value>,
 }
 
-
 impl<'a> VM<'a> {
-    fn new(chunk: &'a Chunk) -> Self {
+    pub fn new(chunk: &'a Chunk) -> Self {
         Self {
             chunk, // Просто сохраняем переданную ссылку
             ip: 0,
@@ -52,14 +53,18 @@ impl<'a> VM<'a> {
                     self.registers[dst as usize] = self.chunk.constants[const_id as usize];
                 }
                 Instruction::Add { dst, lhs, rhs } => {
-                    if let (Value::Number(l), Value::Number(r)) = (self.registers[lhs as usize], self.registers[rhs as usize]) {
+                    if let (Value::Number(l), Value::Number(r)) =
+                        (self.registers[lhs as usize], self.registers[rhs as usize])
+                    {
                         self.registers[dst as usize] = Value::Number(l + r);
                     } else {
                         panic!("Type error in Add instruction");
                     }
                 }
                 Instruction::Mul { dst, lhs, rhs } => {
-                    if let (Value::Number(l), Value::Number(r)) = (self.registers[lhs as usize], self.registers[rhs as usize]) {
+                    if let (Value::Number(l), Value::Number(r)) =
+                        (self.registers[lhs as usize], self.registers[rhs as usize])
+                    {
                         self.registers[dst as usize] = Value::Number(l * r);
                     } else {
                         panic!("Type error in Mul instruction");
@@ -80,24 +85,26 @@ mod tests {
 
     #[test]
     fn test_vm_simple_return() {
-        
         let program = Chunk {
             constants: vec![
                 Value::Number(42), // Константа 42 находится по индексу 0
             ],
             instructions: vec![
                 // 2. Используем правильный формат инструкции: загрузить константу с ID=0.
-                Instruction::LoadConstant { dst: 0, const_id: 0 },
+                Instruction::LoadConstant {
+                    dst: 0,
+                    const_id: 0,
+                },
                 Instruction::Return { src: 0 },
             ],
         };
-        
+
         // 3. Передаем в ВМ ссылку на наш Chunk.
         let mut vm = VM::new(&program);
         let result = vm.run();
         assert_eq!(result, 42);
     }
-    
+
     #[test]
     fn test_vm_arithmetic() {
         // Программа: (10 + 20) * 2
@@ -110,11 +117,28 @@ mod tests {
         let program = Chunk {
             constants: vec![Value::Number(10), Value::Number(20), Value::Number(2)],
             instructions: vec![
-                Instruction::LoadConstant { dst: 0, const_id: 0 }, // r0 = 10
-                Instruction::LoadConstant { dst: 1, const_id: 1 }, // r1 = 20
-                Instruction::Add { dst: 2, lhs: 0, rhs: 1 },       // r2 = r0 + r1
-                Instruction::LoadConstant { dst: 3, const_id: 2 }, // r3 = 2
-                Instruction::Mul { dst: 4, lhs: 2, rhs: 3 },       // r4 = r2 * r3
+                Instruction::LoadConstant {
+                    dst: 0,
+                    const_id: 0,
+                }, // r0 = 10
+                Instruction::LoadConstant {
+                    dst: 1,
+                    const_id: 1,
+                }, // r1 = 20
+                Instruction::Add {
+                    dst: 2,
+                    lhs: 0,
+                    rhs: 1,
+                }, // r2 = r0 + r1
+                Instruction::LoadConstant {
+                    dst: 3,
+                    const_id: 2,
+                }, // r3 = 2
+                Instruction::Mul {
+                    dst: 4,
+                    lhs: 2,
+                    rhs: 3,
+                }, // r4 = r2 * r3
                 Instruction::Return { src: 4 },
             ],
         };

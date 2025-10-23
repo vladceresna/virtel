@@ -11,3 +11,7 @@ pub static TOKIO: Lazy<Arc<Runtime>> = Lazy::new(|| {
             .expect("Failed to start Tokio runtime"),
     )
 });
+
+pub fn get_tokio() -> Arc<Runtime> {
+    Arc::clone(&TOKIO)
+}

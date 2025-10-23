@@ -6,7 +6,12 @@ use std::{
 
 use once_cell::sync::Lazy;
 
-use crate::{app::App, apps::install_app, settings::{FileSystem, Settings}, vx};
+use crate::{
+    app::App,
+    apps::{install_app, prepare_apps},
+    settings::{FileSystem, Settings},
+    vx,
+};
 
 #[derive(Debug, uniffi::Error)]
 pub enum VirtelError {
@@ -30,15 +35,12 @@ pub trait SystemApi: Send + Sync + Debug {
     fn get_os_home_dir(&self) -> Result<String, VirtelError>;
 }
 
-
 #[uniffi::export]
 pub fn get_virtel_center() -> Arc<VirtelCenter> {
     Arc::clone(&VIRTEL_CENTER)
 }
 
-pub static VIRTEL_CENTER: Lazy<Arc<VirtelCenter>> = Lazy::new(|| {
-    Arc::new(VirtelCenter::new())
-});
+pub static VIRTEL_CENTER: Lazy<Arc<VirtelCenter>> = Lazy::new(|| Arc::new(VirtelCenter::new()));
 
 struct VirtelCenterData {
     running_apps: Vec<Arc<App>>,
@@ -70,15 +72,11 @@ impl VirtelCenter {
             let mut data = self.data.lock().unwrap();
             data.ui_api = Some(ui_api);
             data.system_api = Some(system_api);
-
-
         }
+        prepare_apps();
+        self.run_app("vladceresna.virtel.launcher".to_string());
         println!("VirtelCenter initialized.");
     }
-    pub fn start(&self) {
-        
-    }
-    
 }
 impl VirtelCenter {
     pub fn get_ui_api(&self) -> Arc<dyn UiApi> {

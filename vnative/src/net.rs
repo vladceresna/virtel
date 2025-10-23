@@ -1,12 +1,29 @@
 use crate::tokio_setup::TOKIO;
 use reqwest::{header::HeaderMap, Client, Method};
 
+pub enum RequestBody {
+    Text(String),
+    Bytes(Vec<u8>),
+    None,
+}
+
+pub enum ResponseBody {
+    Text,
+    Bytes,
+}
+
+pub enum FetchResult {
+    Text(String),
+    Bytes(Vec<u8>),
+}
+
 pub fn fetch(
     url: String,
-    method: Method, // GET, POST и т.д.
+    method: Method,
     headers: Option<HeaderMap>,
-    body: Option<String>,
-) -> Result<(HeaderMap, String), reqwest::Error> {
+    body: RequestBody,
+    response_type: ResponseBody,
+) -> Result<(HeaderMap, FetchResult), reqwest::Error> {
     let runtime = TOKIO.clone();
     runtime.block_on(async move {
         let client = Client::new();
@@ -16,13 +33,30 @@ pub fn fetch(
             request = request.headers(h);
         }
 
-        if let Some(b) = body {
-            request = request.body(b);
+        match body {
+            RequestBody::Text(txt) => {
+                request = request.body(txt);
+            }
+            RequestBody::Bytes(bytes) => {
+                request = request.body(bytes);
+            }
+            RequestBody::None => {}
         }
 
         let resp = request.send().await?;
         let resp_headers = resp.headers().clone();
-        let resp_body = resp.text().await?;
-        Ok((resp_headers, resp_body))
+
+        let result = match response_type {
+            ResponseBody::Text => {
+                let text = resp.text().await?;
+                FetchResult::Text(text)
+            }
+            ResponseBody::Bytes => {
+                let bytes = resp.bytes().await?.to_vec();
+                FetchResult::Bytes(bytes)
+            }
+        };
+
+        Ok((resp_headers, result))
     })
 }

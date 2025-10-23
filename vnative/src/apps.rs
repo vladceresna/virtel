@@ -2,24 +2,28 @@ use std::fs;
 use std::io::{self, Read};
 use std::path::Path;
 
+use hyper::{HeaderMap, Method};
+
 use crate::center::get_virtel_center;
+use crate::net::{fetch, FetchResult, RequestBody, ResponseBody};
 
-/// .vc - virtel bytecode
-/// .vs - virtel scriptcode (bytecode text interpretation)
-pub fn install_app(vc_file_path: &str) -> io::Result<()> {
-    // Read the .vc file
-    let vc_file_path = Path::new(vc_file_path);
-    if !vc_file_path.exists() {
-        return Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            "The specified .vc file does not exist",
-        ));
+pub fn prepare_apps() {
+    if !is_app_installed("vladceresna.virtel.launcher") {
+        let (_, launcher) = fetch(
+            "https://virtel.netlify.app/std-apps/4.0.0/vladceresna.virtel.launcher.vc".to_string(),
+            Method::GET,
+            None,
+            RequestBody::None,
+            ResponseBody::Bytes,
+        )
+        .unwrap();
+        if let FetchResult::Bytes(bytecode) = launcher {
+            install_app("vladceresna.virtel.launcher", bytecode).unwrap();
+        }
     }
+}
 
-    let mut vc_file = fs::File::open(vc_file_path)?;
-    let mut bytecode = Vec::new();
-    vc_file.read_to_end(&mut bytecode)?;
-
+pub fn is_app_installed(app_id: &str) -> bool {
     let apps_dir = get_virtel_center()
         .get_settings()
         .filesystem
@@ -27,17 +31,28 @@ pub fn install_app(vc_file_path: &str) -> io::Result<()> {
         .clone();
 
     // Write the bytecode to the Virtel filesystem
-    let apps_path = Path::new(apps_dir.as_str());
-    if !apps_path.exists() {
-        fs::create_dir_all(apps_path)?;
+    let temp = format!("{}/{}/code/{}.vc", apps_dir, app_id, app_id);
+    let this_app_code_path = Path::new(&temp);
+    return this_app_code_path.exists();
+}
+
+/// .vc - virtel bytecode
+/// .vs - virtel scriptcode (bytecode text interpretation)
+pub fn install_app(app_id: &str, bytecode: Vec<u8>) -> io::Result<()> {
+    let apps_dir = get_virtel_center()
+        .get_settings()
+        .filesystem
+        .apps_dir
+        .clone();
+
+    // Write the bytecode to the Virtel filesystem
+    let temp = format!("{}/{}/code", apps_dir, app_id);
+    let this_app_code_path = Path::new(&temp);
+    if !this_app_code_path.exists() {
+        fs::create_dir_all(&this_app_code_path)?;
     }
-
-    let app_name = vc_file_path
-        .file_stem()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Invalid .vc file name"))?;
-    let app_path = apps_path.join(app_name).join(app_name).with_extension("vc");
-
-    fs::write(app_path, bytecode)?;
+    let app_bytecode_path = this_app_code_path.join(app_id.to_string() + ".vc");
+    fs::write(app_bytecode_path, bytecode)?;
 
     println!("App successfully copied to Virtel filesystem.");
     Ok(())
@@ -49,10 +64,10 @@ pub fn remove_app(app_id: &str) -> io::Result<()> {
         .filesystem
         .apps_dir
         .clone();
-    let app_path = Path::new(apps_dir.as_str()).join(app_id);
+    let this_app_path = Path::new(apps_dir.as_str()).join(app_id);
 
-    if app_path.exists() {
-        fs::remove_dir_all(&app_path)?;
+    if this_app_path.exists() {
+        fs::remove_dir_all(&this_app_path)?;
         println!("App '{}' successfully removed.", app_id);
         Ok(())
     } else {
