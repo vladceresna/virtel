@@ -27,7 +27,8 @@ impl fmt::Display for VirtelError {
 
 #[uniffi::export(with_foreign)]
 pub trait UiApi: Send + Sync + Debug {
-    fn create_window(&self, title: String) -> Result<String, VirtelError>;
+    fn create_window(&self, title: String, width: i64, height: i64) -> Result<String, VirtelError>;
+    fn put_box(&self, node: String, id: String) -> Result<String, VirtelError>;
 }
 
 #[uniffi::export(with_foreign)]
@@ -43,7 +44,7 @@ pub fn get_virtel_center() -> Arc<VirtelCenter> {
 pub static VIRTEL_CENTER: Lazy<Arc<VirtelCenter>> = Lazy::new(|| Arc::new(VirtelCenter::new()));
 
 struct VirtelCenterData {
-    running_apps: Vec<Arc<App>>,
+    apps: Vec<Arc<App>>,
     ui_api: Option<Arc<dyn UiApi>>,
     system_api: Option<Arc<dyn SystemApi>>,
     settings: Arc<Settings>,
@@ -60,7 +61,7 @@ impl VirtelCenter {
     pub fn new() -> VirtelCenter {
         VirtelCenter {
             data: Mutex::new(VirtelCenterData {
-                running_apps: Vec::new(),
+                apps: Vec::new(),
                 ui_api: None,
                 system_api: None,
                 settings: Arc::new(Settings::new(FileSystem::new())),
@@ -91,39 +92,29 @@ impl VirtelCenter {
         let data = self.data.lock().unwrap();
         Arc::clone(&data.settings)
     }
+    pub fn get_app_by_id(&self, app_id: String) -> Arc<App> {
+        let data = self.data.lock().unwrap();
+
+        let app = data
+            .apps
+            .iter()
+            .find_map(|arc_app| {
+                if arc_app.get_id() == app_id {
+                    Some(arc_app)
+                } else {
+                    None
+                }
+            })
+            .unwrap();
+        return Arc::clone(app);
+    }
 
     pub fn run_app(&self, app_id: String) {
-        let mut data = self.data.lock().unwrap();
-
-        println!("Running app: {}", app_id);
-        let app = App::new(app_id, "Virtel Launcher".to_string(), "0.1.0".to_string());
-        let arc_app = Arc::new(app);
-
-        arc_app.on_create();
-        data.running_apps.push(arc_app);
+        let app = self.get_app_by_id(app_id);
+        app.on_create();
     }
 
-    pub fn stop_app(&self, app_id: String) {
-        let mut data = self.data.lock().unwrap();
-
-        println!("Stopping app: {}", app_id);
-        data.running_apps.retain(|app_arc| {
-            if app_arc.get_id() == app_id {
-                app_arc.on_destroy();
-                false
-            } else {
-                true
-            }
-        });
-    }
-
-    pub fn get_running_app_ids(&self) -> Vec<String> {
-        let data = self.data.lock().unwrap();
-        data.running_apps
-            .iter()
-            .map(|app_arc| app_arc.get_id())
-            .collect()
-    }
+    pub fn scan_apps(&self) {}
 }
 
 //tests
@@ -141,11 +132,7 @@ mod tests {
             .run_app("vladceresna.virtel.launcher".to_string());
         let vc2 = Arc::clone(&vc);
 
-        let thread = std::thread::spawn(move || {
-            vc2.lock()
-                .unwrap()
-                .stop_app("vladceresna.virtel.launcher".to_string());
-        });
+        let thread = std::thread::spawn(move || vc2.lock().unwrap());
 
         for _ in 0..5 {
             println!("Main thread is doing other work...");

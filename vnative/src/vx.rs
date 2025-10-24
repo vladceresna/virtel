@@ -20,7 +20,9 @@ pub enum Instruction {
     Add { dst: Reg, lhs: Reg, rhs: Reg },
     Mul { dst: Reg, lhs: Reg, rhs: Reg },
     Return { src: Reg },
-    Call {},
+    Call { function: Reg },
+    RunApp { name: Reg },
+    CreateWindow { title: Reg, width: Reg, height: Reg },
 }
 
 pub struct Chunk {
@@ -73,6 +75,7 @@ impl<'a> VM<'a> {
                 Instruction::Return { src } => {
                     return self.registers[src as usize].as_i64();
                 }
+                Instruction::Call { function } => {}
             }
         }
     }
