@@ -1,6 +1,8 @@
 use std::{
     clone,
     fmt::{self, Debug},
+    fs,
+    path::PathBuf,
     sync::{Arc, Mutex},
 };
 
@@ -75,6 +77,7 @@ impl VirtelCenter {
             data.system_api = Some(system_api);
         }
         prepare_apps();
+        self.scan_apps();
         self.run_app("vladceresna.virtel.launcher".to_string());
         println!("VirtelCenter initialized.");
     }
@@ -114,7 +117,23 @@ impl VirtelCenter {
         app.on_create();
     }
 
-    pub fn scan_apps(&self) {}
+    pub fn scan_apps(&self) {
+        let mut data = self.data.lock().unwrap();
+        let apps_dir = data.settings.filesystem.apps_dir.clone();
+
+        let entries = fs::read_dir(&apps_dir)
+            .unwrap()
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.path().is_dir()) // только папки
+            .filter_map(|entry| entry.file_name().into_string().ok()) // имя папки = app_id
+            .collect::<Vec<_>>();
+
+        data.apps.clear();
+        for app_id in entries {
+            let app = Arc::new(App::new(app_id));
+            data.apps.push(app);
+        }
+    }
 }
 
 //tests

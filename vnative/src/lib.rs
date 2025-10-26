@@ -7,6 +7,7 @@ mod center;
 mod net;
 mod settings;
 mod tokio_setup;
+mod vc_vs_converter;
 mod vx;
 
 use crate::center::VirtelCenter;

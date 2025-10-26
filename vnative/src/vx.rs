@@ -1,6 +1,8 @@
 use std::vec;
 
-#[derive(Debug, Clone, Copy)]
+use bincode::{Decode, Encode};
+
+#[derive(Debug, Clone, Copy, Encode, Decode, PartialEq)]
 pub enum Value {
     Number(i64),
 }
@@ -14,7 +16,7 @@ impl Value {
 
 pub type Reg = u16;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Encode, Decode, PartialEq)]
 pub enum Instruction {
     LoadConstant { dst: Reg, const_id: u16 },
     Add { dst: Reg, lhs: Reg, rhs: Reg },
@@ -25,6 +27,7 @@ pub enum Instruction {
     CreateWindow { title: Reg, width: Reg, height: Reg },
 }
 
+#[derive(Encode, Decode)]
 pub struct Chunk {
     pub instructions: Vec<Instruction>,
     pub constants: Vec<Value>,
@@ -45,7 +48,7 @@ impl<'a> VM<'a> {
         }
     }
 
-    fn run(&mut self) -> i64 {
+    pub fn run(&mut self) -> i64 {
         loop {
             let instruction = self.chunk.instructions[self.ip];
             self.ip += 1;

@@ -1,8 +1,11 @@
+use bincode::{config, decode_from_slice, encode_to_vec};
+use serde_json::Value;
 use std::{fs, sync::Mutex, thread::JoinHandle};
 
-use serde_json::Value;
-
-use crate::center::get_virtel_center;
+use crate::{
+    center::get_virtel_center,
+    vx::{Chunk, VM},
+};
 
 #[derive(Debug)]
 pub enum AppStatus {
@@ -34,8 +37,6 @@ pub struct App {
 }
 impl App {
     pub fn new(app_id: String) -> Self {
-        //read from appid/config.json
-
         let apps_dir = get_virtel_center()
             .get_settings()
             .filesystem
@@ -73,11 +74,21 @@ impl App {
             .apps_dir
             .clone();
         let app_id = self.data.lock().unwrap().id.clone();
-        let app_file = apps_dir + "/" + app_id.as_str() + "/code/" + app_id.as_str() + ".vc";
-        //VM::new(chunk);
-        //TODO starting
+        let app_file = format!("{}/{}/code/{}.vc", apps_dir, app_id, app_id);
 
-        println!("App {} created.", app_id);
+        // Читаем .vc файл
+        let vc_content = fs::read(&app_file).expect("Failed to read .vc file");
+
+        // Десериализуем в Chunk
+        let config = config::standard();
+        let (chunk, _len): (Chunk, usize) =
+            decode_from_slice(&vc_content, config).expect("Failed to decode .vc into Chunk");
+
+        println!("App {} created", app_id);
+        // Запускаем VM
+        let mut vm = VM::new(&chunk);
+        let result = vm.run();
+        println!("{}", result);
     }
     pub fn on_destroy(&self) {
         println!("App {} destroyed.", self.data.lock().unwrap().id);
