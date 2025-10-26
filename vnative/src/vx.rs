@@ -1,8 +1,9 @@
 use std::vec;
 
 use bincode::{Decode, Encode};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Encode, Decode, PartialEq)]
+#[derive(Debug, Clone, Copy, Encode, Decode, PartialEq, Serialize, Deserialize)]
 pub enum Value {
     Number(i64),
 }
@@ -16,7 +17,7 @@ impl Value {
 
 pub type Reg = u16;
 
-#[derive(Debug, Clone, Copy, Encode, Decode, PartialEq)]
+#[derive(Debug, Clone, Copy, Encode, Decode, PartialEq, Deserialize, Serialize)]
 pub enum Instruction {
     LoadConstant { dst: Reg, const_id: u16 },
     Add { dst: Reg, lhs: Reg, rhs: Reg },
@@ -27,7 +28,7 @@ pub enum Instruction {
     CreateWindow { title: Reg, width: Reg, height: Reg },
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, Serialize, Deserialize)]
 pub struct Chunk {
     pub instructions: Vec<Instruction>,
     pub constants: Vec<Value>,
