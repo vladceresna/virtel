@@ -80,6 +80,12 @@ impl<'a> VM<'a> {
                     return self.registers[src as usize].as_i64();
                 }
                 Instruction::Call { function } => {}
+                Instruction::CreateWindow {
+                    title,
+                    width,
+                    height,
+                } => {}
+                Instruction::RunApp { name } => {}
             }
         }
     }

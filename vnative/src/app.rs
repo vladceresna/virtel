@@ -1,9 +1,11 @@
-use bincode::{config, decode_from_slice, encode_to_vec};
 use serde_json::Value;
-use std::{fs, sync::Mutex, thread::JoinHandle};
+use std::{error::Error, fs, sync::Mutex};
+use tokio::task::JoinHandle;
 
 use crate::{
     center::get_virtel_center,
+    tokio_setup::{get_tokio, TOKIO},
+    vc_converter::vc_to_chunk,
     vx::{Chunk, VM},
 };
 
@@ -76,21 +78,23 @@ impl App {
         let app_id = self.data.lock().unwrap().id.clone();
         let app_file = format!("{}/{}/code/{}.vc", apps_dir, app_id, app_id);
 
-        // Читаем .vc файл
-        let vc_content = fs::read(&app_file).expect("Failed to read .vc file");
-
-        // Десериализуем в Chunk
-        let config = config::standard();
-        let (chunk, _len): (Chunk, usize) =
-            decode_from_slice(&vc_content, config).expect("Failed to decode .vc into Chunk");
+        let vc = fs::read(&app_file).expect("Failed to read .vc file");
+        let chunk = vc_to_chunk(vc);
 
         println!("App {} created", app_id);
-        // Запускаем VM
-        let mut vm = VM::new(&chunk);
-        let result = vm.run();
-        println!("{}", result);
+        // Starting VM
+        let handle = get_tokio().spawn(async move {
+            let mut vm = VM::new(&chunk);
+            let result = vm.run();
+            println!("{}", result);
+        });
+        self.data.lock().unwrap().threads.push(handle);
     }
     pub fn on_destroy(&self) {
         println!("App {} destroyed.", self.data.lock().unwrap().id);
     }
+    // pub fn run_new_thread(future: F) -> Result<(), Error> {
+    //     let handle = get_tokio().spawn(future);
+    //     self.data.lock().unwrap().threads.push(handle);
+    // }
 }

@@ -1,4 +1,4 @@
-use crate::tokio_setup::TOKIO;
+use crate::tokio_setup::{get_tokio, TOKIO};
 use reqwest::{header::HeaderMap, Client, Method};
 
 pub enum RequestBody {
@@ -24,8 +24,7 @@ pub fn fetch(
     body: RequestBody,
     response_type: ResponseBody,
 ) -> Result<(HeaderMap, FetchResult), reqwest::Error> {
-    let runtime = TOKIO.clone();
-    runtime.block_on(async move {
+    get_tokio().block_on(async move {
         let client = Client::new();
         let mut request = client.request(method, &url);
 

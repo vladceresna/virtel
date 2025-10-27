@@ -151,7 +151,9 @@ mod tests {
             .run_app("vladceresna.virtel.launcher".to_string());
         let vc2 = Arc::clone(&vc);
 
-        let thread = std::thread::spawn(move || vc2.lock().unwrap());
+        let thread = std::thread::spawn(move || {
+            vc2.lock().unwrap();
+        });
 
         for _ in 0..5 {
             println!("Main thread is doing other work...");
