@@ -4,8 +4,8 @@ use tokio::task::JoinHandle;
 
 use crate::{
     center::get_virtel_center,
+    chunk_utils::vc_to_chunk,
     tokio_setup::{get_tokio, TOKIO},
-    vc_converter::vc_to_chunk,
     vx::{Chunk, VM},
 };
 

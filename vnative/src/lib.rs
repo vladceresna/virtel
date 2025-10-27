@@ -4,10 +4,10 @@ uniffi::setup_scaffolding!();
 mod app;
 mod apps;
 mod center;
+mod chunk_utils;
 mod net;
 mod settings;
 mod tokio_setup;
-mod vc_converter;
 mod vx;
 
 use crate::center::VirtelCenter;
