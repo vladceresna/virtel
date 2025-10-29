@@ -5,6 +5,7 @@ use tokio::task::JoinHandle;
 use crate::{
     center::get_virtel_center,
     chunk_utils::vc_to_chunk,
+    log::log,
     tokio_setup::{get_tokio, TOKIO},
     vx::{Chunk, VM},
 };
@@ -81,7 +82,10 @@ impl App {
         let vc = fs::read(&app_file).expect("Failed to read .vc file");
         let chunk = vc_to_chunk(vc);
 
-        println!("App {} created", app_id);
+        log(
+            crate::log::Log::Info,
+            format!("App crated: {}", app_id).as_str(),
+        );
         // Starting VM
         let handle = get_tokio().spawn(async move {
             let mut vm = VM::new(&chunk);

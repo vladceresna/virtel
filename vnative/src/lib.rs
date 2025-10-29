@@ -5,6 +5,7 @@ mod app;
 mod apps;
 mod center;
 mod chunk_utils;
+mod log;
 mod net;
 mod settings;
 mod tokio_setup;

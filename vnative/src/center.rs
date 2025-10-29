@@ -43,7 +43,7 @@ pub fn get_virtel_center() -> Arc<VirtelCenter> {
     Arc::clone(&VIRTEL_CENTER)
 }
 
-pub static VIRTEL_CENTER: Lazy<Arc<VirtelCenter>> = Lazy::new(|| Arc::new(VirtelCenter::new()));
+static VIRTEL_CENTER: Lazy<Arc<VirtelCenter>> = Lazy::new(|| Arc::new(VirtelCenter::new()));
 
 struct VirtelCenterData {
     apps: Vec<Arc<App>>,
@@ -124,8 +124,8 @@ impl VirtelCenter {
         let entries = fs::read_dir(&apps_dir)
             .unwrap()
             .filter_map(|entry| entry.ok())
-            .filter(|entry| entry.path().is_dir()) // только папки
-            .filter_map(|entry| entry.file_name().into_string().ok()) // имя папки = app_id
+            .filter(|entry| entry.path().is_dir()) // only folders
+            .filter_map(|entry| entry.file_name().into_string().ok()) // folder name = app_id
             .collect::<Vec<_>>();
 
         data.apps.clear();

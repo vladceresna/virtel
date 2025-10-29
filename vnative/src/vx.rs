@@ -43,7 +43,7 @@ pub struct VM<'a> {
 impl<'a> VM<'a> {
     pub fn new(chunk: &'a Chunk) -> Self {
         Self {
-            chunk, // Просто сохраняем переданную ссылку
+            chunk, // Just save transferred link
             ip: 0,
             registers: vec![Value::Number(0); 256],
         }
@@ -100,10 +100,10 @@ mod tests {
     fn test_vm_simple_return() {
         let program = Chunk {
             constants: vec![
-                Value::Number(42), // Константа 42 находится по индексу 0
+                Value::Number(42), // Constant 42 locates at index 0
             ],
             instructions: vec![
-                // 2. Используем правильный формат инструкции: загрузить константу с ID=0.
+                // 2. Using right format of instruction: load const with ID=0.
                 Instruction::LoadConstant {
                     dst: 0,
                     const_id: 0,
@@ -112,7 +112,7 @@ mod tests {
             ],
         };
 
-        // 3. Передаем в ВМ ссылку на наш Chunk.
+        // 3. Transfer in VM link on our Chunk.
         let mut vm = VM::new(&program);
         let result = vm.run();
         assert_eq!(result, 42);
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn test_vm_arithmetic() {
-        // Программа: (10 + 20) * 2
+        // Programm: (10 + 20) * 2
         // r0 = 10
         // r1 = 20
         // r2 = r0 + r1

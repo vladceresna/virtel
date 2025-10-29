@@ -37,3 +37,54 @@ pub fn chunk_to_vc(chunk: &Chunk) -> Vec<u8> {
     let encoded = encode_to_vec(chunk, config).expect("Failed to encode Chunk");
     return encoded;
 }
+
+//tests
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use crate::center::get_virtel_center;
+
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let apps_dir = "/home/vladceresna/.virtel/0/sys/apps";
+        let app_id = "vladceresna.virtel.launcher";
+        let this_app_vc_path = format!("{}/{}/code/{}.vc", apps_dir, app_id, app_id);
+        let program = Chunk {
+            constants: vec![Value::Number(10), Value::Number(20), Value::Number(2)],
+            instructions: vec![
+                Instruction::LoadConstant {
+                    dst: 0,
+                    const_id: 0,
+                }, // r0 = 10
+                Instruction::LoadConstant {
+                    dst: 1,
+                    const_id: 1,
+                }, // r1 = 20
+                Instruction::Add {
+                    dst: 2,
+                    lhs: 0,
+                    rhs: 1,
+                }, // r2 = r0 + r1
+                Instruction::LoadConstant {
+                    dst: 3,
+                    const_id: 2,
+                }, // r3 = 2
+                Instruction::Mul {
+                    dst: 4,
+                    lhs: 2,
+                    rhs: 3,
+                }, // r4 = r2 * r3
+                Instruction::Return { src: 4 },
+            ],
+        };
+        let vs = chunk_to_vs(&program);
+        println!("{}", &vs);
+        let vc = chunk_to_vc(&program);
+        fs::write(this_app_vc_path, vc).unwrap();
+        //let vs = json!({ "instructions":[""] }).to_string();
+        assert_eq!(vc_to_vs(vs_to_vc(vs.clone())), vs);
+    }
+}
