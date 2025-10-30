@@ -3,14 +3,18 @@ use std::vec;
 use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Encode, Decode, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Encode, Decode, PartialEq, Serialize, Deserialize)]
 pub enum Value {
     Number(i64),
+    Double(f64),
+    String(String),
 }
 impl Value {
     fn as_i64(&self) -> i64 {
         match self {
             Value::Number(n) => *n,
+            Value::Double(_) => panic!("Type error: Cannot convert Double to i64"),
+            Value::String(_) => panic!("Type error: Cannot convert String to i64"),
         }
     }
 }
@@ -56,21 +60,23 @@ impl<'a> VM<'a> {
 
             match instruction {
                 Instruction::LoadConstant { dst, const_id } => {
-                    self.registers[dst as usize] = self.chunk.constants[const_id as usize];
+                    self.registers[dst as usize] = self.chunk.constants[const_id as usize].clone();
                 }
                 Instruction::Add { dst, lhs, rhs } => {
-                    if let (Value::Number(l), Value::Number(r)) =
-                        (self.registers[lhs as usize], self.registers[rhs as usize])
-                    {
+                    if let (Value::Number(l), Value::Number(r)) = (
+                        self.registers[lhs as usize].clone(),
+                        self.registers[rhs as usize].clone(),
+                    ) {
                         self.registers[dst as usize] = Value::Number(l + r);
                     } else {
                         panic!("Type error in Add instruction");
                     }
                 }
                 Instruction::Mul { dst, lhs, rhs } => {
-                    if let (Value::Number(l), Value::Number(r)) =
-                        (self.registers[lhs as usize], self.registers[rhs as usize])
-                    {
+                    if let (Value::Number(l), Value::Number(r)) = (
+                        self.registers[lhs as usize].clone(),
+                        self.registers[rhs as usize].clone(),
+                    ) {
                         self.registers[dst as usize] = Value::Number(l * r);
                     } else {
                         panic!("Type error in Mul instruction");

@@ -7,13 +7,19 @@
   <img alt="License: GPL-3" src="https://img.shields.io/badge/License-GPL--3-red?style=flat-square">
   <img alt="Kotlin: 2.0" src="https://img.shields.io/badge/Kotlin-2.0-orange?style=flat-square">
   <img alt="Rust: 2021" src="https://img.shields.io/badge/Rust-2021-purple?style=flat-square">
-  
+
 
 </p>
 
 ------------
 
 [![Ubuntu CI](https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml)
+
+Virtel (Virtually)
+
+[**vi** (you) (virtually) **rt** (reactiveness) **el** (element)]
+
+Virtually Reactiveness Element
 
 Virtel is the fastest, the most secure and safe crossplatform customized virtual enviroment. Best suited for mathematical calculations, development or deployment of applications and servers, though can be used for any purpose. We call it the operating system.
 
