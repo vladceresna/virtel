@@ -170,6 +170,12 @@ This is a Kotlin Multiplatform project targeting Android, iOS, Desktop.
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
 
+# Virtel Compatibility Strategy
+Every version of Virtel works only with compatible apps and plugins. One version = one Virtel Standart = One Monolith Virtel = Virtel Core + Virtel Apps + Virtel Plugins
+When Virtel updates, then we launch Virtel Canary version. So, you, as developer, can test your plugins on Virtel and then, when plugins tested other developers can finally test their apps.
+When we change bytecode of .VC, then we write some compiler for your apps to help you rewrite your apps to working on new version of Virtel.
+When apps have tested, then we launch this all Virtel monolith as new version.
+
 # How to build Virtel?
 Don't even try :)
 

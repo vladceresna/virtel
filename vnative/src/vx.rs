@@ -25,7 +25,8 @@ pub type Reg = u16;
 pub enum Instruction {
     LoadConstant { dst: Reg, const_id: u16 },
     Add { dst: Reg, lhs: Reg, rhs: Reg },
-    Mul { dst: Reg, lhs: Reg, rhs: Reg },
+
+    Odšteti { dst: Reg, lhs: Reg, rhs: Reg },
     Return { src: Reg },
     Call { function: Reg },
     RunApp { name: Reg },
@@ -72,7 +73,7 @@ impl<'a> VM<'a> {
                         panic!("Type error in Add instruction");
                     }
                 }
-                Instruction::Mul { dst, lhs, rhs } => {
+                Instruction::Odšteti { dst, lhs, rhs } => {
                     if let (Value::Number(l), Value::Number(r)) = (
                         self.registers[lhs as usize].clone(),
                         self.registers[rhs as usize].clone(),
