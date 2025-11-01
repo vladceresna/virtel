@@ -1,24 +1,15 @@
-use std::{collections::HashMap, vec};
+use std::{any::Any, collections::HashMap, vec};
 
 use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Encode, Decode, PartialEq, Serialize, Deserialize)]
 pub enum Value {
+    Boolean(bool),
     Number(i64),
     Double(f64),
     String(String),
     Object(HashMap<i64, Value>),
-}
-impl Value {
-    fn as_i64(&self) -> i64 {
-        match self {
-            Value::Number(n) => *n,
-            Value::Double(_) => panic!("Type error: Cannot convert Double to i64"),
-            Value::String(_) => panic!("Type error: Cannot convert String to i64"),
-            Value::Object(_) => panic!("Type error: Cannot convert Object to i64"),
-        }
-    }
 }
 
 pub type Reg = u16;
@@ -68,8 +59,7 @@ pub enum Instruction {
     },
     Not {
         dst: Reg,
-        lhs: Reg,
-        rhs: Reg,
+        hs: Reg,
     },
     SystemWrite {
         content: Reg,
@@ -126,7 +116,17 @@ impl<'a> VM<'a> {
                         panic!("Type error in Add instruction");
                     }
                 }
-                Instruction::Mul { dst, lhs, rhs } => {
+                Instruction::Subtract { dst, lhs, rhs } => {
+                    if let (Value::Number(l), Value::Number(r)) = (
+                        self.registers[lhs as usize].clone(),
+                        self.registers[rhs as usize].clone(),
+                    ) {
+                        self.registers[dst as usize] = Value::Number(l - r);
+                    } else {
+                        panic!("Type error in Mul instruction");
+                    }
+                }
+                Instruction::Multiply { dst, lhs, rhs } => {
                     if let (Value::Number(l), Value::Number(r)) = (
                         self.registers[lhs as usize].clone(),
                         self.registers[rhs as usize].clone(),
@@ -136,16 +136,41 @@ impl<'a> VM<'a> {
                         panic!("Type error in Mul instruction");
                     }
                 }
-                Instruction::Return { src } => {
-                    return self.registers[src as usize].as_i64();
+                Instruction::Divide { dst, lhs, rhs } => {
+                    if let (Value::Number(l), Value::Number(r)) = (
+                        self.registers[lhs as usize].clone(),
+                        self.registers[rhs as usize].clone(),
+                    ) {
+                        self.registers[dst as usize] = Value::Number(l / r);
+                    } else {
+                        panic!("Type error in Mul instruction");
+                    }
                 }
-                Instruction::Call { function } => {}
-                Instruction::CreateWindow {
-                    title,
-                    width,
-                    height,
-                } => {}
-                Instruction::RunApp { name } => {}
+                Instruction::Equals { dst, lhs, rhs } => {
+                    let (l, r) = (
+                        self.registers[lhs as usize].clone(),
+                        self.registers[rhs as usize].clone(),
+                    );
+                    self.registers[dst as usize] = Value::Boolean(l == r);
+                }
+                Instruction::And { dst, lhs, rhs } => {
+                    let (l, r) = (
+                        self.registers[lhs as usize].clone(),
+                        self.registers[rhs as usize].clone(),
+                    );
+                    self.registers[dst as usize] = Value::Boolean(l && r);
+                }
+                Instruction::Or { dst, lhs, rhs } => {
+                    let (l, r) = (
+                        self.registers[lhs as usize].clone(),
+                        self.registers[rhs as usize].clone(),
+                    );
+                    self.registers[dst as usize] = Value::Boolean(l || r);
+                }
+                Instruction::Not { dst, hs } => {
+                    let (hs) = (self.registers[hs as usize].clone());
+                    self.registers[dst as usize] = Value::Boolean(!hs);
+                }
             }
         }
     }
