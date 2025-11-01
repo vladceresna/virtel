@@ -86,6 +86,7 @@ impl App {
             crate::log::Log::Info,
             format!("App crated: {}", app_id).as_str(),
         );
+        self.data.lock().unwrap().status = AppStatus::Running;
         // Starting VM
         let handle = get_tokio().spawn(async move {
             let mut vm = VM::new(&chunk);
@@ -96,6 +97,7 @@ impl App {
     }
     pub fn on_destroy(&self) {
         println!("App {} destroyed.", self.data.lock().unwrap().id);
+        self.data.lock().unwrap().status = AppStatus::Stopped;
     }
     // pub fn run_new_thread(future: F) -> Result<(), Error> {
     //     let handle = get_tokio().spawn(future);

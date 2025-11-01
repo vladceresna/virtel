@@ -53,6 +53,7 @@ mod tests {
         let app_id = "vladceresna.virtel.launcher";
         let this_app_vc_path = format!("{}/{}/code/{}.vc", apps_dir, app_id, app_id);
         let program = Chunk {
+            version: "virtel.4.0.0".to_string(),
             constants: vec![Value::Number(10), Value::Number(20), Value::Number(2)],
             instructions: vec![
                 Instruction::LoadConstant {
@@ -72,12 +73,12 @@ mod tests {
                     dst: 3,
                     const_id: 2,
                 }, // r3 = 2
-                Instruction::Mul {
+                Instruction::Multiply {
                     dst: 4,
                     lhs: 2,
                     rhs: 3,
                 }, // r4 = r2 * r3
-                Instruction::Return { src: 4 },
+                Instruction::SystemWrite { content: 4 },
             ],
         };
         let vs = chunk_to_vs(&program);

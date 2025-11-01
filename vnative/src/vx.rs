@@ -1,4 +1,4 @@
-use std::vec;
+use std::{collections::HashMap, vec};
 
 use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
@@ -8,6 +8,7 @@ pub enum Value {
     Number(i64),
     Double(f64),
     String(String),
+    Object(HashMap<i64, Value>),
 }
 impl Value {
     fn as_i64(&self) -> i64 {
@@ -15,26 +16,75 @@ impl Value {
             Value::Number(n) => *n,
             Value::Double(_) => panic!("Type error: Cannot convert Double to i64"),
             Value::String(_) => panic!("Type error: Cannot convert String to i64"),
+            Value::Object(_) => panic!("Type error: Cannot convert Object to i64"),
         }
     }
 }
 
 pub type Reg = u16;
+pub type ConstId = u16;
+pub type FunctionId = u16;
 
 #[derive(Debug, Clone, Copy, Encode, Decode, PartialEq, Deserialize, Serialize)]
 pub enum Instruction {
-    LoadConstant { dst: Reg, const_id: u16 },
-    Add { dst: Reg, lhs: Reg, rhs: Reg },
-
-    Odšteti { dst: Reg, lhs: Reg, rhs: Reg },
-    Return { src: Reg },
-    Call { function: Reg },
-    RunApp { name: Reg },
-    CreateWindow { title: Reg, width: Reg, height: Reg },
+    LoadConstant {
+        dst: Reg,
+        const_id: ConstId,
+    },
+    Add {
+        dst: Reg,
+        lhs: Reg,
+        rhs: Reg,
+    },
+    Subtract {
+        dst: Reg,
+        lhs: Reg,
+        rhs: Reg,
+    },
+    Multiply {
+        dst: Reg,
+        lhs: Reg,
+        rhs: Reg,
+    },
+    Divide {
+        dst: Reg,
+        lhs: Reg,
+        rhs: Reg,
+    },
+    Equals {
+        dst: Reg,
+        lhs: Reg,
+        rhs: Reg,
+    },
+    And {
+        dst: Reg,
+        lhs: Reg,
+        rhs: Reg,
+    },
+    Or {
+        dst: Reg,
+        lhs: Reg,
+        rhs: Reg,
+    },
+    Not {
+        dst: Reg,
+        lhs: Reg,
+        rhs: Reg,
+    },
+    SystemWrite {
+        content: Reg,
+    },
+    CallNative {
+        dst: Reg,
+        plugin_id: Reg, // 0 == virtel core
+        fun_id: Reg,
+        args: Reg,
+    },
 }
 
 #[derive(Encode, Decode, Serialize, Deserialize)]
 pub struct Chunk {
+    pub version: String,
     pub instructions: Vec<Instruction>,
     pub constants: Vec<Value>,
 }
@@ -44,13 +94,16 @@ pub struct VM<'a> {
     ip: usize,
     registers: Vec<Value>,
 }
-
 impl<'a> VM<'a> {
     pub fn new(chunk: &'a Chunk) -> Self {
-        Self {
-            chunk, // Just save transferred link
-            ip: 0,
-            registers: vec![Value::Number(0); 256],
+        if chunk.version == "virtel.4.0.0".to_string() {
+            Self {
+                chunk, // Just save transferred link
+                ip: 0,
+                registers: vec![Value::Number(0); 256 * 256],
+            }
+        } else {
+            panic!("Version is not supported");
         }
     }
 
@@ -73,7 +126,7 @@ impl<'a> VM<'a> {
                         panic!("Type error in Add instruction");
                     }
                 }
-                Instruction::Odšteti { dst, lhs, rhs } => {
+                Instruction::Mul { dst, lhs, rhs } => {
                     if let (Value::Number(l), Value::Number(r)) = (
                         self.registers[lhs as usize].clone(),
                         self.registers[rhs as usize].clone(),
@@ -106,6 +159,7 @@ mod tests {
     #[test]
     fn test_vm_simple_return() {
         let program = Chunk {
+            version: "virtel.4.0.0".to_string(),
             constants: vec![
                 Value::Number(42), // Constant 42 locates at index 0
             ],
@@ -135,6 +189,7 @@ mod tests {
         // r4 = r2 * r3
         // return r4
         let program = Chunk {
+            version: "virtel.4.0.0".to_string(),
             constants: vec![Value::Number(10), Value::Number(20), Value::Number(2)],
             instructions: vec![
                 Instruction::LoadConstant {
