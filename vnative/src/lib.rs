@@ -7,6 +7,7 @@ mod center;
 mod chunk_utils;
 mod log;
 mod net;
+mod permissions;
 mod settings;
 mod tokio_setup;
 mod vx;

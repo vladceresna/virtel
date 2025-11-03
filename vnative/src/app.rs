@@ -90,8 +90,7 @@ impl App {
         // Starting VM
         let handle = get_tokio().spawn(async move {
             let mut vm = VM::new(&chunk);
-            let result = vm.run();
-            println!("{}", result);
+            vm.run();
         });
         self.data.lock().unwrap().threads.push(handle);
     }
