@@ -1,4 +1,4 @@
-use std::f64;
+use std::{f64, iter::Map};
 
 use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
@@ -106,15 +106,12 @@ impl Value {
 
 /// -------------------  Оpcodes  -------------------
 
-const OP_LOAD_CONST: u8 = 1;
-const OP_CAST_I64_TO_F64: u8 = 2;
-const OP_ADD: u8 = 2;
-const OP_SUB: u8 = 3;
-const OP_MUL: u8 = 4;
-const OP_DIV: u8 = 5;
-const OP_EQ: u8 = 6;
-const OP_SYSTEM_WRITE: u8 = 7;
-const OP_CALL_NATIVE: u8 = 8;
+enum Op {
+    LoadConst,
+    CastI64ToF64,
+
+    CallNative,
+}
 
 /// -------------------  Handlers  -------------------
 type OpHandler = fn(&mut VM);
@@ -170,14 +167,14 @@ fn op_call_native(vm: &mut VM) {
 /// -------------------  Dispatch Table  -------------------
 const fn build_dispatch_table() -> [OpHandler; 256] {
     let mut table = [invalid_op as OpHandler; 256];
-    table[OP_LOAD_CONST as usize] = op_load_const as OpHandler;
-    table[OP_ADD as usize] = op_add as OpHandler;
-    table[OP_SUB as usize] = op_sub as OpHandler;
-    table[OP_MUL as usize] = op_mul as OpHandler;
-    table[OP_DIV as usize] = op_div as OpHandler;
-    table[OP_EQ as usize] = op_eq as OpHandler;
-    table[OP_SYSTEM_WRITE as usize] = op_system_write as OpHandler;
-    table[OP_CALL_NATIVE as usize] = op_call_native as OpHandler;
+    table[Op::LoadConst as usize] = op_load_const as OpHandler;
+    table[Op::IADD as usize] = op_add as OpHandler;
+    table[Op::ISUB as usize] = op_sub as OpHandler;
+    table[Op::IMUL as usize] = op_mul as OpHandler;
+    table[Op::IDIV as usize] = op_div as OpHandler;
+    table[Op::EQ as usize] = op_eq as OpHandler;
+    table[Op::SYSTEM_WRITE as usize] = op_system_write as OpHandler;
+    table[Op::CALL_NATIVE as usize] = op_call_native as OpHandler;
     table
 }
 
