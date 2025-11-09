@@ -1,198 +1,121 @@
+
 <p align="center">
-<img src='https://i.postimg.cc/d0WWH1MR/a2c68588eab85ad2459788d74bd36534.webp' border='0'/>
-<h1 align="center"><u>Virtel</u>: Your best virtual enviroment</h1>
+<img src='https://i.postimg.cc/d0WWH1MR/a2c68588eab85ad2459788d74bd36534.webp' border='0' alt='Virtel Logo'/>
+<h1 align="center"><u>Virtel</u>: A New Digital Ecosystem</h1>
+<p align="center"><i>A cross-platform execution environment for ultra-light, universal applications.</i></p>
 </p>
 
 <p align="center">
   <img alt="License: GPL-3" src="https://img.shields.io/badge/License-GPL--3-red?style=flat-square">
-  <img alt="Kotlin: 2.0" src="https://img.shields.io/badge/Kotlin-2.0-orange?style=flat-square">
-  <img alt="Rust: 2021" src="https://img.shields.io/badge/Rust-2021-purple?style=flat-square">
-  
-
+  <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/Kotlin-Multiplatform-orange?style=flat-square">
+  <img alt="Rust" src="https://img.shields.io/badge/Rust-2021-purple?style=flat-square">
+  <img alt="Build Status" src="https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml/badge.svg">
 </p>
 
 ------------
 
-[![Ubuntu CI](https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml)
+## 🌌 What is Virtel?
 
-Virtel is the fastest, the most secure and safe crossplatform customized virtual enviroment. Best suited for mathematical calculations, development or deployment of applications and servers, though can be used for any purpose. We call it the operating system.
+Virtel is a fundamentally new type of application environment, conceptualized as a hybrid between a web browser and a traditional operating system. Like a browser, it runs applications in secure, isolated sandboxes. Like an OS, applications are stored locally on your device, offering true offline capabilities and instant execution.
 
-Built on the Kotlin Multiplatform framework and the Rust language, Virtel provides a unique approach to programming through its own language, Steps, which allows for concise and efficient code writing. With Virtel, users can develop cross-platform applications that run seamlessly on any device, ensuring consistency and ease of use.
+Our ultimate vision is to unify the user experience across all devices. In the future, Virtel aims to replace the standard OS shell (like Desktop Environment on Linux or Launcher on Android), creating a truly cross-platform world where **one codebase equals one executable file that runs everywhere.**
 
-Please see last releases on Releases page and join our Discord server: https://discord.gg/hNSyTvuy2v .
+## ⚡ Why Virtel? The Problem of Bloat
 
-The primary goal of Virtel is to offer a transparent and user-friendly environment where developers can focus on their ideas without being overwhelmed by complex setups or bulky frameworks. By integrating features like multithreading, multitasking, and a built-in terminal, Virtel empowers users to create powerful yet compact applications.
+Modern applications are bloated. They consume gigabytes of storage and significant system resources because every app bundles its own set of dependencies (libraries, frameworks).
 
-Whether you're building a simple HTTP server or a complex system, Virtel's modular design and extensive libraries make it an ideal choice for developers of all levels. The system's emphasis on minimalism and performance ensures that applications built with Virtel are both efficient and easy to maintain.
+**Virtel's solution is radical: we unify dependencies at the platform level.** Instead of every app shipping its own copy of common libraries, Virtel provides a comprehensive, built-in set of tools. This is why applications built for Virtel are incredibly small-often measured in bytes and kilobytes, not megabytes.
 
---------------
-### We need help!
-`🫂` Virtel is currently in the stage of early development, which means that as for now, most of the desired functionality is not here yet. For that reason, we need **your help** to develop Virtel.
+**This means:**
+*   **More Space:** Free up gigabytes of storage on your devices.
+*   **Instant Speed:** Applications launch and run instantly without loading overhead.
+*   **True Privacy & Security:** Full control over your data and applications.
+*   **Universal Compatibility:** Write once, run anywhere - Windows, Linux, Android, and more.
 
-If you know **Compose Multiplatform**, you can help us to develop Virtel itself. At current stage we lack an **IDE to write programs that will run on Virtel**, and there aren't any programming languages **that would compile into <u>Steps</u>**.
+## 🏗️ Architecture
 
------------
-### What is "Steps"?
-`❓` **Steps** is a programming language made specifically to run on Virtel. As have been said before, Steps also lacks lots of functionality, but is constantly improved - creating programs in Steps isn't that far away from reality. The file extension that Steps uses is pretty straightforward: `.steps`. The same thing can be said about the language itself, as the syntax is pretty easy to learn. If you don't like Steps, in the near future you will be able to write code via another language that compiles into Steps.
+Virtel is built on a robust, multi-language foundation to ensure performance and safety:
+*   **Core Engine:** Written in **Rust** for memory safety and speed.
+*   **User Interface:** Built with **Kotlin Compose Multiplatform** for a native, modern UI on all platforms.
+*   **Applications:** Run on Virtel's own custom bytecode (`.vc`), written in the **Steps** language.
 
-------------
-### Quick overview of Steps
-`🔬` In the future, there will be a dedicated Steps documentation, where you will be able to read and see lots of examples. **This section exists only for the sole purpose of providing some basic information about the Steps language**, as the documentation **hasn't been written yet**.
+## 🦶 The Steps Programming Language
 
-`🛠️` List of currently available commands:
-* `sys out {name of the variable or any text}`
-* `var set {var name} {var value}`
-* `var get {var name}`
-* `var del {name of the variable}`
-* `bin run {name of the .steps script}`
-* `mat plus {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `mat min {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `mat mult {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* `mat div {num as text or var name} {num as text or var name} {name of the var to store the result}`
-* other commands for every needs
+**Steps** is a simple, concise programming language designed specifically for Virtel. Its syntax is straightforward, making it easy to learn while being powerful enough to build complex applications. If you prefer another language, our goal is to support compilers that can transpile other popular languages into Steps bytecode.
 
-### Different code examples:
-#### Basic example, working with `bin run`:
-`start.steps` is always a starting point for any Steps application. In this example we also jump to the `run.steps` file.
-
-Path of the file (may depend on the system): `C:/Virtel/apps/vladceresna.virtel.launcher/bin/start.steps`
-
-Script in `start.steps`:
-```
-var set "Hello!" greet;
-csl write greet;
-var set "Hi!" greet;
-csl write greet;
-var del greet;
-csl write greet;
-run one "/run.steps";
-```
-Script in `run.steps`:
-```
-csl write "Hello from run";
-csl write "This is run";
+**Simple Example (`start.steps`):**
+```steps
+# Set a variable and print it
+var set "Hello, Virtel World!" greeting;
+sys out greeting;
 ```
 
-#### Another example, working with math commands:
-This example briefly shows how you can use mathematics in Steps.
+## 🚀 Try Virtel Now
 
-Steps Code:
-```
-var set a 5;
-var set b 5;
-mat plus a b c;
-csl write c;
-```
-Output of the code:
-```
-10
-```
+We are in active development, but you can try the latest release right now!
+*   **Download:** [virtel.netlify.app/download](https://virtel.netlify.app/download)
+*   **Official Website:** [virtel.netlify.app](https://virtel.netlify.app)
 
----------
-### Structure
+## 🤝 We Are Looking for a Co-Founder!
 
-VAR - Virtel Archive - format for distributing apps
+Virtel is more than a project; it's a revolution. We have the technology, but we need a partner to bring this vision to the world.
 
-STEPS - Step`s - native virtel apps developing and running format
+**We are actively looking for a Marketing Co-founder** to join us on this journey. If you are passionate about technology, a brilliant communicator, and want to build a global brand from the ground up, **[we want to hear from you](https://forms.gle/jRyg6cebjzZgqhzw5)**.
 
-STEPS:
-start.steps:
-```
-csl write "Hello world";
-```
----------
-### List of currently implemented modules:
-- [x] csl (Console, command line)
-- [x] ref (References on vars)
-- [x] var (Vars)
-- [x] lst (Lists)
-- [x] mat (Math and Random operations)
-- [x] str (String operations (ex. cut))
-- [x] bln (Boolean operations)
-- [x] run (if, while)
-- [x] sys (System data (ex. all programs))
-- [x] fls (Files)
-- [x] scr (Operate screen components)
-- [ ] dgm (Diagrams)
-- [x] srv (Server on selected ports)
-- [x] clt (Client for urls)
-- [ ] wss (WebSockets)
-- [ ] blt (Bluetooth)
-- [ ] ppt (Perspective projection (3D in ui))
-- [ ] ort (Orthogonal projection (3D in ui))
-- [ ] ard (AR)
-- [ ] vrd (VR)
-- [ ] anm (Interface animations)
-- [x] tts (Text To Speech)
-- [ ] stt (Speech To Text)
-- [ ] mcr (Microphone)
-- [x] spr (Speaker)
-- [x] llm (Pino helper)
-- [ ] nnt (Neuronets)
-- [ ] cmr (Camera)
-- [ ] snr (Sensors of device)
-- [ ] cnt (Connect&Sync with Virtel`s on other machines)
+### For Developers: How to Contribute
 
+Virtel is in its early stages, and we need your help! We are looking for contributors, especially those with experience in **Compose Multiplatform**, to help us build critical components like:
+*   The **IDE** for developing Steps applications.
+*   **Compilers** for other languages to target the Steps bytecode.
 
-### List of currently supported platforms:
-* [x] Windows
-* [x] Linux
-* [x] Android
-* [ ] MacOS
-* [ ] iOS
-* [ ] Redox
-* [ ] Native (OS)
+If you're interested in contributing, please check our [Contributing Guidelines](CONTRIBUTING.md) (or open an issue to start the discussion!).
 
----------
-### Our Git Flow
+## 📊 Project Status
 
-<img src='https://miro.medium.com/v2/resize:fit:828/format:webp/1*q1Q_vY3tA8u8CVaiqr-rxA.png' border='0'/>
+### Supported Platforms
+- [x] Windows
+- [x] Linux
+- [x] Android
+- [ ] macOS
+- [ ] iOS
+- [ ] Redox
+- [ ] Native (OS)
 
----------
-### Project Structure
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop.
+### Implemented Modules
+- [x] **Core:** `csl` (Console), `ref` (References), `var` (Variables), `sys` (System)
+- [x] **Data:** `lst` (Lists), `mat` (Math), `str` (Strings), `bln` (Booleans)
+- [x] **Logic:** `run` (Control Flow: if, while)
+- [x] **I/O:** `fls` (Files), `srv` (Server), `clt` (Client), `spr` (Speaker), `tts` (Text-to-Speech)
+- [x] **UI:** `scr` (Screen Components)
+- [x] **AI:** `llm` (LLM Helper)
+- [ ] **UI/UX:** `dgm` (Diagrams), `ppt`/`ort` (3D), `anm` (Animations)
+- [ ] **Hardware:** `wss` (WebSockets), `blt` (Bluetooth), `ard` (AR), `vrd` (VR), `stt` (Speech-to-Text), `mcr` (Microphone), `cmr` (Camera), `snr` (Sensors)
+- [ ] **Networking:** `cnt` (Connect & Sync)
 
-* `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - `commonMain` is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    `iosMain` would be the right folder for such calls.
+## 🔧 Building from Source
 
-* `/iosApp` contains iOS applications. Even if you’re shDon't even tryaring your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Building Virtel is a complex process due to its multi-platform nature. We are working on simplifying it. For now, you can follow these steps:
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
+**Prerequisites:**
+1.  **JDK 21+** (e.g., [Liberica](https://bell-sw.com/pages/downloads/#jdk-21-lts))
+2.  **Android Studio** (required for managing the Android SDK and NDK, even for desktop builds)
+3.  **Rust Toolchain** (latest stable)
 
-# How to build Virtel?
-Don't even try :)
+**Steps:**
+1.  Clone the repository: `git clone https://github.com/vladceresna/virtel.git`
+2.  Open the project in Android Studio.
+3.  Ensure you have the Android SDK and NDK installed via the SDK Manager in Android Studio.
+4.  Sync the project with Gradle files.
+5.  Run the desired configuration (e.g., `desktopRun`).
 
-But okay, if you still want to dive into this mess, please, I'll help you do it :)
+If you encounter any issues, please open an issue on GitHub with details about your operating system and the error you encountered.
 
-Although, of course, I don't fully understand how it works myself, but still.
+## 📜 License
 
-## You need to have the following **installed**:
+This project is licensed under the GPL-3 License - see the [LICENSE](LICENSE) file for details.
 
-### If you on Linux or maybe on Windows:
+## 🌐 Community
 
-- JDK, for example [Liberica](https://bell-sw.com/pages/downloads/#jdk-21-lts) (Java Development Kit) (You can do it via SDK MAN)
-- [Android Studio](https://developer.android.com/studio) (Yes, even for desktop builds)
-- [Rust Toolchain](https://www.rust-lang.org/tools/install)
-
-Next, via Android Studio, ensure you have installed:
-
-- Android NDK
-- Android SDK
-
-### If you on MacOS
-
-I don't know, what you need to have installed, because I don't have Macbook, so you could need the same toolchains as for Linux, but yet you will need to have XCode or something.
-
-### Common recommendations
-
-**Use LLM!!! Use LLM!!!**
-
-Every error just share to LLM as ChatGPT.
-
-Sometimes you may need to install some libraries.
-If you have installed some system library and this have been helpful for your version of your operating system - create issue and we will add it to checklist on this page.
+Join our community to stay updated, ask questions, and connect with us:
+*   **Discord:** [discord.gg/hNSyTvuy2v](https://discord.gg/hNSyTvuy2v)
+*   **Telegram:** [t.me/virtelx](https://t.me/virtelx)
