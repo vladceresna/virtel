@@ -9,6 +9,7 @@ mod log;
 mod net;
 mod permissions;
 mod settings;
+mod storage;
 mod tokio_setup;
 mod vx;
 

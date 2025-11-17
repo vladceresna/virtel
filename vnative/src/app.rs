@@ -6,8 +6,8 @@ use crate::{
     center::get_virtel_center,
     chunk_utils::vc_to_chunk,
     log::log,
-    tokio_setup::{get_tokio, TOKIO},
-    vx::{Chunk, VM},
+    tokio_setup::get_tokio,
+    vx::{Function, VM},
 };
 
 #[derive(Debug)]

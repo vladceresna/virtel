@@ -1,6 +1,6 @@
 use bincode::{config, decode_from_slice, encode_to_vec};
 
-use crate::vx::Chunk;
+use crate::vx::Function;
 
 /// VX Bytecode = Chunk
 /// Encoded via bincode = .VC
@@ -16,21 +16,21 @@ pub fn vc_to_vs(vc: Vec<u8>) -> String {
     return chunk_to_vs(&vc_to_chunk(vc));
 }
 
-pub fn vs_to_chunk(vs: String) -> Chunk {
+pub fn vs_to_chunk(vs: String) -> Function {
     return serde_json::from_str(vs.as_str()).unwrap();
 }
-pub fn chunk_to_vs(chunk: &Chunk) -> String {
+pub fn chunk_to_vs(chunk: &Function) -> String {
     return serde_json::to_string(chunk).unwrap();
 }
 
-pub fn vc_to_chunk(vc: Vec<u8>) -> Chunk {
+pub fn vc_to_chunk(vc: Vec<u8>) -> Function {
     let config = config::standard();
-    let (decoded, len): (Chunk, usize) =
+    let (decoded, len): (Function, usize) =
         decode_from_slice(&vc[..], config).expect("Failed to encode Chunk");
     return decoded;
 }
 
-pub fn chunk_to_vc(chunk: &Chunk) -> Vec<u8> {
+pub fn chunk_to_vc(chunk: &Function) -> Vec<u8> {
     let config = config::standard();
     let encoded = encode_to_vec(chunk, config).expect("Failed to encode Chunk");
     return encoded;
