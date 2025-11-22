@@ -12,7 +12,6 @@ use crate::{
     app::App,
     apps::{install_app, prepare_apps},
     settings::{FileSystem, Settings},
-    vx,
 };
 
 #[derive(Debug, uniffi::Error)]

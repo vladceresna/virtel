@@ -1,8 +1,10 @@
+use std::sync::{Arc, Mutex};
+
 use bincode::{config, decode_from_slice, encode_to_vec};
 
-use crate::vx::Function;
+use crate::app::{AppHeap, AppHeapSerialized};
 
-/// VX Bytecode = Chunk
+/// VX Bytecode App Structure = Heap
 /// Encoded via bincode = .VC
 /// Encoded via JSON = .VS
 /// Low-level programming language = Steps
@@ -10,28 +12,36 @@ use crate::vx::Function;
 /// Human-level programming language = Wit
 
 pub fn vs_to_vc(vs: String) -> Vec<u8> {
-    return chunk_to_vc(&vs_to_chunk(vs));
+    return heap_to_vc(&vs_to_heap(vs));
 }
 pub fn vc_to_vs(vc: Vec<u8>) -> String {
-    return chunk_to_vs(&vc_to_chunk(vc));
+    return heap_to_vs(&vc_to_heap(vc));
 }
 
-pub fn vs_to_chunk(vs: String) -> Function {
+pub fn vs_to_heap(vs: String) -> AppHeapSerialized {
     return serde_json::from_str(vs.as_str()).unwrap();
 }
-pub fn chunk_to_vs(chunk: &Function) -> String {
+pub fn heap_to_vs(chunk: &AppHeapSerialized) -> String {
     return serde_json::to_string(chunk).unwrap();
 }
 
-pub fn vc_to_chunk(vc: Vec<u8>) -> Function {
+pub fn vc_to_heap(vc: Vec<u8>) -> AppHeapSerialized {
     let config = config::standard();
-    let (decoded, len): (Function, usize) =
-        decode_from_slice(&vc[..], config).expect("Failed to encode Chunk");
+    let (decoded, _len): (AppHeapSerialized, usize) =
+        decode_from_slice(&vc[..], config).expect("Failed to decode Chunk");
     return decoded;
 }
 
-pub fn chunk_to_vc(chunk: &Function) -> Vec<u8> {
+pub fn heap_to_vc(chunk: &AppHeapSerialized) -> Vec<u8> {
     let config = config::standard();
     let encoded = encode_to_vec(chunk, config).expect("Failed to encode Chunk");
     return encoded;
+}
+
+pub fn heap_to_deserialized(heap: AppHeapSerialized) -> AppHeap {
+    AppHeap {
+        strings: Arc::new(Mutex::new(heap.strings)),
+        arrays: Arc::new(Mutex::new(heap.arrays)),
+        functions: Arc::new(Mutex::new(heap.functions)),
+    }
 }

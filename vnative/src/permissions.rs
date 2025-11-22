@@ -1,26 +1,23 @@
 use std::collections::HashSet;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub enum Capability {
-    FileWrite,
+pub enum Permission {
+    Files,
     Network,
-    Crypto,
 }
-
-pub struct Capabilities {
-    allowed: HashSet<Capability>,
+pub struct Permissions {
+    allowed: HashSet<Permission>,
 }
-
-impl Capabilities {
+impl Permissions {
     pub fn new() -> Self {
-        Self { allowed: HashSet::new() }
+        Self {
+            allowed: HashSet::new(),
+        }
     }
-
-    pub fn grant(&mut self, cap: Capability) {
+    pub fn grant(&mut self, cap: Permission) {
         self.allowed.insert(cap);
     }
-
-    pub fn check(&self, cap: Capability) -> bool {
+    pub fn check(&self, cap: Permission) -> bool {
         self.allowed.contains(&cap)
     }
 }

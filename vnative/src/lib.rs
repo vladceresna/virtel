@@ -11,9 +11,7 @@ mod permissions;
 mod settings;
 mod storage;
 mod tokio_setup;
-mod vx;
 
-use crate::center::VirtelCenter;
 //code
 
 fn add(a: u32, b: u32) -> u32 {
