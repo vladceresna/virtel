@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use bincode::{config, decode_from_slice, encode_to_vec};
 
@@ -40,8 +40,8 @@ pub fn heap_to_vc(chunk: &AppHeapSerialized) -> Vec<u8> {
 
 pub fn heap_to_deserialized(heap: AppHeapSerialized) -> AppHeap {
     AppHeap {
-        strings: Arc::new(Mutex::new(heap.strings)),
-        arrays: Arc::new(Mutex::new(heap.arrays)),
-        functions: Arc::new(Mutex::new(heap.functions)),
+        strings: Arc::new(RwLock::new(heap.strings)),
+        arrays: Arc::new(RwLock::new(heap.arrays)),
+        functions: Arc::new(RwLock::new(heap.functions)),
     }
 }
