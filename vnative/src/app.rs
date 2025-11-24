@@ -1,4 +1,4 @@
-use generational_arena::Arena;
+use slotmap::SlotMap;
 use std::{
     fs,
     sync::{Arc, Mutex, RwLock},
@@ -8,6 +8,7 @@ use tokio::task::JoinHandle;
 use crate::{
     center::get_virtel_center,
     chunk_utils::{app_heap_object_deserialize, vc_to_heap},
+    data::{Cell, Function},
     log::log,
     permissions::Permissions,
     tokio_setup::get_tokio,
@@ -25,69 +26,16 @@ pub enum VMError {
     InvalidOpcode(u8),
     HeapError(String),
     UnknownFunction(usize),
+    FunctionError(String), // error on user side
 }
 pub type VMResult<T> = Result<T, VMError>;
 
-/// ------------------- TYPES & VALUES -------------------
-
 /// ------------------- HEAP -------------------
 
-pub struct AppHeap {
-    pub strings: Arc<RwLock<Arena<String>>>,
-    pub functions: Arc<RwLock<Arena<Function>>>,
-    pub arrays: Arc<RwLock<Arena<RwLock<Vec<ValueOrRef>>>>>,
-}
-impl AppHeap {
-    pub fn new() -> Self {
-        Self {
-            strings: Arc::new(RwLock::new(Arena::new())),
-            functions: Arc::new(RwLock::new(Arena::new())),
-            arrays: Arc::new(RwLock::new(Arena::new())),
-        }
-    }
-    pub fn alloc_string(&self, s: String) -> Index {
-        let mut strings_arena = self.strings.write().unwrap();
-        strings_arena.insert(s)
-    }
-    pub fn get_string(&self, index: Index) -> Option<&String> {
-        let strings_arena = self.strings.read().unwrap();
-        strings_arena.get(index)
-    }
-    pub fn alloc_array(&self, arr: Vec<ValueOrRef>) -> Index {
-        let mut arrays_arena = self.arrays.write().unwrap();
-        arrays_arena.insert(RwLock::new(arr))
-    }
-    pub fn get_array_rwlock(&self, index: Index) -> Option<&RwLock<Vec<ValueOrRef>>> {
-        let arrays_arena_r = self.arrays.read().unwrap();
-        arrays_arena_r.get(index) // .read()/.write()
-    }
-    pub fn array_set_at(
-        &self,
-        array_idx: Index,
-        item_idx: usize,
-        value: ValueOrRef,
-    ) -> Result<(), String> {
-        let arrays_arena = self.arrays.read().unwrap();
-        if let Some(arr_rwlock) = arrays_arena.get(array_idx) {
-            let mut arr = arr_rwlock.write().unwrap();
-            if item_idx < arr.len() {
-                arr[item_idx] = value;
-                Ok(())
-            } else {
-                Err(format!("Array index out of bounds: {}", item_idx))
-            }
-        } else {
-            Err(format!("Heap array not found: {:?}", array_idx))
-        }
-    }
-    pub fn alloc_function(&self, func: Function) -> Index {
-        let mut functions_arena = self.functions.write().unwrap();
-        functions_arena.insert(func)
-    }
-    pub fn get_function(&self, index: Index) -> Option<&Function> {
-        let functions_arena = self.functions.read().unwrap();
-        functions_arena.get(index)
-    }
+pub struct Heap {
+    pub strings: SlotMap<String>,
+    pub functions: SlotMap<Function>,
+    pub arrays: SlotMap<Cell>,
 }
 
 /// ------------------- APP STRUCTURE -------------------
@@ -98,7 +46,7 @@ pub enum AppStatus {
     Background,
     Stopped,
     Paused,
-    Error,
+    Error(String),
 }
 impl Default for AppStatus {
     fn default() -> Self {
@@ -113,7 +61,7 @@ struct AppData {
     status: AppStatus,
     permissions: Permissions,
     threads: Vec<JoinHandle<()>>,
-    heap: AppHeap,
+    heap: Heap,
 }
 pub struct App {
     data: Mutex<AppData>,
@@ -139,7 +87,7 @@ impl App {
                 status: AppStatus::default(),
                 permissions: Permissions::new(),
                 threads: Vec::new(),
-                heap: AppHeap::new(),
+                heap: Heap::new(),
             }),
         }
     }
@@ -186,60 +134,16 @@ impl App {
 
 /// ------------------- FUNCTIONS -------------------
 
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
-pub struct FunctionSignature {
-    pub args: Vec<ValueOrRefType>,
-    pub result_type: ValueOrRefType,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
-pub struct FunctionWorkTable {
-    pub constants: Vec<ValueOrRef>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
-pub enum FunctionResultType {
-    Success,
-    Warning,
-    Failure,
-}
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
-pub struct FunctionResult {
-    typ: FunctionResultType,
-    error_message: String,
-    data: ValueOrRef,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
-pub struct Function {
-    pub signature: FunctionSignature,
-    pub worktable: FunctionWorkTable,
-    pub result: Option<FunctionResult>,
-    pub instructions: Vec<u8>,
-}
-impl Function {
-    pub fn new(args: Vec<ValueOrRefType>, result_type: ValueOrRefType) -> Self {
-        Self {
-            signature: FunctionSignature { args, result_type },
-            worktable: FunctionWorkTable {
-                constants: Vec::new(),
-            },
-            result: None,
-            instructions: Vec::new(),
-        }
-    }
-}
-
 /// ------------------- EXECUTION FRAME -------------------
 
 pub struct FunctionFunnel {
-    pub function: Function,
+    pub function: &Function,
     pub ip: usize,
-    pub registers: [ValueOrRef; 256],
+    pub registers: [Cell; 256],
     pub return_to_reg: usize,
 }
 impl FunctionFunnel {
-    pub fn new(func: Function, return_to_reg: usize) -> Self {
+    pub fn new(func: &Function, return_to_reg: usize) -> Self {
         Self {
             function: func,
             ip: 0,
@@ -268,10 +172,10 @@ impl FunctionFunnel {
 
 pub struct Flow {
     pub functions_stack: Vec<FunctionFunnel>,
-    pub heap: Arc<AppHeap>,
+    pub heap: Arc<Heap>,
 }
 impl Flow {
-    pub fn new(heap: Arc<AppHeap>) -> Self {
+    pub fn new(heap: Arc<Heap>) -> Self {
         let main_func = heap
             .get_function(0)
             .expect("Main function (0) not found in heap");

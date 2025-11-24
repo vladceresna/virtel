@@ -1,9 +1,8 @@
 use std::sync::{Arc, Mutex, RwLock};
 
 use bincode::{config, decode_from_slice, encode_to_vec};
-use generational_arena::Arena;
 
-use crate::app::{AppHeap, AppHeapObject};
+use crate::app::{Heap, AppHeapObject};
 
 /// VX Bytecode App Structure = Heap
 /// Encoded via bincode = .VC
@@ -39,15 +38,15 @@ pub fn heap_to_vc(chunk: &AppHeapObject) -> Vec<u8> {
     return encoded;
 }
 
-pub fn app_heap_object_deserialize(heap: AppHeapObject) -> AppHeap {
-    AppHeap {
+pub fn app_heap_object_deserialize(heap: AppHeapObject) -> Heap {
+    Heap {
         strings: Arc::new(RwLock::new(Arena::new()))),
         arrays: Arc::new(RwLock::new(heap.arrays)),
         functions: Arc::new(RwLock::new(heap.functions)),
     }
 }
 
-pub fn app_heap_object_serialize(heap: AppHeap) -> AppHeapObject {
+pub fn app_heap_object_serialize(heap: Heap) -> AppHeapObject {
     AppHeapObject {
         strings: heap.strings.read().unwrap(),
         arrays: (),
