@@ -13,6 +13,10 @@ pub enum Cell {
 }
 #[derive(Serialize, Deserialize)]
 pub enum Constant {
+    I64(i64),
+    F64(f64),
+    U64(u64),
+    Bool(bool),
     String(String),
     Array(SlotMap<Key, Cell>),
     Function(Function),

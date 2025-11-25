@@ -6,10 +6,11 @@ use std::{
 use tokio::task::JoinHandle;
 
 use crate::{
+    app_file::AppFile,
     center::get_virtel_center,
     chunk_utils::{app_heap_object_deserialize, vc_to_heap},
     data::{Cell, Function},
-    log::log,
+    log::{log, Log},
     permissions::Permissions,
     tokio_setup::get_tokio,
 };
@@ -30,14 +31,6 @@ pub enum VMError {
 }
 pub type VMResult<T> = Result<T, VMError>;
 
-/// ------------------- HEAP -------------------
-
-pub struct Heap {
-    pub strings: SlotMap<String>,
-    pub functions: SlotMap<Function>,
-    pub arrays: SlotMap<Cell>,
-}
-
 /// ------------------- APP STRUCTURE -------------------
 
 #[derive(Debug)]
@@ -48,87 +41,110 @@ pub enum AppStatus {
     Paused,
     Error(String),
 }
-impl Default for AppStatus {
-    fn default() -> Self {
-        AppStatus::Stopped
-    }
-}
-struct AppData {
+#[derive(Debug, Encode, Decode, Serialize, Deserialize)]
+pub struct AppConfig {
     id: String,
     name: String,
     version: String,
     icon_path: String,
-    status: AppStatus,
-    permissions: Permissions,
-    threads: Vec<JoinHandle<()>>,
-    heap: Heap,
 }
 pub struct App {
-    data: Mutex<AppData>,
+    app_config: AppConfig,     // config.json
+    app_file: Option<AppFile>, // {app_id}.vxc
+    status: AppStatus,
+    global_data: Option<Arc<RwLock<SlotMap<Key, Constant>>>>,
+    permissions: Permissions,
+    threads: Vec<JoinHandle<()>>,
 }
-impl App {
+pub struct AppElement {
+    data: RwLock<App>,
+}
+impl AppElement {
     pub fn new(app_id: String) -> Self {
         let apps_dir = get_virtel_center()
             .get_settings()
             .filesystem
             .apps_dir
             .clone();
+
         let this_app_config = format!("{}/{}/config.json", apps_dir, app_id);
         let this_app_config_content = fs::read_to_string(this_app_config).unwrap();
-
-        let c: serde_json::Value = serde_json::from_str(this_app_config_content.as_str()).unwrap();
+        let app_config: AppConfig = serde_json::from_str(this_app_config_content.as_str()).unwrap();
 
         Self {
-            data: Mutex::new(AppData {
-                id: app_id,
-                name: c["name"].to_string(),
-                version: c["version"].to_string(),
-                icon_path: c["iconPath"].to_string(),
-                status: AppStatus::default(),
+            data: RwLock::new(App {
+                app_config: app_config,
+                app_file: None,
+                status: AppStatus::Stopped,
+                global_data: None,
                 permissions: Permissions::new(),
                 threads: Vec::new(),
-                heap: Heap::new(),
             }),
         }
     }
     pub fn get_id(&self) -> String {
-        self.data.lock().unwrap().id.clone()
+        self.data.lock().unwrap().app_config.id.clone()
     }
     pub fn get_name(&self) -> String {
-        self.data.lock().unwrap().name.clone()
+        self.data.lock().unwrap().app_config.name.clone()
     }
     pub fn get_version(&self) -> String {
-        self.data.lock().unwrap().version.clone()
+        self.data.lock().unwrap().app_config.version.clone()
     }
-    pub fn on_create(&self) {
+    fn set_status(&self, status: AppStatus) {
+        self.data.write().unwrap().status = status
+    }
+    pub fn load_code_from_disk(&self) {
         let apps_dir = get_virtel_center()
             .get_settings()
             .filesystem
             .apps_dir
             .clone();
-        let app_id = self.data.lock().unwrap().id.clone();
-        let app_file = format!("{}/{}/code/{}.vc", apps_dir, app_id, app_id);
 
-        let vc = fs::read(&app_file).expect("Failed to read .vc file");
-        let heap = Arc::new(app_heap_object_deserialize(vc_to_heap(vc)));
+        let app_id = self.get_id();
 
-        log(
-            crate::log::Log::Info,
-            format!("App created: {}", app_id).as_str(),
-        );
-        self.data.lock().unwrap().status = AppStatus::Running;
+        let app_file_path = format!("{}/{}/{}.vxc", apps_dir, app_id, app_id);
+        let app_file_content = fs::read(&app_file_path).expect("Failed to read .vxc file");
+        let bytes = app_file_content;
+        let app_file = AppFile::from_bytes(bytes);
 
-        let handle = get_tokio().spawn(async move {
-            let mut vm = Flow::new(heap);
-            if let Err(e) = vm.run() {
-                println!("CRITICAL VX VM ERROR: {:?}", e);
-            }
-        });
-        self.data.lock().unwrap().threads.push(handle);
+        let
+        {
+            self.data.lock().unwrap().app_file = Some(app_file);
+        }
+
+    }
+
+    pub fn on_create(&self) {
+        self.load_code_from_disk();
+
+        log(Log::Info, format!("App created: {}", app_id).as_str());
+        self.set_status(App::Running);
+
+        self.start_flow_from_function(0);
     }
     pub fn on_destroy(&self) {
-        println!("App {} destroyed.", self.data.lock().unwrap().id);
-        self.data.lock().unwrap().status = AppStatus::Stopped;
+        println!("App {} destroyed.", self.get_id());
+        self.set_status(App::Stopped);
+    }
+    pub fn start_flow_from_function(&self, index: usize) {
+        let flow = Flow::new(heap);
+
+        self.data.read().unwrap().app_file.unwrap();
+
+        let handle = get_tokio().spawn(async move {
+            let mut flow = Flow::new(heap);
+            if let Err(e) = flow.run() {
+                println!("CRITICAL VX VM ERROR: {:?}", e);
+                self.set_status(AppStatus::Error(e));
+            }
+        });
+        {
+            self.data.lock().unwrap().threads.push(handle);
+        }
+    }
+    pub fn install_app(path: String) {
+        todo!();
     }
 }
 
@@ -172,10 +188,10 @@ impl FunctionFunnel {
 
 pub struct Flow {
     pub functions_stack: Vec<FunctionFunnel>,
-    pub heap: Arc<Heap>,
+    pub heap: Arc,
 }
 impl Flow {
-    pub fn new(heap: Arc<Heap>) -> Self {
+    pub fn new(heap: Arc) -> Self {
         let main_func = heap
             .get_function(0)
             .expect("Main function (0) not found in heap");
@@ -406,3 +422,21 @@ const fn build_dispatch_table() -> [OpHandler; 256] {
 }
 
 static DISPATCH_TABLE: [OpHandler; 256] = build_dispatch_table();
+
+#[cfg(test)]
+mod tests {
+    use crate::app::Op;
+
+    use super::*;
+    #[test]
+    fn it_works() {
+        let app = AppElement::new("vladceresna.virtel.launcher".to_string());
+
+        app.on_create();
+
+        app.on_destroy();
+
+        let result = add(2, 2);
+        assert_eq!(result, 4);
+    }
+}

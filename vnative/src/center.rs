@@ -9,7 +9,7 @@ use std::{
 use once_cell::sync::Lazy;
 
 use crate::{
-    app::App,
+    app::AppElement,
     apps::{install_app, prepare_apps},
     settings::{FileSystem, Settings},
 };
@@ -45,7 +45,7 @@ pub fn get_virtel_center() -> Arc<VirtelCenter> {
 static VIRTEL_CENTER: Lazy<Arc<VirtelCenter>> = Lazy::new(|| Arc::new(VirtelCenter::new()));
 
 struct VirtelCenterData {
-    apps: Vec<Arc<App>>,
+    apps: Vec<Arc<AppElement>>,
     ui_api: Option<Arc<dyn UiApi>>,
     system_api: Option<Arc<dyn SystemApi>>,
     settings: Arc<Settings>,
@@ -94,7 +94,7 @@ impl VirtelCenter {
         let data = self.data.lock().unwrap();
         Arc::clone(&data.settings)
     }
-    pub fn get_app_by_id(&self, app_id: String) -> Arc<App> {
+    pub fn get_app_by_id(&self, app_id: String) -> Arc<AppElement> {
         let data = self.data.lock().unwrap();
 
         let app = data
@@ -129,7 +129,7 @@ impl VirtelCenter {
 
         data.apps.clear();
         for app_id in entries {
-            let app = Arc::new(App::new(app_id));
+            let app = Arc::new(AppElement::new(app_id));
             data.apps.push(app);
         }
     }
