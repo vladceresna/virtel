@@ -1,4 +1,4 @@
-use slotmap::SlotMap;
+use slotmap::{DefaultKey, Key, SlotMap};
 use std::{
     fs,
     sync::{Arc, Mutex, RwLock},
@@ -8,8 +8,7 @@ use tokio::task::JoinHandle;
 use crate::{
     app_file::AppFile,
     center::get_virtel_center,
-    chunk_utils::{app_heap_object_deserialize, vc_to_heap},
-    data::{Cell, Function},
+    data::{Cell, Constant, Function},
     log::{log, Log},
     permissions::Permissions,
     tokio_setup::get_tokio,
@@ -24,10 +23,11 @@ pub enum VMError {
     StackUnderflow,
     FrameError,
     DivisionByZero,
-    InvalidOpcode(u8),
+    InvalidOpcode,
     HeapError(String),
     UnknownFunction(usize),
     FunctionError(String), // error on user side
+    NativeReferencesCastingError(String),
 }
 pub type VMResult<T> = Result<T, VMError>;
 
@@ -52,7 +52,7 @@ pub struct App {
     app_config: AppConfig,     // config.json
     app_file: Option<AppFile>, // {app_id}.vxc
     status: AppStatus,
-    global_data: Option<Arc<RwLock<SlotMap<Key, Constant>>>>,
+    global_data: Option<Arc<RwLock<SlotMap<DefaultKey, Constant>>>>,
     permissions: Permissions,
     threads: Vec<JoinHandle<()>>,
 }
@@ -83,13 +83,13 @@ impl AppElement {
         }
     }
     pub fn get_id(&self) -> String {
-        self.data.lock().unwrap().app_config.id.clone()
+        self.data.read().unwrap().app_config.id.clone()
     }
     pub fn get_name(&self) -> String {
-        self.data.lock().unwrap().app_config.name.clone()
+        self.data.read().unwrap().app_config.name.clone()
     }
     pub fn get_version(&self) -> String {
-        self.data.lock().unwrap().app_config.version.clone()
+        self.data.read().unwrap().app_config.version.clone()
     }
     fn set_status(&self, status: AppStatus) {
         self.data.write().unwrap().status = status
@@ -107,43 +107,50 @@ impl AppElement {
         let app_file_content = fs::read(&app_file_path).expect("Failed to read .vxc file");
         let bytes = app_file_content;
         let app_file = AppFile::from_bytes(bytes);
-
-        let
         {
-            self.data.lock().unwrap().app_file = Some(app_file);
+            let app = self.data.write().unwrap();
+            app.app_file = Some(app_file);
+            app.global_data = Some(app_file.get_global_data_initial_state())
         }
-
     }
 
     pub fn on_create(&self) {
         self.load_code_from_disk();
 
-        log(Log::Info, format!("App created: {}", app_id).as_str());
-        self.set_status(App::Running);
+        log(
+            Log::Info,
+            format!("App created: {}", self.get_id()).as_str(),
+        );
+        self.set_status(AppStatus::Running);
 
         self.start_flow_from_function(0);
     }
     pub fn on_destroy(&self) {
         println!("App {} destroyed.", self.get_id());
-        self.set_status(App::Stopped);
+        self.set_status(AppStatus::Stopped);
     }
     pub fn start_flow_from_function(&self, index: usize) {
-        let flow = Flow::new(heap);
+        let app_file = { self.data.read().unwrap().app_file.unwrap() };
 
-        self.data.read().unwrap().app_file.unwrap();
+        let arc_global_data = { Arc::clone(&(self.data.read().unwrap().global_data.unwrap())) };
+
+        let flow = Flow::new(
+            app_file.get_entry_point_key(index),
+            SlotMap::new(),
+            arc_global_data,
+        );
 
         let handle = get_tokio().spawn(async move {
-            let mut flow = Flow::new(heap);
             if let Err(e) = flow.run() {
                 println!("CRITICAL VX VM ERROR: {:?}", e);
-                self.set_status(AppStatus::Error(e));
+                // TODO(Normal e handler)
             }
         });
         {
-            self.data.lock().unwrap().threads.push(handle);
+            self.data.write().unwrap().threads.push(handle);
         }
     }
-    pub fn install_app(path: String) {
+    pub fn install_app(path_to_lpp: String) {
         todo!();
     }
 }
@@ -153,17 +160,17 @@ impl AppElement {
 /// ------------------- EXECUTION FRAME -------------------
 
 pub struct FunctionFunnel {
-    pub function: &Function,
+    pub function: Function,
     pub ip: usize,
     pub registers: [Cell; 256],
     pub return_to_reg: usize,
 }
 impl FunctionFunnel {
-    pub fn new(func: &Function, return_to_reg: usize) -> Self {
+    pub fn new(func: Function, return_to_reg: usize) -> Self {
         Self {
             function: func,
             ip: 0,
-            registers: [ValueOrRef::new_null(); 256],
+            registers: [Cell::Null; 256],
             return_to_reg,
         }
     }
@@ -187,18 +194,28 @@ impl FunctionFunnel {
 /// ------------------- VM (FLOW) -------------------
 
 pub struct Flow {
-    pub functions_stack: Vec<FunctionFunnel>,
-    pub heap: Arc,
+    functions_stack: Vec<FunctionFunnel>,
+    local_data: SlotMap<DefaultKey, Constant>,
+    global_data: Arc<RwLock<SlotMap<DefaultKey, Constant>>>,
 }
 impl Flow {
-    pub fn new(heap: Arc) -> Self {
-        let main_func = heap
-            .get_function(0)
+    pub fn new(
+        start_key: DefaultKey,
+        local_data: SlotMap<DefaultKey, Constant>,
+        global_data: Arc<RwLock<SlotMap<DefaultKey, Constant>>>,
+    ) -> Self {
+        let main_func = local_data
+            .get(start_key)
             .expect("Main function (0) not found in heap");
-        let main_frame = FunctionFunnel::new(main_func, 0);
+        let function = match main_func {
+            Constant::Function(f) => f,
+            _ => panic!(),
+        };
+        let main_frame = FunctionFunnel::new(function.clone(), 0);
         Self {
             functions_stack: vec![main_frame],
-            heap,
+            local_data,
+            global_data,
         }
     }
     #[inline(always)]
@@ -207,7 +224,7 @@ impl Flow {
     }
     pub fn run(&mut self) -> VMResult<()> {
         while !self.functions_stack.is_empty() {
-            let handler = DISPATCH_TABLE[self.current_frame_mut().read_u8() as usize];
+            let handler = DISPATCH_TABLE[self.current_frame_mut().unwrap().read_u8() as usize];
             handler(self)?
         }
         Ok(())

@@ -1,14 +1,14 @@
-use bincode::{Decode, Encode};
+use bincode::{config, Decode, Encode};
 use serde::{Deserialize, Serialize};
 use slotmap::{Key, SlotMap};
 
-use crate::{app::AppElement, data::Constant};
+use crate::data::Constant;
 
 #[derive(Debug, Serialize, Deserialize, Encode, Decode)]
 pub struct AppFile {
     magic: [u8; 4],                                    // "VCLL"
     version: u8,                                       // 4...5...6...7 as Virtel versions
-    entry_point: Key, // it is only directive to system, but user can select another function to entry in
+    entry_points: Vec<Box<Key>>, // it is only directive to system, but user can select another function to entry in
     global_data_initial_state: SlotMap<Key, Constant>, // data, that exists on start of instructions execution
 }
 impl AppFile {
@@ -17,13 +17,19 @@ impl AppFile {
         let (app_file, _): (AppFile, _) = bincode::decode_from_slice(&bytes[..], config).unwrap();
         app_file
     }
-    pub fn to_bytes(app_file: Self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         let config = config::standard();
-        let bytes: Vec<u8> = bincode::encode_to_vec(&app_file, config).unwrap();
+        let bytes: Vec<u8> = bincode::encode_to_vec(self, config).unwrap();
         bytes
     }
     pub fn get_global_data_initial_state(&self) -> SlotMap<Key, Constant> {
-        self.global_data_initial_state
+        self.global_data_initial_state // todo or .clone() or &self
+    }
+    pub fn get_entry_point_key(&self, index: usize) -> Key {
+        *self
+            .entry_points
+            .get(index)
+            .expect("Entry point index out of bounds")
     }
 }
 // ------ installer ------
