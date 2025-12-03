@@ -2,11 +2,8 @@ uniffi::setup_scaffolding!();
 
 //modules
 mod app;
-mod app_file;
 mod apps;
 mod center;
-mod chunk_utils;
-mod data;
 mod log;
 mod net;
 mod permissions;

@@ -1,19 +1,17 @@
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex};
 
 use once_cell::sync::Lazy;
 
-use crate::log;
-
 #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-fn logAtOs(content: &str) {
+fn log_at_os(content: &str) {
     println!("{}", content);
 }
 #[cfg(target_os = "android")]
-fn logAtOs(content: &str) {
+fn log_at_os(content: &str) {
     println!("{}", content);
 }
 #[cfg(target_os = "ios")]
-fn logAtOs(content: &str) {
+fn log_at_os(content: &str) {
     println!("{}", content);
 }
 
@@ -24,24 +22,24 @@ pub fn log(log_type: Log, content: &str) {
         Log::Success => "SCSS",
         Log::Warning => "WRNG",
     };
-    logStr(format!("[{}] {}", log_type, content).as_str());
+    log_str(format!("[{}] {}", log_type, content).as_str());
 }
 #[uniffi::export]
-pub fn logStr(content: &str) {
-    logAtOs(content);
-    pushToLog(content);
+pub fn log_str(content: &str) {
+    log_at_os(content);
+    push_to_log(content);
 }
 #[uniffi::export]
-pub fn snapshotLog() -> Vec<String> {
-    getLogger().lock().expect("Error Logger locking").clone()
+pub fn snapshot_log() -> Vec<String> {
+    get_logger().lock().expect("Error Logger locking").clone()
 }
-fn pushToLog(content: &str) {
-    getLogger()
+fn push_to_log(content: &str) {
+    get_logger()
         .lock()
         .expect("Error Logger locking")
         .push(content.to_string());
 }
-fn getLogger() -> Arc<Mutex<Vec<String>>> {
+fn get_logger() -> Arc<Mutex<Vec<String>>> {
     Arc::clone(&LOGGER)
 }
 

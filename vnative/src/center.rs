@@ -1,8 +1,6 @@
 use std::{
-    clone,
     fmt::{self, Debug},
     fs,
-    path::PathBuf,
     sync::{Arc, Mutex},
 };
 
@@ -10,7 +8,7 @@ use once_cell::sync::Lazy;
 
 use crate::{
     app::AppElement,
-    apps::{install_app, prepare_apps},
+    apps::prepare_apps,
     settings::{FileSystem, Settings},
 };
 
