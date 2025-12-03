@@ -1,20 +1,19 @@
-# VX
-Registers-based statically-typized VM used in Virtel to run apps on.
+# Virtel File Execution Docs
+## AppFile
+- Magic: 4 bytes: VXCL
+- Virtel Version: 1 byte: 4
+- Entry points: Vec bytes for functions
+- Global Consts
+## Data in App
+1. App
+- Global Consts: `Vec<Constant>`
+2. Thread
+- Output: `Arc<RwLock<Vec<Constant>>>`
+- Private Data: `Vec<Constant>`
+3. Function Frame
+- Registers: `[Cell;256]`
 
-## Architecture
-### App
-- Storage (ArrayOfRegisters)
-- 
-### Flow is VM
-- CurrentStorage (ArrayOfRegisters)
-- 
-
-## Bytecode
-In hex.
-### Initialization
-00 01
-
-
-### OpCodes
-- LoadConst
--
+### Commands
+LoadConst (clone object from Global Consts to Private Data and Register)
+ExportConst (pub idx) ()
+ImportConst

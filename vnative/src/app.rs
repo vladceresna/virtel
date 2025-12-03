@@ -1,7 +1,5 @@
-use slotmap::{DefaultKey, Key, SlotMap};
 use std::{
-    fs,
-    sync::{Arc, Mutex, RwLock},
+    array::from_fn, fs, sync::{Arc, RwLock}
 };
 use tokio::task::JoinHandle;
 
@@ -52,7 +50,7 @@ pub struct App {
     app_config: AppConfig,     // config.json
     app_file: Option<AppFile>, // {app_id}.vxc
     status: AppStatus,
-    global_data: Option<Arc<RwLock<SlotMap<DefaultKey, Constant>>>>,
+    global_consts: Option<Arc<Vec<Constant>>>,
     permissions: Permissions,
     threads: Vec<JoinHandle<()>>,
 }
@@ -76,7 +74,7 @@ impl AppElement {
                 app_config: app_config,
                 app_file: None,
                 status: AppStatus::Stopped,
-                global_data: None,
+                global_consts: None,
                 permissions: Permissions::new(),
                 threads: Vec::new(),
             }),
@@ -108,9 +106,11 @@ impl AppElement {
         let bytes = app_file_content;
         let app_file = AppFile::from_bytes(bytes);
         {
-            let app = self.data.write().unwrap();
-            app.app_file = Some(app_file);
-            app.global_data = Some(app_file.get_global_data_initial_state())
+            let mut app = self.data.write().unwrap();
+            app.app_file = Some(app_file.clone());
+            app.global_consts = Some(Arc::new(
+                app_file.get_global_consts().clone(),
+            ));
         }
     }
 
@@ -130,13 +130,13 @@ impl AppElement {
         self.set_status(AppStatus::Stopped);
     }
     pub fn start_flow_from_function(&self, index: usize) {
-        let app_file = { self.data.read().unwrap().app_file.unwrap() };
+        let app_file = { self.data.read().unwrap().app_file.clone().unwrap() };
 
-        let arc_global_data = { Arc::clone(&(self.data.read().unwrap().global_data.unwrap())) };
+        let arc_global_data =
+            { Arc::clone(&(self.data.read().unwrap().global_consts.clone().unwrap())) };
 
-        let flow = Flow::new(
-            app_file.get_entry_point_key(index),
-            SlotMap::new(),
+        let mut flow = Flow::new(
+            app_file.get_entry_point_key(index) as usize,
             arc_global_data,
         );
 
@@ -155,17 +155,15 @@ impl AppElement {
     }
 }
 
-/// ------------------- FUNCTIONS -------------------
-
 /// ------------------- EXECUTION FRAME -------------------
 
-pub struct FunctionFunnel {
+pub struct FunctionFrame {
     pub function: Function,
     pub ip: usize,
     pub registers: [Cell; 256],
     pub return_to_reg: usize,
 }
-impl FunctionFunnel {
+impl FunctionFrame {
     pub fn new(func: Function, return_to_reg: usize) -> Self {
         Self {
             function: func,
@@ -194,32 +192,33 @@ impl FunctionFunnel {
 /// ------------------- VM (FLOW) -------------------
 
 pub struct Flow {
-    functions_stack: Vec<FunctionFunnel>,
-    local_data: SlotMap<DefaultKey, Constant>,
-    global_data: Arc<RwLock<SlotMap<DefaultKey, Constant>>>,
+    functions_stack: Vec<FunctionFrame>,
+    local_data: Vec<Constant>,
+    public_data: [Constant; 256],
+    global_consts: Arc<Vec<Constant>>,
 }
 impl Flow {
     pub fn new(
-        start_key: DefaultKey,
-        local_data: SlotMap<DefaultKey, Constant>,
-        global_data: Arc<RwLock<SlotMap<DefaultKey, Constant>>>,
+        start_point: usize,
+        global_consts_arc: Arc<Vec<Constant>>,
     ) -> Self {
-        let main_func = local_data
-            .get(start_key)
-            .expect("Main function (0) not found in heap");
+        let main_func = global_consts_arc
+            .get(start_point)
+            .expect("Main function (0) not found in heap").clone();
         let function = match main_func {
             Constant::Function(f) => f,
             _ => panic!(),
         };
-        let main_frame = FunctionFunnel::new(function.clone(), 0);
+        let main_frame = FunctionFrame::new(function.clone(), 0);
         Self {
             functions_stack: vec![main_frame],
-            local_data,
-            global_data,
+            local_data: Vec::new(),
+            public_data: from_fn(|_| Constant::Null),
+            global_consts: global_consts_arc,
         }
     }
     #[inline(always)]
-    pub fn current_frame_mut(&mut self) -> Option<&mut FunctionFunnel> {
+    pub fn current_frame_mut(&mut self) -> Option<&mut FunctionFrame> {
         self.functions_stack.last_mut()
     }
     pub fn run(&mut self) -> VMResult<()> {
@@ -229,6 +228,11 @@ impl Flow {
         }
         Ok(())
     }
+}
+pub fn push_to_local_heap(vm: &mut Flow, constant: Constant) -> u64 {
+    let idx = vm.local_data.len() as usize;
+    vm.local_data[idx] = constant;
+    idx as u64
 }
 
 /// ------------------- OPCODES & HANDLERS -------------------
@@ -268,76 +272,49 @@ fn invalid_op(_vm: &mut Flow) -> VMResult<()> {
     Err(VMError::InvalidOpcode)
 }
 
-fn op_load_const(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
+fn op_to_locals(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
     let dst = frame.read_u8() as usize;
     let cid = frame.read_u16() as usize;
-    // Копируем константу из таблицы работы функции в регистр
-    let val = frame.function.worktable.constants[cid];
+    let val: Constant;
+    {
+        let gl = vm.;
+        let global_data = gl.read().unwrap()
+        let val_ref = global_data.get(cid).unwrap();
+        val = val_ref.clone();
+    };
+    let val_idx = vm.local_data.len();
+    vm.local_data.push(val.clone());
+    frame.registers[dst] = match val {
+        Constant::F64(float) => Cell::F64(float as f64),
+        Constant::I64(int) => Cell::I64(int as i64),
+        Constant::F64(float) => Cell::F64(val_idx as f64),
+        Constant::F64(float) => Cell::F64(val_idx as f64),
+        Constant::F64(float) => Cell::F64(val_idx as f64),
+        Constant::F64(float) => Cell::F64(val_idx as f64),
+        _ => return Err(VMError::HeapError("Types mismatch".to_string())),
+    };
+    Ok(())
+}
+fn op_to_globals(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+    let dst = frame.read_u8() as usize;
+    let cid = frame.read_u16() as usize;
+    let val = frame.function.constants[cid];
     frame.registers[dst] = val;
-}
-
-fn op_move(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
-    let dst = frame.read_u8() as usize;
-    let src = frame.read_u8() as usize;
-    frame.registers[dst] = frame.registers[src];
-}
-
-fn op_add(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
-    let dst = frame.read_u8() as usize;
-    let idx_a = frame.read_u8() as usize;
-    let idx_b = frame.read_u8() as usize;
-
-    let a = frame.registers[idx_a].as_i64();
-    let b = frame.registers[idx_b].as_i64();
-
-    frame.registers[dst] = ValueOrRef::new_i64(a + b);
-}
-
-fn op_subtract(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
-    let dst = frame.read_u8() as usize;
-    let idx_a = frame.read_u8() as usize;
-    let idx_b = frame.read_u8() as usize;
-
-    let a = frame.registers[idx_a].as_i64();
-    let b = frame.registers[idx_b].as_i64();
-
-    frame.registers[dst] = ValueOrRef::new_i64(a - b);
-}
-
-fn op_multiply(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
-    let dst = frame.read_u8() as usize;
-    let idx_a = frame.read_u8() as usize;
-    let idx_b = frame.read_u8() as usize;
-
-    let a = frame.registers[idx_a].as_i64();
-    let b = frame.registers[idx_b].as_i64();
-
-    frame.registers[dst] = ValueOrRef::new_i64(a * b);
-}
-
-fn op_divide(vm: &mut Flow) -> VMResult<()> {
-    let frame: FunctionFunnel = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
-    let dst = frame.read_u8() as usize;
-    let idx_a = frame.read_u8() as usize;
-    let idx_b = frame.read_u8() as usize;
-
-    let a = frame.registers[idx_a].as_i64();
-    let b = frame.registers[idx_b].as_i64();
-
-    if b == 0 {
-        return Err(VMError::DivisionByZero);
-    }
-    frame.registers[dst] = ValueOrRef::new_i64(a / b);
     Ok(())
 }
 
-fn op_eq(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
+fn op_move(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+    let dst = frame.read_u8() as usize;
+    let src = frame.read_u8() as usize;
+    frame.registers[dst] = frame.registers[src];
+    Ok(())
+}
+
+fn op_add(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
     let dst = frame.read_u8() as usize;
     let idx_a = frame.read_u8() as usize;
     let idx_b = frame.read_u8() as usize;
@@ -345,76 +322,264 @@ fn op_eq(vm: &mut Flow) {
     let a = frame.registers[idx_a];
     let b = frame.registers[idx_b];
 
-    // Simple equality
-    let is_eq = a.typ == b.typ && a.bits == b.bits;
+    let result = match (a, b) {
+        (Cell::I64(a), Cell::I64(b)) => Cell::I64(a + b),
+        (Cell::U64(a), Cell::U64(b)) => Cell::U64(a + b),
+        (Cell::F64(a), Cell::F64(b)) => Cell::F64(a + b),
+        (Cell::I64(a), Cell::F64(b)) => Cell::F64(a as f64 + b),
+        (Cell::U64(a), Cell::F64(b)) => Cell::F64(a as f64 + b),
+        (Cell::F64(a), Cell::I64(b)) => Cell::F64(a + b as f64),
+        (Cell::F64(a), Cell::U64(b)) => Cell::F64(a + b as f64),
+        _ => {
+            return Err(VMError::FunctionError(format!(
+                "Cannot add types {:?} and {:?}",
+                a, b
+            )))
+        }
+    };
+    frame.registers[dst] = result;
+    Ok(())
+}
+fn op_sub(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+    let dst = frame.read_u8() as usize;
+    let idx_a = frame.read_u8() as usize;
+    let idx_b = frame.read_u8() as usize;
 
-    frame.registers[dst] = ValueOrRef::new_bool(is_eq);
+    let a = frame.registers[idx_a];
+    let b = frame.registers[idx_b];
+
+    let result = match (a, b) {
+        (Cell::I64(a), Cell::I64(b)) => Cell::I64(a - b),
+        (Cell::U64(a), Cell::U64(b)) => Cell::U64(a - b),
+        (Cell::F64(a), Cell::F64(b)) => Cell::F64(a - b),
+        (Cell::I64(a), Cell::F64(b)) => Cell::F64(a as f64 - b),
+        (Cell::U64(a), Cell::F64(b)) => Cell::F64(a as f64 - b),
+        (Cell::F64(a), Cell::I64(b)) => Cell::F64(a - b as f64),
+        (Cell::F64(a), Cell::U64(b)) => Cell::F64(a - b as f64),
+        _ => {
+            return Err(VMError::FunctionError(format!(
+                "Cannot subtract types {:?} and {:?}",
+                a, b
+            )))
+        }
+    };
+    frame.registers[dst] = result;
+    Ok(())
 }
 
-fn op_goto(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
-    // Читаем адрес (куда прыгать). Обычно это u16 или u32
+fn op_mul(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+    let dst = frame.read_u8() as usize;
+    let idx_a = frame.read_u8() as usize;
+    let idx_b = frame.read_u8() as usize;
+
+    let a = frame.registers[idx_a];
+    let b = frame.registers[idx_b];
+
+    let result = match (a, b) {
+        (Cell::I64(a), Cell::I64(b)) => Cell::I64(a * b),
+        (Cell::U64(a), Cell::U64(b)) => Cell::U64(a * b),
+        (Cell::F64(a), Cell::F64(b)) => Cell::F64(a * b),
+        (Cell::I64(a), Cell::F64(b)) => Cell::F64(a as f64 * b),
+        (Cell::U64(a), Cell::F64(b)) => Cell::F64(a as f64 * b),
+        (Cell::F64(a), Cell::I64(b)) => Cell::F64(a * b as f64),
+        (Cell::F64(a), Cell::U64(b)) => Cell::F64(a * b as f64),
+        _ => {
+            return Err(VMError::FunctionError(format!(
+                "Cannot multiply types {:?} and {:?}",
+                a, b
+            )))
+        }
+    };
+    frame.registers[dst] = result;
+    Ok(())
+}
+
+fn op_divide(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+    let dst = frame.read_u8() as usize;
+    let idx_a = frame.read_u8() as usize;
+    let idx_b = frame.read_u8() as usize;
+
+    let a = frame.registers[idx_a];
+    let b = frame.registers[idx_b];
+
+    let result = match (a, b) {
+        // I64 / I64 — integer dividing (as in C, Rust, JavaScript)
+        (Cell::I64(a), Cell::I64(b)) => {
+            if b == 0 {
+                return Err(VMError::DivisionByZero);
+            }
+            Cell::I64(a / b)
+        }
+        // F64 / F64 — IEEE 754, with NaN supporting, inf, -0.0
+        (Cell::F64(a), Cell::F64(b)) => {
+            if b == 0.0 {
+                // 5.0 / 0.0 → inf, -5.0 / 0.0 → -inf, 0.0 / 0.0 → NaN
+                // it is standard behavior
+                Cell::F64(a / b)
+            } else {
+                Cell::F64(a / b)
+            }
+        }
+        (Cell::U64(a), Cell::U64(b)) => {
+            if b == 0 {
+                return Err(VMError::DivisionByZero);
+            }
+            Cell::U64(a / b)
+        }
+        (Cell::I64(a), Cell::F64(b)) => Cell::F64(a as f64 / b),
+        (Cell::U64(a), Cell::F64(b)) => Cell::F64(a as f64 / b),
+        _ => {
+            return Err(VMError::FunctionError(format!(
+                "Cannot divide types {:?} and {:?}",
+                a, b
+            )));
+        }
+    };
+    frame.registers[dst] = result;
+    Ok(())
+}
+fn op_eq(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+    let dst = frame.read_u8() as usize;
+    let idx_a = frame.read_u8() as usize;
+    let idx_b = frame.read_u8() as usize;
+
+    let a = frame.registers[idx_a];
+    let b = frame.registers[idx_b];
+
+    let is_eq = match (a, b) {
+        (Cell::I64(a), Cell::I64(b)) => a == b,
+        (Cell::F64(a), Cell::F64(b)) => f64::to_bits(a) == f64::to_bits(b),
+        (Cell::U64(a), Cell::U64(b)) => a == b,
+        (Cell::Bool(a), Cell::Bool(b)) => a == b,
+        (Cell::Null, Cell::Null) => true,
+        (Cell::StrRef(a), Cell::StrRef(b)) => a == b,
+        (Cell::ArrayRef(a), Cell::ArrayRef(b)) => a == b,
+        (Cell::FuncRef(a), Cell::FuncRef(b)) => a == b,
+        _ => {
+            return Err(VMError::FunctionError(
+                "Type mismatch in equality comparison".to_string(),
+            ));
+        }
+    };
+    frame.registers[dst] = Cell::Bool(is_eq);
+    Ok(())
+}
+
+fn op_goto(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
     let jump_address = frame.read_u16() as usize;
-
-    // Просто меняем Instruction Pointer
+    if jump_address >= frame.function.instructions.len() {
+        return Err(VMError::FunctionError(format!(
+            "Jump out of bounds: {} (function size: {})",
+            jump_address,
+            frame.function.instructions.len()
+        )));
+    }
     frame.ip = jump_address;
+    Ok(())
 }
 
-fn op_goto_if(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
+fn op_goto_if(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
     let jump_address = frame.read_u16() as usize;
     let condition_reg = frame.read_u8() as usize;
+    if jump_address >= frame.function.instructions.len() {
+        return Err(VMError::FunctionError(format!(
+            "Conditional jump out of bounds: {} >= {}",
+            jump_address,
+            frame.function.instructions.len()
+        )));
+    }
     let condition = frame.registers[condition_reg];
-    if condition.as_bool() {
+    let condition_bool = match condition {
+        Cell::Bool(b) => b,
+        Cell::Null => false,
+        Cell::I64(0) | Cell::U64(0) | Cell::F64(0.0 | -0.0) => false,
+        Cell::I64(_) | Cell::U64(_) | Cell::F64(_) => true,
+        Cell::StrRef(_) | Cell::ArrayRef(_) | Cell::FuncRef(_) => true,
+        _ => {
+            log(Log::Warning, "Non-boolean value used as condition");
+            true
+        }
+    };
+    if condition_bool {
         frame.ip = jump_address;
     }
+    Ok(())
 }
 
 fn op_call_function(vm: &mut Flow) -> VMResult<()> {
     let (func_idx, dest_reg) = {
-        let frame: FunctionFunnel = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+        let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
         (frame.read_u16() as usize, frame.read_u8() as usize)
     };
-    if let Some(func) = vm.heap.get_function(func_idx) {
-        let new_frame = FunctionFunnel::new(func.clone(), dest_reg);
-        vm.functions_stack.push(new_frame);
-        Ok(())
+    if let Some(func) = vm.global_consts.read().unwrap().get(func_idx) {
+        match func {
+            Constant::Function(function) => {
+                let new_frame = FunctionFrame::new(function.clone(), dest_reg);
+                vm.functions_stack.push(new_frame);
+                Ok(())
+            }
+            _ => Err(VMError::FunctionError("It is not function".to_string())),
+        }
     } else {
         Err(VMError::UnknownFunction(func_idx))
     }
 }
-fn op_return(vm: &mut Flow) {
+
+fn op_return(vm: &mut Flow) -> VMResult<()> {
     let (ret_val, dest_reg) = {
-        let frame = vm.current_frame_mut();
+        let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
         let src_reg = frame.read_u8() as usize;
-        (frame.registers[src_reg], frame.return_to_reg)
+        (frame.registers[src_reg].clone(), frame.return_to_reg)
     };
     vm.functions_stack.pop();
     if let Some(parent_frame) = vm.functions_stack.last_mut() {
         parent_frame.registers[dest_reg] = ret_val;
+    } else {
+        log(Log::Info, "Returned from top-level function.");
     }
+    Ok(())
 }
 
 fn op_new_array(vm: &mut Flow) -> VMResult<()> {
     let (dst_reg, size) = {
-        let frame: FunctionFunnel = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+        let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
         let dst = frame.read_u8() as usize;
         let sz = frame.read_u16() as usize;
         (dst, sz)
     };
-    let new_arr = vec![ValueOrRef::new_null(); size];
-    let arr_idx = vm.heap.alloc_array(new_arr);
+    let new_arr = vec![Cell::Null; size];
+    let arr_idx = vm.local_data.len();
+    vm.local_data.push(Constant::Array(new_arr));
     let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
-    frame.registers[dst_reg] = ValueOrRef::new_array_ref(arr_idx);
+    frame.registers[dst_reg] = Cell::ArrayRef(arr_idx as u64);
+    Ok(())
+}
+fn op_new_array(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
+    let dst_reg = frame.read_u8() as usize;
+    let size = frame.read_u16() as usize;
+
+    let array = vec![Cell::Null; size];
+    let idx_in_local_heap = vm.local_data.len();
+    vm.local_data.push(Constant::Array(array));
+
+    frame.registers[dst_reg] = Cell::ArrayRef(idx_in_local_heap as u64);
     Ok(())
 }
 
-fn op_call_native(vm: &mut Flow) {
-    let frame = vm.current_frame_mut();
+fn op_call_native(vm: &mut Flow) -> VMResult<()> {
+    let frame = vm.current_frame_mut().ok_or(VMError::StackUnderflow)?;
     let _plugin_id = frame.read_u8();
     let _fun_id = frame.read_u8();
     let _args_reg = frame.read_u8();
     println!("CALL_NATIVE: Not implemented yet");
+    Ok(())
 }
 
 /// ------------------- DISPATCH TABLE -------------------
@@ -422,11 +587,11 @@ fn op_call_native(vm: &mut Flow) {
 const fn build_dispatch_table() -> [OpHandler; 256] {
     let mut table = [invalid_op as OpHandler; 256];
 
-    table[Op::LoadConst as usize] = op_load_const;
+    table[Op::LoadConst as usize] = op_load_from_globals;
     table[Op::Move as usize] = op_move;
     table[Op::Add as usize] = op_add;
-    table[Op::Subtract as usize] = op_subtract;
-    table[Op::Multiply as usize] = op_multiply;
+    table[Op::Subtract as usize] = op_sub;
+    table[Op::Multiply as usize] = op_mul;
     table[Op::Divide as usize] = op_divide;
 
     table[Op::Eq as usize] = op_eq;
