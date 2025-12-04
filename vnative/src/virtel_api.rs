@@ -1,25 +1,30 @@
-use ruwren::{wren_impl, wren_module, WrenObject};
+use ruwren::{foreign_v2::WrenString, wren_impl, wren_module, WrenObject};
 
 #[derive(WrenObject, Default)]
-struct System {
-    bar: f64,
-}
+pub struct Log {}
 #[wren_impl]
-impl System {
-    #[wren_impl(constructor)]
-    fn constructor(&self, bar: f64) -> Result<SystemInstance, String> {
-        Ok(SystemInstance { bar })
+impl Log {
+    fn info(&self, msg: WrenString) {
+        crate::log::log(crate::log::Log::Info, msg.into_string().unwrap().as_str());
     }
-    #[wren_impl(instance)]
-    fn instance(&self) -> f64 {
-        self.bar
+    fn success(&self, msg: WrenString) {
+        crate::log::log(
+            crate::log::Log::Success,
+            msg.into_string().unwrap().as_str(),
+        );
     }
-    fn static_fn(&self, num: f64) -> f64 {
-        num + 5.0
+    fn error(&self, msg: WrenString) {
+        crate::log::log(crate::log::Log::Error, msg.into_string().unwrap().as_str());
+    }
+    fn warning(&self, msg: WrenString) {
+        crate::log::log(
+            crate::log::Log::Warning,
+            msg.into_string().unwrap().as_str(),
+        );
     }
 }
 wren_module! {
     pub mod virtel {
-        pub crate::virtel_api::System;
+        pub crate::virtel_api::Log;
     }
 }

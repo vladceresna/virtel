@@ -111,7 +111,7 @@ impl VirtelCenter {
 
     pub fn run_app(&self, app_id: String) {
         let app = self.get_app_by_id(app_id);
-        app.on_create();
+        app.start();
     }
 
     pub fn scan_apps(&self) {

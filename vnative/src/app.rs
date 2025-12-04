@@ -15,20 +15,6 @@ use crate::{
 
 use serde::{Deserialize, Serialize};
 
-/// ------------------ Error type ----------------
-#[derive(Debug, Clone)]
-pub enum VMError {
-    StackUnderflow,
-    FrameError,
-    DivisionByZero,
-    InvalidOpcode,
-    HeapError(String),
-    UnknownFunction(usize),
-    FunctionError(String), // error on user side
-    NativeReferencesCastingError(String),
-}
-pub type VMResult<T> = Result<T, VMError>;
-
 /// ------------------- APP STRUCTURE -------------------
 
 #[derive(Debug)]
@@ -97,24 +83,24 @@ impl AppElement {
 
         let app_id = self.get_id();
 
-        let app_file_path = format!("{}/{}/{}.vxc", apps_dir, app_id, app_id);
-        let app_file = fs::read_to_string(&app_file_path).expect("Failed to read .vxc file");
+        let app_file_path = format!("{}/{}/code/app.wren", apps_dir, app_id);
+        let app_file = fs::read_to_string(&app_file_path).expect("Failed to read .wren file");
         {
             let mut app = self.data.write().unwrap();
             app.app_file = Some(app_file.clone());
         }
     }
 
-    pub fn on_create(&self) {
+    pub fn start(&self) {
         self.load_code_from_disk();
         log(
             Log::Info,
             format!("App created: {}", self.get_id()).as_str(),
         );
         self.set_status(AppStatus::Running);
-        self.start_flow_from_function("on_create");
+        self.start_flow_from_function("start");
     }
-    pub fn on_destroy(&self) {
+    pub fn destroy(&self) {
         println!("App {} destroyed.", self.get_id());
         self.set_status(AppStatus::Stopped);
     }
@@ -128,11 +114,11 @@ impl AppElement {
 
         vm.interpret("main", app_file).unwrap();
         vm.execute(|vm| {
-            vm.ensure_slots(2);
+            vm.ensure_slots(1);
             vm.get_variable("main", "VirtelApp", 0);
-            vm.set_slot_double(1, 0.016);
         });
-        vm.call(FunctionSignature::new_function(name, 0));
+        vm.call(FunctionSignature::new_function(name, 0))
+            .expect("Error with function calling");
     }
     pub fn install_app(path_to_lpp: String) {
         todo!();
@@ -147,10 +133,42 @@ mod tests {
     fn it_works() {
         let app = AppElement::new("vladceresna.virtel.launcher".to_string());
 
-        app.on_create();
+        app.start();
 
-        app.on_destroy();
+        app.destroy();
 
         assert_eq!(4, 4);
+    }
+    #[test]
+    fn wren_works() {
+        let app_file_path =
+            "/home/vladceresna/.virtel/0/sys/apps/vladceresna.virtel.launcher/code/app.wren"
+                .to_string();
+        let app_file = fs::read_to_string(&app_file_path).expect("Failed to read .wren file");
+
+        let mut lib = ModuleLibrary::new();
+        virtel::publish_module(&mut lib);
+
+        let vm = VMConfig::new().library(&lib).build();
+        vm.interpret(
+            "virtel",
+            r#"
+            class Log {
+                foreign static info(msg)
+                foreign static success(msg)
+                foreign static error(msg)
+                foreign static warning(msg)
+            }
+            "#,
+        )
+        .unwrap();
+        vm.interpret("main", app_file)
+            .expect("Error with interpreting app_file");
+        vm.execute(|vm| {
+            vm.ensure_slots(1);
+            vm.get_variable("main", "VirtelApp", 0);
+        });
+        vm.call(FunctionSignature::new_function("start", 0))
+            .expect("Error with function calling");
     }
 }
