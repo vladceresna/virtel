@@ -9,6 +9,7 @@ mod net;
 mod permissions;
 mod settings;
 mod tokio_setup;
+mod virtel_api;
 //code
 
 fn add(a: u32, b: u32) -> u32 {

@@ -1,4 +1,4 @@
-use ruwren::{FunctionSignature, VMConfig};
+use ruwren::{FunctionSignature, ModuleLibrary, VMConfig};
 use std::{
     fs,
     sync::{Arc, RwLock},
@@ -10,6 +10,7 @@ use crate::{
     log::{log, Log},
     permissions::Permissions,
     tokio_setup::get_tokio,
+    virtel_api::virtel,
 };
 
 use serde::{Deserialize, Serialize};
@@ -120,16 +121,18 @@ impl AppElement {
     pub fn start_flow_from_function(&self, name: &str) {
         let app_file = { self.data.read().unwrap().app_file.clone().unwrap() };
 
-        let vm = VMConfig::new().build();
+        let mut lib = ModuleLibrary::new();
+        virtel::publish_module(&mut lib);
+
+        let vm = VMConfig::new().library(&lib).build();
 
         vm.interpret("main", app_file).unwrap();
-        let handle = vm.make_call_handle(FunctionSignature::new_function(name, 0));
         vm.execute(|vm| {
             vm.ensure_slots(2);
             vm.get_variable("main", "VirtelApp", 0);
             vm.set_slot_double(1, 0.016);
         });
-        vm.call_handle(&handle);
+        vm.call(FunctionSignature::new_function(name, 0));
     }
     pub fn install_app(path_to_lpp: String) {
         todo!();
