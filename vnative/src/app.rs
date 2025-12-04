@@ -10,7 +10,7 @@ use crate::{
     log::{log, Log},
     permissions::Permissions,
     tokio_setup::get_tokio,
-    virtel_api::virtel,
+    virtel_api::{virtel, virtel_api_wren_bindings},
 };
 
 use serde::{Deserialize, Serialize};
@@ -31,6 +31,7 @@ pub struct AppConfig {
     name: String,
     version: String,
     icon_path: String,
+    main_class: String,
 }
 pub struct App {
     app_config: AppConfig,    // config.json
@@ -71,6 +72,9 @@ impl AppElement {
     pub fn get_version(&self) -> String {
         self.data.read().unwrap().app_config.version.clone()
     }
+    pub fn get_main_class(&self) -> String {
+        self.data.read().unwrap().app_config.main_class.clone()
+    }
     fn set_status(&self, status: AppStatus) {
         self.data.write().unwrap().status = status
     }
@@ -109,15 +113,17 @@ impl AppElement {
 
         let mut lib = ModuleLibrary::new();
         virtel::publish_module(&mut lib);
-
         let vm = VMConfig::new().library(&lib).build();
 
-        vm.interpret("main", app_file).unwrap();
+        vm.interpret("virtel", virtel_api_wren_bindings()).unwrap();
+
+        vm.interpret("main", app_file)
+            .expect("Error with interpreting app_file");
         vm.execute(|vm| {
             vm.ensure_slots(1);
-            vm.get_variable("main", "VirtelApp", 0);
+            vm.get_variable("main", self.get_main_class(), 0);
         });
-        vm.call(FunctionSignature::new_function(name, 0))
+        vm.call(FunctionSignature::new_function("start", 0))
             .expect("Error with function calling");
     }
     pub fn install_app(path_to_lpp: String) {
@@ -127,6 +133,8 @@ impl AppElement {
 
 #[cfg(test)]
 mod tests {
+
+    use crate::virtel_api::{self, virtel_api_wren_bindings};
 
     use super::*;
     #[test]
@@ -150,23 +158,12 @@ mod tests {
         virtel::publish_module(&mut lib);
 
         let vm = VMConfig::new().library(&lib).build();
-        vm.interpret(
-            "virtel",
-            r#"
-            class Log {
-                foreign static info(msg)
-                foreign static success(msg)
-                foreign static error(msg)
-                foreign static warning(msg)
-            }
-            "#,
-        )
-        .unwrap();
+        vm.interpret("virtel", virtel_api_wren_bindings()).unwrap();
         vm.interpret("main", app_file)
             .expect("Error with interpreting app_file");
         vm.execute(|vm| {
             vm.ensure_slots(1);
-            vm.get_variable("main", "VirtelApp", 0);
+            vm.get_variable("main", "MyApp", 0);
         });
         vm.call(FunctionSignature::new_function("start", 0))
             .expect("Error with function calling");

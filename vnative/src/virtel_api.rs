@@ -26,5 +26,41 @@ impl Log {
 wren_module! {
     pub mod virtel {
         pub crate::virtel_api::Log;
+        pub crate::virtel_api::VirtelApp;
+        pub crate::virtel_api::VirtelPlugin;
     }
+}
+
+#[derive(WrenObject, Default)]
+pub struct VirtelApp {}
+#[wren_impl]
+impl VirtelApp {
+    fn start(&self) {
+        println!("Rust: Base VirtelApp.start() called. Did you forget to override it?");
+    }
+}
+#[derive(WrenObject, Default)]
+pub struct VirtelPlugin {}
+#[wren_impl]
+impl VirtelPlugin {
+    fn start(&self) {
+        println!("Rust: Base VirtelApp.start() called. Did you forget to override it?");
+    }
+}
+
+pub fn virtel_api_wren_bindings() -> &'static str {
+    return r#"
+class Log {
+    foreign static info(msg)
+    foreign static success(msg)
+    foreign static error(msg)
+    foreign static warning(msg)
+}
+class VirtelApp {
+    foreign static start()
+}
+class VirtelPlugin {
+    foreign static start()
+}
+"#;
 }
