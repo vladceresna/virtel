@@ -6,11 +6,11 @@ use std::{
 use tokio::task::JoinHandle;
 
 use crate::{
+    api::get_ready_apied_vm,
     center::get_virtel_center,
     log::{log, Log},
     permissions::Permissions,
     tokio_setup::get_tokio,
-    virtel_api::{virtel, virtel_api_wren_bindings},
 };
 
 use serde::{Deserialize, Serialize};
@@ -109,13 +109,17 @@ impl AppElement {
         self.set_status(AppStatus::Stopped);
     }
     pub fn start_flow_from_function(&self, name: &str) {
+        let apps_dir = get_virtel_center()
+            .get_settings()
+            .filesystem
+            .apps_dir
+            .clone();
+
+        let app_id = self.get_id();
+
         let app_file = { self.data.read().unwrap().app_file.clone().unwrap() };
 
-        let mut lib = ModuleLibrary::new();
-        virtel::publish_module(&mut lib);
-        let vm = VMConfig::new().library(&lib).build();
-
-        vm.interpret("virtel", virtel_api_wren_bindings()).unwrap();
+        let vm = get_ready_apied_vm(format!("{}/{}/code", apps_dir, app_id).as_str());
 
         vm.interpret("main", app_file)
             .expect("Error with interpreting app_file");
@@ -123,7 +127,7 @@ impl AppElement {
             vm.ensure_slots(1);
             vm.get_variable("main", self.get_main_class(), 0);
         });
-        vm.call(FunctionSignature::new_function("start", 0))
+        vm.call(FunctionSignature::new_function(name, 0))
             .expect("Error with function calling");
     }
     pub fn install_app(path_to_lpp: String) {
@@ -134,7 +138,7 @@ impl AppElement {
 #[cfg(test)]
 mod tests {
 
-    use crate::virtel_api::{self, virtel_api_wren_bindings};
+    use crate::api::{self, get_ready_apied_vm};
 
     use super::*;
     #[test]
@@ -154,11 +158,11 @@ mod tests {
                 .to_string();
         let app_file = fs::read_to_string(&app_file_path).expect("Failed to read .wren file");
 
-        let mut lib = ModuleLibrary::new();
-        virtel::publish_module(&mut lib);
+        let vm = get_ready_apied_vm(
+            format!("/home/vladceresna/.virtel/0/sys/apps/vladceresna.virtel.launcher/code")
+                .as_str(),
+        );
 
-        let vm = VMConfig::new().library(&lib).build();
-        vm.interpret("virtel", virtel_api_wren_bindings()).unwrap();
         vm.interpret("main", app_file)
             .expect("Error with interpreting app_file");
         vm.execute(|vm| {

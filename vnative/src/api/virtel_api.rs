@@ -1,5 +1,7 @@
 use ruwren::{foreign_v2::WrenString, wren_impl, wren_module, WrenObject};
 
+use crate::center::get_virtel_center;
+
 #[derive(WrenObject, Default)]
 pub struct Log {}
 #[wren_impl]
@@ -23,13 +25,6 @@ impl Log {
         );
     }
 }
-wren_module! {
-    pub mod virtel {
-        pub crate::virtel_api::Log;
-        pub crate::virtel_api::VirtelApp;
-        pub crate::virtel_api::VirtelPlugin;
-    }
-}
 
 #[derive(WrenObject, Default)]
 pub struct VirtelApp {}
@@ -44,7 +39,17 @@ pub struct VirtelPlugin {}
 #[wren_impl]
 impl VirtelPlugin {
     fn start(&self) {
-        println!("Rust: Base VirtelApp.start() called. Did you forget to override it?");
+        println!("Rust: Base VirtelPlugin.start() called. Did you forget to override it?");
+    }
+}
+
+#[derive(WrenObject, Default)]
+pub struct Center {}
+#[wren_impl]
+impl Center {
+    #[allow(non_snake_case)]
+    fn startApp(&self, id: WrenString) {
+        get_virtel_center().run_app(id.into_string().unwrap());
     }
 }
 
@@ -62,5 +67,17 @@ class VirtelApp {
 class VirtelPlugin {
     foreign static start()
 }
+class Center {
+    foreign static startApp(id)
+}
 "#;
+}
+
+wren_module! {
+    pub mod virtel {
+        pub crate::api::virtel_api::Log;
+        pub crate::api::virtel_api::VirtelApp;
+        pub crate::api::virtel_api::VirtelPlugin;
+        pub crate::api::virtel_api::Center;
+    }
 }
