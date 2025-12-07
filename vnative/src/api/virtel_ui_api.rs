@@ -3,39 +3,36 @@ use ruwren::{foreign_v2::WrenString, wren_impl, wren_module, WrenObject};
 use crate::center::get_virtel_center;
 
 #[derive(WrenObject, Default)]
-pub struct Window {
-    name: String,
-}
-
+pub struct UI {}
 #[wren_impl]
-impl Window {
-    #[wren_impl(constructor)]
-    fn new(&mut self, name: WrenString) -> Result<WindowInstance, String> {
-        Ok(WindowInstance {
-            name: name.into_string().unwrap(),
-        })
-    }
-
-    #[wren_impl(instance)]
-    fn show(&self) {
-        println!("Showing window named: {}", self.name);
+impl UI {
+    #[allow(non_snake_case)]
+    fn createWindow(&self, title: WrenString, width: i64, height: i64) -> String {
         get_virtel_center()
             .get_ui_api()
-            .create_window(self.name.clone(), 100, 100)
-            .unwrap();
+            .create_window(title.into_string().unwrap(), width, height)
+            .unwrap()
     }
+    // #[allow(non_snake_case)]
+    // fn showWindow(&self, id: WrenString) -> String {
+    //     get_virtel_center()
+    //         .get_ui_api()
+    //         .(id.into_string().unwrap(), width, height)
+    //         .unwrap()
+    // }
 }
 
 pub fn virtel_ui_api_wren_bindings() -> &'static str {
     return r#"
-foreign class Window {
-    construct new(name) {}
-    foreign show()
+class UI {
+    foreign static createWindow(title)
+    foreign static showWindow(id)
 }
 "#;
 }
+
 wren_module! {
     pub mod virtel_ui {
-        pub crate::api::virtel_ui_api::Window;
+        pub crate::api::virtel_ui_api::UI;
     }
 }

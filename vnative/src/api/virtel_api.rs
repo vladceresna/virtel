@@ -52,6 +52,17 @@ impl Center {
         get_virtel_center().run_app(id.into_string().unwrap());
     }
 }
+#[derive(WrenObject, Default)]
+pub struct Permissions {}
+#[wren_impl]
+impl Permissions {
+    #[allow(non_snake_case)]
+    fn request(&self, id: i64) {
+        get_virtel_center()
+    }
+    #[allow(non_snake_case)]
+    fn check(&self, id: i64) -> bool {}
+}
 
 pub fn virtel_api_wren_bindings() -> &'static str {
     return r#"
@@ -70,6 +81,10 @@ class VirtelPlugin {
 class Center {
     foreign static startApp(id)
 }
+class Permissions {
+    foreign static request(id)
+    foreign static check(id)
+}
 "#;
 }
 
@@ -79,5 +94,6 @@ wren_module! {
         pub crate::api::virtel_api::VirtelApp;
         pub crate::api::virtel_api::VirtelPlugin;
         pub crate::api::virtel_api::Center;
+        pub crate::api::virtel_api::Permissions;
     }
 }
