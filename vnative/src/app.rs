@@ -1,7 +1,9 @@
 use ruwren::{FunctionSignature, ModuleLibrary, VMConfig};
 use std::{
+    collections::HashSet,
     fs,
     sync::{Arc, RwLock},
+    thread,
 };
 use tokio::task::JoinHandle;
 
@@ -9,12 +11,26 @@ use crate::{
     api::get_ready_apied_vm,
     center::get_virtel_center,
     log::{log, Log},
-    permissions::Permissions,
     tokio_setup::get_tokio,
 };
 
 use serde::{Deserialize, Serialize};
 
+use std::cell::RefCell;
+use std::thread_local;
+
+// --- Now we know app_id in foreign bindings from Rust to Wren ----
+thread_local! {
+    static CURRENT_APP_ID: RefCell<Option<String>> = RefCell::new(None);
+}
+pub fn set_current_app_id(app_id: &str) {
+    CURRENT_APP_ID.with(|id| {
+        *id.borrow_mut() = Some(app_id.to_string());
+    });
+}
+pub fn get_current_app_id() -> Option<String> {
+    CURRENT_APP_ID.with(|id| id.borrow().clone())
+}
 /// ------------------- APP STRUCTURE -------------------
 
 #[derive(Debug)]
@@ -37,7 +53,7 @@ pub struct App {
     app_config: AppConfig,    // config.json
     app_file: Option<String>, // {app_id}.wren
     status: AppStatus,
-    permissions: Permissions,
+    permissions: HashSet<i64>,
 }
 pub struct AppElement {
     data: RwLock<App>,
@@ -59,7 +75,7 @@ impl AppElement {
                 app_config: app_config,
                 app_file: None,
                 status: AppStatus::Stopped,
-                permissions: Permissions::new(),
+                permissions: HashSet::new(),
             }),
         }
     }
@@ -109,6 +125,7 @@ impl AppElement {
         self.set_status(AppStatus::Stopped);
     }
     pub fn start_flow_from_function(&self, name: &str) {
+        let main_class = self.get_main_class();
         let apps_dir = get_virtel_center()
             .get_settings()
             .filesystem
@@ -119,19 +136,32 @@ impl AppElement {
 
         let app_file = { self.data.read().unwrap().app_file.clone().unwrap() };
 
-        let vm = get_ready_apied_vm(format!("{}/{}/code", apps_dir, app_id).as_str());
+        let name = name.to_string();
 
-        vm.interpret("main", app_file)
-            .expect("Error with interpreting app_file");
-        vm.execute(|vm| {
-            vm.ensure_slots(1);
-            vm.get_variable("main", self.get_main_class(), 0);
+        thread::spawn(move || {
+            set_current_app_id(&app_id);
+
+            let vm = get_ready_apied_vm(format!("{}/{}/code", apps_dir, app_id).as_str());
+
+            vm.interpret("main", app_file)
+                .expect("Error with interpreting app_file");
+            vm.execute(|vm| {
+                vm.ensure_slots(1);
+                vm.get_variable("main", main_class, 0);
+            });
+
+            vm.call(FunctionSignature::new_function(name, 0))
+                .expect("Error with function calling");
         });
-        vm.call(FunctionSignature::new_function(name, 0))
-            .expect("Error with function calling");
     }
     pub fn install_app(path_to_lpp: String) {
         todo!();
+    }
+    pub fn request_permissions(&self, id: i64) {
+        self.data.write().unwrap().permissions.insert(id);
+    }
+    pub fn check_permissions(&self, id: i64) -> bool {
+        self.data.read().unwrap().permissions.contains(&id)
     }
 }
 

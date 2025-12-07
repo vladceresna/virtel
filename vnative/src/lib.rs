@@ -7,7 +7,6 @@ mod apps;
 mod center;
 mod log;
 mod net;
-mod permissions;
 mod settings;
 mod tokio_setup;
 //code

@@ -42,7 +42,7 @@ pub fn get_virtel_center() -> Arc<VirtelCenter> {
 
 static VIRTEL_CENTER: Lazy<Arc<VirtelCenter>> = Lazy::new(|| Arc::new(VirtelCenter::new()));
 
-struct VirtelCenterData {
+pub struct VirtelCenterData {
     apps: Vec<Arc<AppElement>>,
     ui_api: Option<Arc<dyn UiApi>>,
     system_api: Option<Arc<dyn SystemApi>>,
@@ -149,7 +149,7 @@ mod tests {
         let vc2 = Arc::clone(&vc);
 
         let thread = std::thread::spawn(move || {
-            vc2.lock().unwrap();
+            vc2.lock().unwrap().get_settings();
         });
 
         for _ in 0..5 {

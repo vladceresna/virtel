@@ -1,27 +1,37 @@
 use ruwren::{foreign_v2::WrenString, wren_impl, wren_module, WrenObject};
 
-use crate::center::get_virtel_center;
+use crate::{app::get_current_app_id, center::get_virtel_center};
 
 #[derive(WrenObject, Default)]
 pub struct Log {}
 #[wren_impl]
 impl Log {
     fn info(&self, msg: WrenString) {
-        crate::log::log(crate::log::Log::Info, msg.into_string().unwrap().as_str());
+        let app_id = get_current_app_id().unwrap_or("unknown".to_string());
+        crate::log::log(
+            crate::log::Log::Info,
+            format!("[{}] {}", app_id, msg.into_string().unwrap()).as_str(),
+        );
     }
     fn success(&self, msg: WrenString) {
+        let app_id = get_current_app_id().unwrap_or("unknown".to_string());
         crate::log::log(
             crate::log::Log::Success,
-            msg.into_string().unwrap().as_str(),
+            format!("[{}] {}", app_id, msg.into_string().unwrap()).as_str(),
         );
     }
     fn error(&self, msg: WrenString) {
-        crate::log::log(crate::log::Log::Error, msg.into_string().unwrap().as_str());
+        let app_id = get_current_app_id().unwrap_or("unknown".to_string());
+        crate::log::log(
+            crate::log::Log::Error,
+            format!("[{}] {}", app_id, msg.into_string().unwrap()).as_str(),
+        );
     }
     fn warning(&self, msg: WrenString) {
+        let app_id = get_current_app_id().unwrap_or("unknown".to_string());
         crate::log::log(
             crate::log::Log::Warning,
-            msg.into_string().unwrap().as_str(),
+            format!("[{}] {}", app_id, msg.into_string().unwrap()).as_str(),
         );
     }
 }
@@ -58,10 +68,16 @@ pub struct Permissions {}
 impl Permissions {
     #[allow(non_snake_case)]
     fn request(&self, id: i64) {
-        get_virtel_center()
+        let app_id = get_current_app_id().unwrap_or("unknown".to_string());
+        let app = get_virtel_center().get_app_by_id(app_id);
+        app.request_permissions(id);
     }
     #[allow(non_snake_case)]
-    fn check(&self, id: i64) -> bool {}
+    fn check(&self, id: i64) -> bool {
+        let app_id = get_current_app_id().unwrap_or("unknown".to_string());
+        let app = get_virtel_center().get_app_by_id(app_id);
+        app.check_permissions(id)
+    }
 }
 
 pub fn virtel_api_wren_bindings() -> &'static str {
