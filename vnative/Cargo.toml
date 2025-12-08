@@ -14,7 +14,7 @@ once_cell = "1.21.3"
 
 tokio = { version = "1.48.0", features = ["full"] }
 hyper = "1.8.1"
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 
 percent-encoding = "2.3.2"
 
@@ -26,3 +26,4 @@ ruwren = "0.4.10"
 
 [build-dependencies]
 uniffi = { version = "0.29.4", features = ["build"] }
+

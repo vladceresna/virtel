@@ -1,9 +1,7 @@
 package com.vladceresna.virtel
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.*
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladceresna.virtel.api.SystemApiImpl
 import com.vladceresna.virtel.api.UiApiImpl
 import com.vladceresna.virtel.screens.LoadingScreen
@@ -20,14 +18,16 @@ fun App(){
     var isLoading by remember { mutableStateOf(true) }
     Box {
         LaunchedEffect(Unit) {
-            delay(500)
+            delay(200)
             //after first recomposition only
+            val virtelCenter = getVirtelCenter()
             CoroutineScope(Job()).launch {
-                val virtelCenter = getVirtelCenter()
-                virtelCenter.initialize(UiApiImpl(), SystemApiImpl())
-                virtelCenter.runApp("launcher.virtel.vladceresna")
+                delay(100)
                 isLoading = false
             }
+            Thread {
+                virtelCenter.initialize(UiApiImpl(), SystemApiImpl())
+            }.start()
         }
         AppTheme(
             dynamicColor = true

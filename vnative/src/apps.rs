@@ -8,7 +8,9 @@ use crate::center::get_virtel_center;
 use crate::net::{fetch, FetchResult, RequestBody, ResponseBody};
 
 pub fn prepare_apps() {
+    println!("prepare apps 1");
     if !is_app_installed("vladceresna.virtel.launcher") {
+        println!("installed");
         let (_, launcher) = fetch(
             "https://virtel.netlify.app/std-apps/4.0.0/vladceresna.virtel.launcher.vc".to_string(),
             Method::GET,
@@ -21,6 +23,7 @@ pub fn prepare_apps() {
             install_app("vladceresna.virtel.launcher", bytecode).unwrap();
         }
     }
+    println!("prepare apps 2");
 }
 
 pub fn is_app_installed(app_id: &str) -> bool {

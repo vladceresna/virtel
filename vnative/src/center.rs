@@ -58,6 +58,7 @@ pub struct VirtelCenter {
 impl VirtelCenter {
     #[uniffi::constructor]
     pub fn new() -> VirtelCenter {
+        println!("constructor");
         VirtelCenter {
             data: Mutex::new(VirtelCenterData {
                 apps: Vec::new(),
@@ -68,6 +69,7 @@ impl VirtelCenter {
         }
     }
     pub fn initialize(&self, ui_api: Arc<dyn UiApi>, system_api: Arc<dyn SystemApi>) {
+        println!("initialize");
         {
             let mut data = self.data.lock().unwrap();
             data.ui_api = Some(ui_api);
@@ -110,11 +112,14 @@ impl VirtelCenter {
     }
 
     pub fn run_app(&self, app_id: String) {
+        println!("run app");
         let app = self.get_app_by_id(app_id);
         app.start();
+        println!("run app 2");
     }
 
     pub fn scan_apps(&self) {
+        println!("scan apps");
         let mut data = self.data.lock().unwrap();
         let apps_dir = data.settings.filesystem.apps_dir.clone();
 
@@ -130,6 +135,7 @@ impl VirtelCenter {
             let app = Arc::new(AppElement::new(app_id));
             data.apps.push(app);
         }
+        println!("scan apps 2");
     }
 }
 
