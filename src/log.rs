@@ -24,12 +24,10 @@ pub fn log(log_type: Log, content: &str) {
     };
     log_str(format!("[{}] {}", log_type, content).as_str());
 }
-#[uniffi::export]
 pub fn log_str(content: &str) {
     log_at_os(content);
     push_to_log(content);
 }
-#[uniffi::export]
 pub fn snapshot_log() -> Vec<String> {
     get_logger().lock().expect("Error Logger locking").clone()
 }
