@@ -12,7 +12,7 @@ use crate::{
     settings::{FileSystem, Settings},
 };
 
-#[derive(Debug, uniffi::Error)]
+//#[derive(Debug, uniffi::Error)]
 pub enum VirtelError {
     Message(String),
 }
@@ -24,18 +24,18 @@ impl fmt::Display for VirtelError {
     }
 }
 
-#[uniffi::export(with_foreign)]
+//#[uniffi::export(with_foreign)]
 pub trait UiApi: Send + Sync + Debug {
     fn create_window(&self, title: String, width: i64, height: i64) -> Result<String, VirtelError>;
     fn put_box(&self, node: String, id: String) -> Result<String, VirtelError>;
 }
 
-#[uniffi::export(with_foreign)]
+//#[uniffi::export(with_foreign)]
 pub trait SystemApi: Send + Sync + Debug {
     fn get_os_home_dir(&self) -> Result<String, VirtelError>;
 }
 
-#[uniffi::export]
+//#[uniffi::export]
 pub fn get_virtel_center() -> Arc<VirtelCenter> {
     Arc::clone(&VIRTEL_CENTER)
 }
@@ -49,14 +49,14 @@ pub struct VirtelCenterData {
     settings: Arc<Settings>,
 }
 
-#[derive(uniffi::Object)]
+//#[derive(uniffi::Object)]
 pub struct VirtelCenter {
     pub data: Mutex<VirtelCenterData>,
 }
 
-#[uniffi::export]
+//#[uniffi::export]
 impl VirtelCenter {
-    #[uniffi::constructor]
+    //#[uniffi::constructor]
     pub fn new() -> VirtelCenter {
         println!("constructor");
         VirtelCenter {

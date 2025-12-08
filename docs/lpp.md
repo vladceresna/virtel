@@ -1,8 +1,8 @@
 # Virtel File Execution Docs
 ### ------ installer ------
-- .lpp - as zip or apk
-- .json - as manifest
-- .wren - wren source code
+- application_1.0.0.lpp - as zip or apk
+- config.json - as manifest
+- code/app.wren - wren source code
 ### ------ development ----
 - .wren - Wren
 ### ==== compiled to Wren ====
