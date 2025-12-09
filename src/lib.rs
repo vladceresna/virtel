@@ -147,7 +147,7 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
             } => {
                 log_now(&format!("OS: [Event] CreateWindow {}", app_id));
 
-                let surface =
+                let mut surface =
                     &mut skia_safe::surfaces::raster_n32_premul((width as i32, height as i32))
                         .expect("Failed to create app surface");
 
@@ -156,12 +156,12 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
 
                     canvas.clear(Color::WHITE);
 
-                    // Заголовок
+                    // Header
                     let mut header_paint = Paint::default();
                     header_paint.set_color(Color::LIGHT_GRAY);
                     canvas.draw_rect(Rect::from_xywh(0.0, 0.0, width as f32, 30.0), &header_paint);
 
-                    // Текст
+                    // Text
                     if let Some(fonts) = &self.font_engine {
                         fonts.draw_text(surface, &title, 10.0, 5.0, Color::BLACK, 20.0);
                         fonts.draw_text(
@@ -173,12 +173,11 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                             16.0,
                         );
                     }
-                } // s умирает здесь, изменения остаются в surface
+                }
 
-                let s = *&*surface;
                 let app_win = VirtualAppWindow {
                     rect: Rect::from_xywh(50.0, 50.0, width as f32, height as f32),
-                    surface: s,
+                    surface: surface.clone(),
                     title,
                 };
                 self.app_windows.insert(app_id, app_win);
@@ -193,7 +192,6 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                 color: _,
             } => {
                 if let Some(app_win) = self.app_windows.get_mut(&app_id) {
-                    // Тот же трюк: клонируем хендл, чтобы получить чистый мутабельный доступ
                     let mut s = app_win.surface.clone();
                     let canvas = s.canvas();
 
@@ -311,14 +309,12 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                 {
                     let info = screen_surface.image_info();
                     {
-                        // Трюк с клонированием для главного экрана тоже работает, если что
                         let mut s = screen_surface.clone();
                         let canvas = s.canvas();
 
                         canvas.clear(Color::DARK_GRAY);
 
                         for (_id, app_win) in &mut self.app_windows {
-                            // Клонируем поверхность приложения для чтения (snapshot)
                             let mut app_s = app_win.surface.clone();
                             let image = app_s.image_snapshot();
 

@@ -61,18 +61,8 @@ pub struct AppElement {
 }
 impl AppElement {
     pub fn new(app_id: String, apps_dir: &str) -> Self {
-        // УДАЛЯЕМ обращение к get_virtel_center()
-        /*
-        let apps_dir = get_virtel_center()
-            .get_settings()
-            .filesystem
-            .apps_dir
-            .clone();
-        */
-
         let this_app_config = format!("{}/{}/config.json", apps_dir, app_id);
 
-        // Добавь проверку, существует ли файл, чтобы не паниковать
         let this_app_config_content = std::fs::read_to_string(&this_app_config)
             .unwrap_or_else(|_| panic!("Config not found: {}", this_app_config));
 

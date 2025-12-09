@@ -29,6 +29,16 @@ impl FontEngine {
         let mut text_style = TextStyle::new();
         text_style.set_font_size(font_size);
         text_style.set_color(color);
+        text_style.set_font_families(&[
+            "sans-serif",
+            "Cantarell",   // Fedora / GNOME default
+            "DejaVu Sans", // Linux
+            "Liberation Sans",
+            "Ubuntu",
+            "Noto Sans",
+            "Roboto",
+            "Arial",
+        ]);
 
         let mut paragraph_style = ParagraphStyle::new();
         paragraph_style.set_text_style(&text_style);
@@ -38,6 +48,13 @@ impl FontEngine {
 
         let mut paragraph = builder.build();
         paragraph.layout(f32::INFINITY);
+
+        println!(
+            "Text layout size: {}x{}",
+            paragraph.max_width(),
+            paragraph.height()
+        );
+
         paragraph.paint(surface.canvas(), Point::new(x, y));
     }
 }

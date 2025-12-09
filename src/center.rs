@@ -127,9 +127,8 @@ impl VirtelCenter {
         let mut data = self.data.lock().unwrap();
         let apps_dir = data.settings.filesystem.apps_dir.clone();
 
-        // 2. Читаем папку (это можно делать и под локом, и без, но путь нам нужен)
         let entries = fs::read_dir(&apps_dir)
-            .unwrap() // Тут может упасть, если папки нет, лучше обработать ошибку
+            .unwrap()
             .filter_map(|entry| entry.ok())
             .filter(|entry| entry.path().is_dir())
             .filter_map(|entry| entry.file_name().into_string().ok())
@@ -139,7 +138,6 @@ impl VirtelCenter {
 
         for app_id in entries {
             println!("Found app: {}", app_id);
-            // 3. Передаем apps_dir внутрь, чтобы AppElement не лез в глобальный лок
             let app = Arc::new(AppElement::new(app_id, &apps_dir));
             data.apps.push(app);
         }

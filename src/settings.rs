@@ -1,8 +1,5 @@
 use std::path::{Path, PathBuf};
 
-// Удаляем зависимость от center, чтобы не было Deadlock
-// use crate::center::get_virtel_center;
-
 pub struct Settings {
     pub filesystem: FileSystem,
 }
@@ -23,11 +20,8 @@ pub struct FileSystem {
 
 impl FileSystem {
     pub fn new() -> Self {
-        // ИСПРАВЛЕНИЕ: Получаем HOME напрямую через std::env,
-        // не обращаясь к get_virtel_center()
         let home_str = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
 
-        // Для Android логика может быть другой, но пока чиним Десктоп
         // #[cfg(target_os = "android")]
         // let home_str = ...;
 
@@ -36,10 +30,9 @@ impl FileSystem {
         let apps_dir = format!("{}/sys/apps", virtel_dir);
         let settings_file = format!("{}/sys/settings.json", virtel_dir);
 
-        // Создаем папки
         let apps_path = Path::new(&apps_dir);
         if !apps_path.exists() {
-            // Используем match или unwrap_or_else, чтобы не крэшить программу жестко
+            //unwrap_or_else
             if let Err(e) = std::fs::create_dir_all(&apps_dir) {
                 eprintln!(
                     "CRITICAL: Failed to create virtel directory {}: {}",
@@ -50,7 +43,7 @@ impl FileSystem {
             }
         }
 
-        // Также желательно создать саму папку .virtel/0, если её нет
+        // .virtel/0
         if !Path::new(&virtel_dir).exists() {
             let _ = std::fs::create_dir_all(&virtel_dir);
         }
