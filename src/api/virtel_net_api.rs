@@ -32,7 +32,7 @@ class HttpClient {
 "#
 }
 wren_module! {
-    pub mod virtel_net {
+    pub mod virtelnet {
         pub crate::api::virtel_net_api::HttpClient;
     }
 }

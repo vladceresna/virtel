@@ -1,8 +1,6 @@
-use std::fs;
-
-use ruwren::{foreign_v2::WrenString, wren_impl, wren_module, WrenObject};
-
 use crate::center::get_virtel_center;
+use ruwren::{foreign_v2::WrenString, wren_impl, wren_module, WrenObject};
+use std::fs;
 
 fn get_full_os_path(path: String) -> String {
     let virtel = get_virtel_center()
@@ -15,32 +13,39 @@ fn get_full_os_path(path: String) -> String {
 
 #[derive(WrenObject, Default)]
 pub struct FS {}
+
 #[wren_impl]
 impl FS {
-    #[allow(non_snake_case)]
     fn readFile(&self, path: WrenString) -> String {
         let path = get_full_os_path(path.into_string().unwrap());
-        fs::read_to_string(path).unwrap()
+        fs::read_to_string(&path).unwrap_or_else(|_| String::new())
     }
-    #[allow(non_snake_case)]
+
     fn writeFile(&self, path: WrenString, content: WrenString) {
-        let path = get_full_os_path(path.into_string().unwrap());
-        fs::write(get_full_os_path(path), content.into_string().unwrap()).unwrap();
+        let path_str = path.into_string().unwrap();
+        let content_str = content.into_string().unwrap();
+        let full_path = get_full_os_path(path_str);
+        if let Some(parent) = std::path::Path::new(&full_path).parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        if let Err(e) = fs::write(&full_path, content_str) {
+            eprintln!("FS Error writing to {}: {}", full_path, e);
+        }
     }
-    #[allow(non_snake_case)]
+
     fn existsPath(&self, path: WrenString) -> bool {
         let path = get_full_os_path(path.into_string().unwrap());
-        fs::exists(path).unwrap()
+        std::path::Path::new(&path).exists()
     }
-    #[allow(non_snake_case)]
+
     fn createPath(&self, path: WrenString) {
         let path = get_full_os_path(path.into_string().unwrap());
-        fs::create_dir_all(path).unwrap()
+        let _ = fs::create_dir_all(path);
     }
-    #[allow(non_snake_case)]
+
     fn deletePath(&self, path: WrenString) {
         let path = get_full_os_path(path.into_string().unwrap());
-        fs::remove_dir_all(path).unwrap()
+        let _ = fs::remove_dir_all(path);
     }
 }
 
@@ -57,7 +62,7 @@ class FS {
 }
 
 wren_module! {
-    pub mod virtel_fs {
+    pub mod virtelfs {
         pub crate::api::virtel_fs_api::FS;
     }
 }

@@ -12,7 +12,7 @@ use crate::{
     settings::{FileSystem, Settings},
 };
 
-//#[derive(Debug, uniffi::Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum VirtelError {
     Message(String),
 }
@@ -24,7 +24,6 @@ impl fmt::Display for VirtelError {
     }
 }
 
-//#[uniffi::export(with_foreign)]
 pub trait UiApi: Send + Sync + Debug {
     fn create_window(&self, title: String, width: i64, height: i64) -> Result<String, VirtelError>;
     fn put_box(&self, node: String, id: String) -> Result<String, VirtelError>;
@@ -114,25 +113,34 @@ impl VirtelCenter {
     pub fn run_app(&self, app_id: String) {
         println!("run app");
         let app = self.get_app_by_id(app_id);
-        app.start();
+        let apps_dir = {
+            let data = self.data.lock().unwrap();
+            data.settings.filesystem.apps_dir.clone()
+        };
+        app.start(&apps_dir);
         println!("run app 2");
     }
 
     pub fn scan_apps(&self) {
         println!("scan apps");
+
         let mut data = self.data.lock().unwrap();
         let apps_dir = data.settings.filesystem.apps_dir.clone();
 
+        // 2. Читаем папку (это можно делать и под локом, и без, но путь нам нужен)
         let entries = fs::read_dir(&apps_dir)
-            .unwrap()
+            .unwrap() // Тут может упасть, если папки нет, лучше обработать ошибку
             .filter_map(|entry| entry.ok())
-            .filter(|entry| entry.path().is_dir()) // only folders
-            .filter_map(|entry| entry.file_name().into_string().ok()) // folder name = app_id
+            .filter(|entry| entry.path().is_dir())
+            .filter_map(|entry| entry.file_name().into_string().ok())
             .collect::<Vec<_>>();
 
         data.apps.clear();
+
         for app_id in entries {
-            let app = Arc::new(AppElement::new(app_id));
+            println!("Found app: {}", app_id);
+            // 3. Передаем apps_dir внутрь, чтобы AppElement не лез в глобальный лок
+            let app = Arc::new(AppElement::new(app_id, &apps_dir));
             data.apps.push(app);
         }
         println!("scan apps 2");

@@ -9,6 +9,7 @@ use tokio::task::JoinHandle;
 
 use crate::{
     api::get_ready_apied_vm,
+    app,
     center::get_virtel_center,
     log::{log, Log},
     tokio_setup::get_tokio,
@@ -59,16 +60,23 @@ pub struct AppElement {
     data: RwLock<App>,
 }
 impl AppElement {
-    pub fn new(app_id: String) -> Self {
+    pub fn new(app_id: String, apps_dir: &str) -> Self {
+        // УДАЛЯЕМ обращение к get_virtel_center()
+        /*
         let apps_dir = get_virtel_center()
             .get_settings()
             .filesystem
             .apps_dir
             .clone();
+        */
 
         let this_app_config = format!("{}/{}/config.json", apps_dir, app_id);
-        let this_app_config_content = fs::read_to_string(this_app_config).unwrap();
-        let app_config: AppConfig = serde_json::from_str(this_app_config_content.as_str()).unwrap();
+
+        // Добавь проверку, существует ли файл, чтобы не паниковать
+        let this_app_config_content = std::fs::read_to_string(&this_app_config)
+            .unwrap_or_else(|_| panic!("Config not found: {}", this_app_config));
+
+        let app_config: AppConfig = serde_json::from_str(&this_app_config_content).unwrap();
 
         Self {
             data: RwLock::new(App {
@@ -94,13 +102,7 @@ impl AppElement {
     fn set_status(&self, status: AppStatus) {
         self.data.write().unwrap().status = status
     }
-    pub fn load_code_from_disk(&self) {
-        let apps_dir = get_virtel_center()
-            .get_settings()
-            .filesystem
-            .apps_dir
-            .clone();
-
+    pub fn load_code_from_disk(&self, apps_dir: &str) {
         let app_id = self.get_id();
 
         let app_file_path = format!("{}/{}/code/app.wren", apps_dir, app_id);
@@ -111,8 +113,8 @@ impl AppElement {
         }
     }
 
-    pub fn start(&self) {
-        self.load_code_from_disk();
+    pub fn start(&self, apps_dir: &str) {
+        self.load_code_from_disk(apps_dir);
         log(
             Log::Info,
             format!("App created: {}", self.get_id()).as_str(),
@@ -173,9 +175,10 @@ mod tests {
     use super::*;
     #[test]
     fn it_works() {
-        let app = AppElement::new("vladceresna.virtel.launcher".to_string());
+        let apps_dir = "/home/vladceresna/.virtel/0/sys/apps";
+        let app = AppElement::new("vladceresna.virtel.launcher".to_string(), &apps_dir);
 
-        app.start();
+        app.start(&apps_dir);
 
         app.destroy();
 

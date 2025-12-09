@@ -8,6 +8,7 @@ pub struct UI {}
 impl UI {
     #[allow(non_snake_case)]
     fn createWindow(&self, title: WrenString, width: i64, height: i64) -> String {
+        println!("createWindow");
         get_virtel_center()
             .get_ui_api()
             .create_window(title.into_string().unwrap(), width, height)
@@ -25,14 +26,13 @@ impl UI {
 pub fn virtel_ui_api_wren_bindings() -> &'static str {
     return r#"
 class UI {
-    foreign static createWindow(title)
-    foreign static showWindow(id)
+    foreign static createWindow(title, width, height)
 }
 "#;
 }
 
 wren_module! {
-    pub mod virtel_ui {
+    pub mod virtelui {
         pub crate::api::virtel_ui_api::UI;
     }
 }

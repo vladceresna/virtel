@@ -2,11 +2,11 @@
 name = "virtel"
 version = "4.0.0"                                   #alpha
 authors = ["Vlad Ĉereŝna <vladceresna6@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "virtel"
-crate-type = ["lib", "staticlib", "cdylib", "rlib"]
+path = "src/lib.rs"
 
 
 [[bin]]
@@ -15,8 +15,15 @@ path = "gen/bin/desktop.rs"
 
 [dependencies]
 
+skia-safe = { version = "0.89.1", features = [
+    "gl",
+    "binary-cache",
+    "textlayout",
+] }
 winit = { version = "0.30", features = ["android-native-activity"] }
-skia-safe = { version = "0.89.1", features = ["gl", "vulkan", "binary-cache"] }
+wgpu = "27.0.1"
+pollster = "0.4"
+softbuffer = "0.4"
 taffy = "0.9.2"
 mobile-entry-point = "0.1.1"
 
