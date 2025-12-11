@@ -4,7 +4,21 @@ use std::num::NonZeroU32;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use skia_safe::{Color, Paint, Rect, Surface};
+use glutin::{
+    config::{ConfigTemplateBuilder, GlConfig},
+    context::{ContextAttributesBuilder, NotCurrentGlContext, PossiblyCurrentContext},
+    display::GetGlDisplay,
+    prelude::*,
+    surface::{Surface as GlutinSurface, WindowSurface},
+};
+use glutin_winit::{DisplayBuilder, GlWindow};
+use raw_window_handle::HasWindowHandle;
+
+use skia_safe::{
+    gpu::{self, gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
+    Color, ColorType, Paint, Rect, Surface,
+};
+
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy};
@@ -41,8 +55,9 @@ struct VirtualAppWindow {
 
 struct VirtelOS {
     window: Option<Rc<Window>>,
-    softbuffer_surface: Option<softbuffer::Surface<Rc<Window>, Rc<Window>>>,
-    screen_surface: Option<Surface>,
+    gl_context: Option<PossiblyCurrentContext>,
+    gl_surface: Option<GlutinSurface<WindowSurface>>,
+    gr_context: Option<gpu::DirectContext>,
     app_windows: HashMap<String, VirtualAppWindow>,
     core_initialized: bool,
     proxy: EventLoopProxy<VirtelEvent>,
@@ -56,8 +71,9 @@ impl VirtelOS {
     fn new(proxy: EventLoopProxy<VirtelEvent>) -> Self {
         Self {
             window: None,
-            softbuffer_surface: None,
-            screen_surface: None,
+            gl_context: None,
+            gl_surface: None,
+            gr_context: None,
             app_windows: HashMap::new(),
             core_initialized: false,
             proxy,
@@ -67,33 +83,81 @@ impl VirtelOS {
             drag_offset: (0.0, 0.0),
         }
     }
-
-    fn recreate_skia_surface(&mut self, width: i32, height: i32) {
-        self.screen_surface = Some(
-            skia_safe::surfaces::raster_n32_premul((width, height))
-                .expect("Failed to create skia surface"),
-        );
-    }
 }
 
 impl ApplicationHandler<VirtelEvent> for VirtelOS {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.window.is_none() {
-            log_now("OS: App Resumed -> Creating Window");
+            log_now("OS: Initializing OpenGL Renderer...");
 
             let win_attr = Window::default_attributes()
-                .with_title("Virtel OS")
+                .with_title("Virtel OS (GPU)")
                 .with_inner_size(winit::dpi::LogicalSize::new(800.0, 600.0))
                 .with_visible(true)
                 .with_decorations(false);
 
-            let window = Rc::new(event_loop.create_window(win_attr).unwrap());
-            let context = softbuffer::Context::new(window.clone()).unwrap();
-            let surface = softbuffer::Surface::new(&context, window.clone()).unwrap();
+            let template = ConfigTemplateBuilder::new()
+                .with_alpha_size(8)
+                .with_transparency(true);
 
-            self.window = Some(window.clone());
-            self.softbuffer_surface = Some(surface);
+            let display_builder = DisplayBuilder::new().with_window_attributes(Some(win_attr));
+
+            let (window, gl_config) = display_builder
+                .build(event_loop, template, |configs| {
+                    configs
+                        .reduce(|accum, config| {
+                            if config.num_samples() > accum.num_samples() {
+                                config
+                            } else {
+                                accum
+                            }
+                        })
+                        .unwrap()
+                })
+                .unwrap();
+
+            let window = Rc::new(window.unwrap());
+            let raw_window_handle = window.window_handle().unwrap().as_raw();
+
+            let gl_display = gl_config.display();
+            let context_attributes = ContextAttributesBuilder::new().build(Some(raw_window_handle));
+
+            let not_current_gl_context = unsafe {
+                gl_display
+                    .create_context(&gl_config, &context_attributes)
+                    .expect("Failed to create GL context")
+            };
+
+            let attrs = window
+                .build_surface_attributes(Default::default())
+                .expect("Failed to build surface attrs");
+            let gl_surface = unsafe {
+                gl_display
+                    .create_window_surface(&gl_config, &attrs)
+                    .expect("Failed to create GL surface")
+            };
+
+            let gl_context = not_current_gl_context.make_current(&gl_surface).unwrap();
+
+            let interface = skia_safe::gpu::gl::Interface::new_load_with(|name| {
+                if let Ok(cname) = std::ffi::CString::new(name) {
+                    gl_display.get_proc_address(&cname) as *const _
+                } else {
+                    std::ptr::null()
+                }
+            })
+            .expect("Failed to create native Skia GL interface");
+
+            let gr_context = gpu::DirectContext::new_gl(interface, None)
+                .expect("Failed to create Skia DirectContext");
+
+            self.window = Some(window);
+            self.gl_context = Some(gl_context);
+            self.gl_surface = Some(gl_surface);
+            self.gr_context = Some(gr_context);
             self.font_engine = Some(FontEngine::new());
+
+            log_now("OS: GPU Initialized Successfully.");
 
             if !self.core_initialized {
                 log_now("OS: Spawning Core Thread...");
@@ -116,24 +180,15 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                 std::thread::Builder::new()
                     .name("VirtelCore".into())
                     .spawn(move || {
-                        log_now("CORE: Thread started.");
                         let center = get_virtel_center();
-                        let result = std::panic::catch_unwind(move || {
+                        let _ = std::panic::catch_unwind(move || {
                             center.initialize(ui_api, sys_api);
-                            log_now("CORE: Initialize SUCCESS.");
                         });
-                        if let Err(err) = result {
-                            log_now("!!! CORE THREAD PANICKED !!!");
-                            if let Some(msg) = err.downcast_ref::<&str>() {
-                                println!("Panic Error: {}", msg);
-                            }
-                        }
                     })
-                    .expect("Failed to spawn core thread");
+                    .unwrap();
 
                 self.core_initialized = true;
             }
-            self.window.as_ref().unwrap().request_redraw();
         }
     }
 
@@ -147,26 +202,24 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
             } => {
                 log_now(&format!("OS: [Event] CreateWindow {}", app_id));
 
+                // Raster Surface (CPU)
                 let mut surface =
-                    &mut skia_safe::surfaces::raster_n32_premul((width as i32, height as i32))
+                    skia_safe::surfaces::raster_n32_premul((width as i32, height as i32))
                         .expect("Failed to create app surface");
 
                 {
-                    let mut canvas = surface.canvas();
-
+                    let canvas = surface.canvas();
                     canvas.clear(Color::WHITE);
 
-                    // Header
-                    let mut header_paint = Paint::default();
-                    header_paint.set_color(Color::LIGHT_GRAY);
-                    canvas.draw_rect(Rect::from_xywh(0.0, 0.0, width as f32, 30.0), &header_paint);
+                    let mut hp = Paint::default();
+                    hp.set_color(Color::LIGHT_GRAY);
+                    canvas.draw_rect(Rect::from_xywh(0.0, 0.0, width as f32, 30.0), &hp);
 
-                    // Text
                     if let Some(fonts) = &self.font_engine {
-                        fonts.draw_text(surface, &title, 10.0, 5.0, Color::BLACK, 20.0);
+                        fonts.draw_text(&mut surface, &title, 10.0, 5.0, Color::BLACK, 20.0);
                         fonts.draw_text(
-                            surface,
-                            "Hello from Wren!",
+                            &mut surface,
+                            "GPU Accelerated OS",
                             10.0,
                             50.0,
                             Color::DARK_GRAY,
@@ -177,12 +230,11 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
 
                 let app_win = VirtualAppWindow {
                     rect: Rect::from_xywh(50.0, 50.0, width as f32, height as f32),
-                    surface: surface.clone(),
+                    surface: surface,
                     title,
                 };
                 self.app_windows.insert(app_id, app_win);
             }
-
             VirtelEvent::DrawRect {
                 app_id,
                 x,
@@ -194,7 +246,6 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                 if let Some(app_win) = self.app_windows.get_mut(&app_id) {
                     let mut s = app_win.surface.clone();
                     let canvas = s.canvas();
-
                     let mut paint = Paint::default();
                     paint.set_color(Color::RED);
                     canvas.draw_rect(
@@ -214,6 +265,94 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
 
+            WindowEvent::Resized(size) => {
+                if size.width > 0 && size.height > 0 {
+                    if let (Some(gl_surface), Some(gl_context)) =
+                        (&self.gl_surface, &self.gl_context)
+                    {
+                        gl_surface.resize(
+                            gl_context,
+                            NonZeroU32::new(size.width).unwrap(),
+                            NonZeroU32::new(size.height).unwrap(),
+                        );
+                    }
+                    if let Some(w) = &self.window {
+                        w.request_redraw();
+                    }
+                }
+            }
+
+            WindowEvent::RedrawRequested => {
+                if let (Some(gl_context), Some(gl_surface), Some(window), Some(gr_context)) = (
+                    &self.gl_context,
+                    &self.gl_surface,
+                    &self.window,
+                    &mut self.gr_context,
+                ) {
+                    // 1. Make Current
+                    let _ = gl_context.make_current(gl_surface);
+
+                    let size = window.inner_size();
+                    if size.width == 0 || size.height == 0 {
+                        return;
+                    }
+
+                    // 2. GPU Canvas
+                    let fb_info = FramebufferInfo {
+                        fboid: 0,
+                        format: skia_safe::gpu::gl::Format::RGBA8.into(),
+                        protected: skia_safe::gpu::Protected::No,
+                    };
+
+                    let backend_render_target = BackendRenderTarget::new_gl(
+                        (size.width as i32, size.height as i32),
+                        None,
+                        8,
+                        fb_info,
+                    );
+
+                    let mut gpu_surface = Surface::from_backend_render_target(
+                        gr_context,
+                        &backend_render_target,
+                        SurfaceOrigin::BottomLeft,
+                        ColorType::RGBA8888,
+                        None,
+                        None,
+                    )
+                    .expect("Failed to create GPU surface");
+
+                    let canvas = gpu_surface.canvas();
+                    canvas.clear(Color::DARK_GRAY);
+
+                    for (_id, app_win) in &mut self.app_windows {
+                        // Raster -> GPU Texture
+                        let image = app_win.surface.image_snapshot();
+                        canvas.draw_image(
+                            &image,
+                            (app_win.rect.x(), app_win.rect.y()),
+                            Some(&Paint::default()),
+                        );
+
+                        let mut p = Paint::default();
+                        p.set_style(skia_safe::paint::Style::Stroke);
+                        if Some(_id) == self.dragging_window.as_ref() {
+                            p.set_color(Color::GREEN);
+                            p.set_stroke_width(3.0);
+                        } else {
+                            p.set_color(Color::WHITE);
+                            p.set_stroke_width(1.0);
+                        }
+                        canvas.draw_rect(app_win.rect, &p);
+                    }
+
+                    // 3. Swap Buffers
+                    gr_context.flush_and_submit();
+                    gl_surface.swap_buffers(gl_context).unwrap();
+
+                    window.request_redraw();
+                }
+            }
+
             WindowEvent::CursorMoved { position, .. } => {
                 self.cursor_position = (position.x, position.y);
                 if let Some(app_id) = &self.dragging_window {
@@ -228,126 +367,27 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     }
                 }
             }
-
             WindowEvent::MouseInput { state, button, .. } => {
                 use winit::event::{ElementState, MouseButton};
                 if button == MouseButton::Left {
                     if state == ElementState::Pressed {
                         let mx = self.cursor_position.0 as f32;
                         let my = self.cursor_position.1 as f32;
-
-                        let mut found = None;
                         for (id, win) in &self.app_windows {
                             if mx >= win.rect.left()
                                 && mx <= win.rect.right()
                                 && my >= win.rect.top()
                                 && my <= win.rect.bottom()
                             {
-                                found = Some(id.clone());
+                                self.dragging_window = Some(id.clone());
+                                self.drag_offset = (mx - win.rect.left(), my - win.rect.top());
+                                break;
                             }
-                        }
-
-                        if let Some(id) = found {
-                            self.dragging_window = Some(id.clone());
-                            let win = self.app_windows.get(&id).unwrap();
-                            self.drag_offset = (mx - win.rect.left(), my - win.rect.top());
                         }
                     } else {
                         self.dragging_window = None;
                     }
                 }
-            }
-
-            WindowEvent::KeyboardInput {
-                event:
-                    winit::event::KeyEvent {
-                        state: winit::event::ElementState::Pressed,
-                        physical_key:
-                            winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::Escape),
-                        ..
-                    },
-                ..
-            } => {
-                event_loop.exit();
-            }
-
-            WindowEvent::Resized(_) => {
-                if let Some(w) = &self.window {
-                    w.request_redraw();
-                }
-            }
-
-            WindowEvent::RedrawRequested => {
-                let window = if let Some(w) = &self.window {
-                    w.clone()
-                } else {
-                    return;
-                };
-                let size = window.inner_size();
-                if size.width == 0 || size.height == 0 {
-                    return;
-                }
-
-                if let Some(sb_surface) = &mut self.softbuffer_surface {
-                    let _ = sb_surface.resize(
-                        NonZeroU32::new(size.width).unwrap(),
-                        NonZeroU32::new(size.height).unwrap(),
-                    );
-                }
-
-                let need_recreate = if let Some(s) = &self.screen_surface {
-                    s.width() != size.width as i32 || s.height() != size.height as i32
-                } else {
-                    true
-                };
-                if need_recreate {
-                    self.recreate_skia_surface(size.width as i32, size.height as i32);
-                }
-
-                if let (Some(sb_surface), Some(screen_surface)) =
-                    (&mut self.softbuffer_surface, &mut self.screen_surface)
-                {
-                    let info = screen_surface.image_info();
-                    {
-                        let mut s = screen_surface.clone();
-                        let canvas = s.canvas();
-
-                        canvas.clear(Color::DARK_GRAY);
-
-                        for (_id, app_win) in &mut self.app_windows {
-                            let mut app_s = app_win.surface.clone();
-                            let image = app_s.image_snapshot();
-
-                            canvas.draw_image(
-                                &image,
-                                (app_win.rect.x(), app_win.rect.y()),
-                                Some(&Paint::default()),
-                            );
-
-                            let mut p = Paint::default();
-                            p.set_style(skia_safe::paint::Style::Stroke);
-                            if Some(_id) == self.dragging_window.as_ref() {
-                                p.set_color(Color::GREEN);
-                                p.set_stroke_width(3.0);
-                            } else {
-                                p.set_color(Color::WHITE);
-                                p.set_stroke_width(1.0);
-                            }
-                            canvas.draw_rect(app_win.rect, &p);
-                        }
-                    }
-                    let mut buffer = sb_surface.buffer_mut().unwrap();
-                    let peek = screen_surface.peek_pixels().unwrap();
-                    let pixels: &[u32] = unsafe {
-                        std::slice::from_raw_parts(
-                            peek.addr() as *const u32,
-                            (info.width() * info.height()) as usize,
-                        )
-                    };
-                    buffer.copy_from_slice(pixels);
-                    let _ = buffer.present();
-                }
-                window.request_redraw();
             }
             _ => (),
         }
