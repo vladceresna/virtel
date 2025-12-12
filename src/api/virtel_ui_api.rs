@@ -32,7 +32,7 @@ class UI {
 }
 
 wren_module! {
-    pub mod virtelui {
+    pub mod virtel_ui {
         pub crate::api::virtel_ui_api::UI;
     }
 }

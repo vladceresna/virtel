@@ -62,7 +62,7 @@ class FS {
 }
 
 wren_module! {
-    pub mod virtelfs {
+    pub mod virtel_fs {
         pub crate::api::virtel_fs_api::FS;
     }
 }
