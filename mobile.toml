@@ -1,0 +1,5 @@
+[app]
+name = "virtel"
+stylized-name = "Virtel"
+identifier = "com.vladceresna.virtel"
+template-pack = "winit"
