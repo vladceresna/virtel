@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img alt="License: GPL-3" src="https://img.shields.io/badge/License-GPL--3-red?style=flat-square">
+  <img alt="License: AGPL-3" src="https://img.shields.io/badge/License-AGPL--3-red?style=flat-square">
   <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/Kotlin-Multiplatform-orange?style=flat-square">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-2021-purple?style=flat-square">
   <img alt="Build Status" src="https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml/badge.svg">
@@ -112,7 +112,7 @@ If you encounter any issues, please open an issue on GitHub with details about y
 
 ## 📜 License
 
-This project is licensed under the GPL-3 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU AGPL-3 License with Virtel Interface Exception for Apps and Plugins - see the [LICENSE](LICENSE) file for details.
 
 ## 🌐 Community
 
