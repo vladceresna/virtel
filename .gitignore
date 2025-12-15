@@ -9,3 +9,5 @@ target/
 .DS_Store
 .env
 Cargo.lock
+gen/android/.idea
+.idea
