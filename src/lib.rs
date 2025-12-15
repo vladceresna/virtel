@@ -19,7 +19,7 @@ use skia_safe::{
     Color, ColorType, Paint, Rect, Surface,
 };
 
-use winit::event::WindowEvent;
+use winit::event::{TouchPhase, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy};
 use winit::window::{Window, WindowId};
 use winit::{application::ApplicationHandler, event::Event};
@@ -290,7 +290,7 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     let mut s = app_win.surface.clone();
                     let canvas = s.canvas();
                     let mut paint = Paint::default();
-                    paint.set_color(Color::RED);
+                    paint.set_color(Color::BLACK);
                     canvas.draw_rect(
                         Rect::from_xywh(x as f32, y as f32, w as f32, h as f32),
                         &paint,
@@ -324,7 +324,6 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     }
                 }
             }
-
             WindowEvent::RedrawRequested => {
                 if let (Some(gl_context), Some(gl_surface), Some(window), Some(gr_context)) = (
                     &self.gl_context,
@@ -432,6 +431,45 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     }
                 }
             }
+            WindowEvent::Touch(touch) => match touch.phase {
+                TouchPhase::Started => {
+                    let mx = touch.location.x as f32;
+                    let my = touch.location.y as f32;
+                    for (id, win) in &self.app_windows {
+                        if mx >= win.rect.left()
+                            && mx <= win.rect.right()
+                            && my >= win.rect.top()
+                            && my <= win.rect.bottom()
+                        {
+                            self.dragging_window = Some(id.clone());
+                            self.drag_offset = (mx - win.rect.left(), my - win.rect.top());
+                            break;
+                        }
+                    }
+                }
+                TouchPhase::Ended => {
+                    self.dragging_window = None;
+                }
+                TouchPhase::Cancelled => {
+                    self.dragging_window = None;
+                }
+                TouchPhase::Moved => {
+                    let mx = touch.location.x;
+                    let my = touch.location.y;
+                    self.cursor_position = (mx, my);
+                    if let Some(app_id) = &self.dragging_window {
+                        if let Some(win) = self.app_windows.get_mut(app_id) {
+                            let new_x = mx as f32 - self.drag_offset.0;
+                            let new_y = my as f32 - self.drag_offset.1;
+                            win.rect =
+                                Rect::from_xywh(new_x, new_y, win.rect.width(), win.rect.height());
+                            if let Some(w) = &self.window {
+                                w.request_redraw();
+                            }
+                        }
+                    }
+                }
+            },
             _ => (),
         }
     }
