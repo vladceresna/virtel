@@ -11,3 +11,4 @@ target/
 Cargo.lock
 gen/android/.idea
 .idea
+.gradle

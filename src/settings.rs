@@ -22,8 +22,8 @@ impl FileSystem {
     pub fn new() -> Self {
         let home_str = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
 
-        // #[cfg(target_os = "android")]
-        // let home_str = ...;
+        #[cfg(target_os = "android")]
+        let home_str = "/storage/emulated/0/Android/data/com.vladceresna.virtel/files".to_string();
 
         let virtel_dir = format!("{}/.virtel/0", home_str);
         let virtel_home_dir: String = format!("{}/home", virtel_dir);

@@ -19,10 +19,10 @@ use skia_safe::{
     Color, ColorType, Paint, Rect, Surface,
 };
 
-use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy};
 use winit::window::{Window, WindowId};
+use winit::{application::ApplicationHandler, event::Event};
 
 mod api;
 mod app;
@@ -32,14 +32,52 @@ mod events;
 mod fonts;
 mod log;
 mod net;
+mod render;
 mod settings;
 mod tokio_setup;
 mod ui_bridge;
+mod ui_layout;
 
-use crate::center::{get_virtel_center, SystemApi, VirtelError};
+use crate::{
+    center::{get_virtel_center, SystemApi, VirtelError},
+    ui_layout::{LayoutEngine, UiNode},
+};
 use events::VirtelEvent;
 use fonts::FontEngine;
 use ui_bridge::WinitUiBridge;
+
+#[cfg(target_os = "android")]
+fn init_logging() {
+    android_logger::init_once(
+        android_logger::Config::default()
+            //.with_max_level(log::Level::Trace)
+            .with_tag("virtel"),
+    );
+}
+
+#[cfg(not(target_os = "android"))]
+fn init_logging() {
+    simple_logger::SimpleLogger::new().init().unwrap();
+}
+
+#[cfg(target_os = "android")]
+use winit::platform::android::activity::AndroidApp;
+#[cfg(target_os = "android")]
+use winit::platform::android::EventLoopBuilderExtAndroid;
+
+#[cfg(target_os = "android")]
+#[no_mangle]
+pub fn android_main(app: AndroidApp) {
+    init_logging();
+
+    let mut event_loop = EventLoop::with_user_event()
+        .with_android_app(app)
+        .build()
+        .unwrap();
+
+    let mut app = VirtelOS::new(event_loop.create_proxy());
+    event_loop.run_app(&mut app).unwrap();
+}
 
 fn log_now(msg: &str) {
     println!("{}", msg);
@@ -51,6 +89,9 @@ struct VirtualAppWindow {
     surface: Surface,
     #[allow(dead_code)]
     title: String,
+
+    ui_root: UiNode,
+    layout_engine: LayoutEngine,
 }
 
 struct VirtelOS {
@@ -232,6 +273,8 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     rect: Rect::from_xywh(50.0, 50.0, width as f32, height as f32),
                     surface: surface,
                     title,
+                    ui_root: UiNode::new_container(Color::WHITE),
+                    layout_engine: LayoutEngine::new(),
                 };
                 self.app_windows.insert(app_id, app_win);
             }
