@@ -1,22 +1,14 @@
-*.iml
-.kotlin
-.gradle
-**/build/
-xcuserdata
-!src/**/build/
-local.properties
-.idea
+# Rust
+target/
+**/*.rs.bk
+
+# cargo-mobile2
+.cargo/
+
+# macOS
 .DS_Store
-captures
-.externalNativeBuild
-.cxx
-*.xcodeproj/*
-!*.xcodeproj/project.pbxproj
-!*.xcodeproj/xcshareddata/
-!*.xcodeproj/project.xcworkspace/
-!*.xcworkspace/contents.xcworkspacedata
-**/xcshareddata/WorkspaceSettings.xcsettings
-/vnative/Cargo.lock
-/vnative/target/
-/composeApp/release/
-/Highlights/
+.env
+Cargo.lock
+gen/android/.idea
+.idea
+.gradle
