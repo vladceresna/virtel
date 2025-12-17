@@ -1,4 +1,4 @@
-use skia_safe::{Color, Rect as SkRect};
+use skia_safe::{Color, RRect, Rect as SkRect};
 use taffy::prelude::*;
 
 pub enum WidgetType {
@@ -20,7 +20,7 @@ pub struct UiNode {
     pub children: Vec<UiNode>,
     pub style: Style, // Taffy (for example Flexbox/Grid)
 
-    pub layout_rect: SkRect,
+    pub layout_rect: RRect,
 }
 
 impl UiNode {
@@ -29,7 +29,7 @@ impl UiNode {
             widget: WidgetType::Container { color },
             children: Vec::new(),
             style: Style::default(), // There can be padding/margin
-            layout_rect: SkRect::default(),
+            layout_rect: RRect::default(),
         }
     }
 
@@ -82,7 +82,8 @@ impl LayoutEngine {
         let abs_x = parent_x + layout.location.x;
         let abs_y = parent_y + layout.location.y;
 
-        node.layout_rect = SkRect::from_xywh(abs_x, abs_y, layout.size.width, layout.size.height);
+        let rect = SkRect::from_xywh(abs_x, abs_y, layout.size.width, layout.size.height);
+        node.layout_rect = RRect::new_rect_xy(rect, 20.0, 20.0);
 
         let children_ids = self.taffy.children(taffy_id).unwrap();
         for (i, child) in node.children.iter_mut().enumerate() {

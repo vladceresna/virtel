@@ -15,14 +15,24 @@ use glutin_winit::{DisplayBuilder, GlWindow};
 use raw_window_handle::HasWindowHandle;
 
 use skia_safe::{
+    canvas::SrcRectConstraint,
     gpu::{self, gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
-    Color, ColorType, Paint, Rect, Surface,
+    ClipOp, Color, ColorType, Image, Paint, RRect, Rect, Surface,
 };
 
-use winit::event::{TouchPhase, WindowEvent};
-use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy};
-use winit::window::{Window, WindowId};
 use winit::{application::ApplicationHandler, event::Event};
+use winit::{
+    event::{TouchPhase, WindowEvent},
+    window::UserAttentionType,
+};
+use winit::{
+    event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy},
+    window::Fullscreen,
+};
+use winit::{
+    monitor::VideoModeHandle,
+    window::{Window, WindowId},
+};
 
 mod api;
 mod app;
@@ -36,14 +46,17 @@ mod render;
 mod settings;
 mod tokio_setup;
 mod ui_bridge;
+mod ui_kit_draw;
 mod ui_layout;
 
 use crate::{
     center::{get_virtel_center, SystemApi, VirtelError},
+    settings::FileSystem,
     ui_layout::{LayoutEngine, UiNode},
 };
 use events::VirtelEvent;
 use fonts::FontEngine;
+use skia_safe::Data;
 use ui_bridge::WinitUiBridge;
 
 #[cfg(target_os = "android")]
@@ -61,6 +74,10 @@ fn init_logging() {
 }
 
 #[cfg(target_os = "android")]
+use std::ffi::CString;
+#[cfg(target_os = "android")]
+use std::io::Read;
+#[cfg(target_os = "android")]
 use winit::platform::android::activity::AndroidApp;
 #[cfg(target_os = "android")]
 use winit::platform::android::EventLoopBuilderExtAndroid;
@@ -71,12 +88,12 @@ pub fn android_main(app: AndroidApp) {
     init_logging();
 
     let mut event_loop = EventLoop::with_user_event()
-        .with_android_app(app)
+        .with_android_app(app.clone())
         .build()
         .unwrap();
 
-    let mut app = VirtelOS::new(event_loop.create_proxy());
-    event_loop.run_app(&mut app).unwrap();
+    let mut os_app = VirtelOS::new(event_loop.create_proxy(), app.clone());
+    event_loop.run_app(&mut os_app).unwrap();
 }
 
 fn log_now(msg: &str) {
@@ -85,7 +102,7 @@ fn log_now(msg: &str) {
 }
 
 struct VirtualAppWindow {
-    rect: Rect,
+    rrect: RRect,
     surface: Surface,
     #[allow(dead_code)]
     title: String,
@@ -96,10 +113,14 @@ struct VirtualAppWindow {
 
 struct VirtelOS {
     window: Option<Rc<Window>>,
+    wallpaper: Option<Image>,
+    #[cfg(target_os = "android")]
+    android_app: AndroidApp,
     gl_context: Option<PossiblyCurrentContext>,
     gl_surface: Option<GlutinSurface<WindowSurface>>,
     gr_context: Option<gpu::DirectContext>,
     app_windows: HashMap<String, VirtualAppWindow>,
+    z_order: Vec<String>,
     core_initialized: bool,
     proxy: EventLoopProxy<VirtelEvent>,
     font_engine: Option<FontEngine>,
@@ -109,13 +130,20 @@ struct VirtelOS {
 }
 
 impl VirtelOS {
-    fn new(proxy: EventLoopProxy<VirtelEvent>) -> Self {
+    fn new(
+        proxy: EventLoopProxy<VirtelEvent>,
+        #[cfg(target_os = "android")] android_app: AndroidApp,
+    ) -> Self {
         Self {
             window: None,
+            wallpaper: None,
+            #[cfg(target_os = "android")]
+            android_app,
             gl_context: None,
             gl_surface: None,
             gr_context: None,
             app_windows: HashMap::new(),
+            z_order: Vec::new(),
             core_initialized: false,
             proxy,
             font_engine: None,
@@ -124,18 +152,64 @@ impl VirtelOS {
             drag_offset: (0.0, 0.0),
         }
     }
+    fn load_wallpaper_resource(&mut self) {
+        if self.wallpaper.is_some() {
+            return;
+        }
+
+        let image_data: Option<Vec<u8>> = {
+            #[cfg(target_os = "android")]
+            {
+                let manager = self.android_app.asset_manager();
+                if let Ok(c_path) = CString::new("wallpaper.png") {
+                    if let Some(mut asset) = manager.open(&c_path) {
+                        let mut buf = Vec::new();
+                        if asset.read_to_end(&mut buf).is_ok() {
+                            Some(buf)
+                        } else {
+                            log_now("OS: Failed to read asset bytes");
+                            None
+                        }
+                    } else {
+                        log_now("OS: Asset 'wallpaper.png' not found");
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+
+            #[cfg(not(target_os = "android"))]
+            {
+                std::fs::read("wallpaper.png")
+                    .or_else(|_| std::fs::read("assets/wallpaper.png"))
+                    .ok()
+            }
+        };
+
+        if let Some(data) = image_data {
+            let sk_data = Data::new_copy(&data);
+            if let Some(img) = Image::from_encoded(sk_data) {
+                log_now("OS: Wallpaper loaded successfully");
+                self.wallpaper = Some(img);
+            } else {
+                log_now("OS: Failed to decode wallpaper image (bad format?)");
+            }
+        }
+    }
 }
 
 impl ApplicationHandler<VirtelEvent> for VirtelOS {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        if self.window.is_none() {
+        if self.window.is_none() || self.gr_context.is_none() {
             log_now("OS: Initializing OpenGL Renderer...");
 
             let win_attr = Window::default_attributes()
-                .with_title("Virtel OS (GPU)")
+                .with_title("Virtel - Apps Box")
                 .with_inner_size(winit::dpi::LogicalSize::new(800.0, 600.0))
                 .with_visible(true)
-                .with_decorations(false);
+                //.with_fullscreen(Some(winit::window::Fullscreen::Borderless(None)))
+                .with_decorations(true);
 
             let template = ConfigTemplateBuilder::new()
                 .with_alpha_size(8)
@@ -158,6 +232,8 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                 .unwrap();
 
             let window = Rc::new(window.unwrap());
+            let scale = window.scale_factor() as f32;
+
             let raw_window_handle = window.window_handle().unwrap().as_raw();
 
             let gl_display = gl_config.display();
@@ -197,6 +273,7 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
             self.gl_surface = Some(gl_surface);
             self.gr_context = Some(gr_context);
             self.font_engine = Some(FontEngine::new());
+            self.load_wallpaper_resource();
 
             log_now("OS: GPU Initialized Successfully.");
 
@@ -219,7 +296,7 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                 let sys_api = Arc::new(MockSystem);
 
                 std::thread::Builder::new()
-                    .name("VirtelCore".into())
+                    .name("Virtel Center".into())
                     .spawn(move || {
                         let center = get_virtel_center();
                         let _ = std::panic::catch_unwind(move || {
@@ -250,33 +327,48 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
 
                 {
                     let canvas = surface.canvas();
+                    canvas.clip_rrect(
+                        RRect::new_rect_xy(
+                            Rect::from_xywh(0.0 as f32, 0.0 as f32, width as f32, height as f32),
+                            20.0,
+                            20.0,
+                        ),
+                        ClipOp::Intersect,
+                        true,
+                    );
                     canvas.clear(Color::WHITE);
 
                     let mut hp = Paint::default();
-                    hp.set_color(Color::LIGHT_GRAY);
-                    canvas.draw_rect(Rect::from_xywh(0.0, 0.0, width as f32, 30.0), &hp);
+                    hp.set_color(Color::BLACK);
+                    hp.set_anti_alias(true);
+                    // App Bar
+                    canvas.draw_rrect(
+                        RRect::new_rect_xy(
+                            Rect::from_xywh(4.0, 4.0, (width as f32) - 8.0, 40.0),
+                            16.0,
+                            16.0,
+                        ),
+                        &hp,
+                    );
 
                     if let Some(fonts) = &self.font_engine {
-                        fonts.draw_text(&mut surface, &title, 10.0, 5.0, Color::BLACK, 20.0);
-                        fonts.draw_text(
-                            &mut surface,
-                            "GPU Accelerated OS",
-                            10.0,
-                            50.0,
-                            Color::DARK_GRAY,
-                            16.0,
-                        );
+                        fonts.draw_text(&mut surface, &title, 15.0, 10.0, Color::WHITE, 20.0);
                     }
                 }
 
                 let app_win = VirtualAppWindow {
-                    rect: Rect::from_xywh(50.0, 50.0, width as f32, height as f32),
+                    rrect: RRect::new_rect_xy(
+                        Rect::from_xywh(50.0, 50.0, width as f32, height as f32),
+                        20.0,
+                        20.0,
+                    ),
                     surface: surface,
                     title,
                     ui_root: UiNode::new_container(Color::WHITE),
                     layout_engine: LayoutEngine::new(),
                 };
-                self.app_windows.insert(app_id, app_win);
+                self.app_windows.insert(app_id.clone(), app_win);
+                self.z_order.push(app_id);
             }
             VirtelEvent::DrawRect {
                 app_id,
@@ -290,12 +382,29 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     let mut s = app_win.surface.clone();
                     let canvas = s.canvas();
                     let mut paint = Paint::default();
-                    paint.set_color(Color::BLACK);
+                    paint.set_color(Color::GREEN);
                     canvas.draw_rect(
                         Rect::from_xywh(x as f32, y as f32, w as f32, h as f32),
                         &paint,
                     );
                 }
+            }
+            VirtelEvent::DrawText {
+                app_id,
+                text,
+                color,
+                size,
+                x,
+                y,
+            } => {
+                if let Some(app_win) = self.app_windows.get_mut(&app_id) {
+                    let mut surface = &mut app_win.surface;
+
+                    if let Some(fonts) = &self.font_engine {
+                        fonts.draw_text(&mut surface, &text, x, y, color, size);
+                    }
+                }
+                println!("DrawText")
             }
             _ => {}
         }
@@ -335,6 +444,7 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     let _ = gl_context.make_current(gl_surface);
 
                     let size = window.inner_size();
+
                     if size.width == 0 || size.height == 0 {
                         return;
                     }
@@ -353,7 +463,7 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                         fb_info,
                     );
 
-                    let mut gpu_surface = Surface::from_backend_render_target(
+                    let mut gpu_surface = &mut Surface::from_backend_render_target(
                         gr_context,
                         &backend_render_target,
                         SurfaceOrigin::BottomLeft,
@@ -363,28 +473,33 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     )
                     .expect("Failed to create GPU surface");
 
-                    let canvas = gpu_surface.canvas();
-                    canvas.clear(Color::DARK_GRAY);
+                    if let Some(bg_image) = &self.wallpaper {
+                        ui_kit_draw::draw_cover(gpu_surface, &bg_image);
+                    } else {
+                        gpu_surface.canvas().clear(Color::DARK_GRAY);
+                    }
 
-                    for (_id, app_win) in &mut self.app_windows {
+                    for id in &mut self.z_order {
+                        let mut app_win = &mut self.app_windows.get(&id.clone()).unwrap();
+
                         // Raster -> GPU Texture
-                        let image = app_win.surface.image_snapshot();
-                        canvas.draw_image(
+                        let image = app_win.surface.clone().image_snapshot();
+                        gpu_surface.canvas().draw_image(
                             &image,
-                            (app_win.rect.x(), app_win.rect.y()),
+                            (app_win.rrect.rect().x(), app_win.rrect.rect().y()),
                             Some(&Paint::default()),
                         );
 
                         let mut p = Paint::default();
                         p.set_style(skia_safe::paint::Style::Stroke);
-                        if Some(_id) == self.dragging_window.as_ref() {
-                            p.set_color(Color::GREEN);
-                            p.set_stroke_width(3.0);
+                        if Some(&(*id)) == self.dragging_window.as_ref() {
+                            p.set_color(Color::GRAY);
+                            p.set_stroke_width(2.0);
                         } else {
-                            p.set_color(Color::WHITE);
-                            p.set_stroke_width(1.0);
+                            p.set_color(Color::LIGHT_GRAY);
+                            p.set_stroke_width(2.0);
                         }
-                        canvas.draw_rect(app_win.rect, &p);
+                        gpu_surface.canvas().draw_rrect(app_win.rrect, &p);
                     }
 
                     // 3. Swap Buffers
@@ -401,8 +516,9 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     if let Some(win) = self.app_windows.get_mut(app_id) {
                         let new_x = position.x as f32 - self.drag_offset.0;
                         let new_y = position.y as f32 - self.drag_offset.1;
-                        win.rect =
-                            Rect::from_xywh(new_x, new_y, win.rect.width(), win.rect.height());
+                        let rect =
+                            Rect::from_xywh(new_x, new_y, win.rrect.width(), win.rrect.height());
+                        win.rrect = RRect::new_rect_xy(rect, 20.0, 20.0);
                         if let Some(w) = &self.window {
                             w.request_redraw();
                         }
@@ -415,16 +531,27 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                     if state == ElementState::Pressed {
                         let mx = self.cursor_position.0 as f32;
                         let my = self.cursor_position.1 as f32;
-                        for (id, win) in &self.app_windows {
-                            if mx >= win.rect.left()
-                                && mx <= win.rect.right()
-                                && my >= win.rect.top()
-                                && my <= win.rect.bottom()
+
+                        let mut win_id = None;
+                        for id in self.z_order.iter().rev() {
+                            let win = &self.app_windows[id];
+
+                            if mx >= win.rrect.rect().left()
+                                && mx <= win.rrect.rect().right()
+                                && my >= win.rrect.rect().top()
+                                && my <= win.rrect.rect().bottom()
                             {
+                                win_id = Some(id.clone());
                                 self.dragging_window = Some(id.clone());
-                                self.drag_offset = (mx - win.rect.left(), my - win.rect.top());
+                                self.drag_offset =
+                                    (mx - win.rrect.rect().left(), my - win.rrect.rect().top());
                                 break;
                             }
+                        }
+                        if !win_id.is_none() {
+                            let id = win_id.unwrap();
+                            self.z_order.retain(|x| *x != id);
+                            self.z_order.push(id.clone());
                         }
                     } else {
                         self.dragging_window = None;
@@ -435,16 +562,27 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                 TouchPhase::Started => {
                     let mx = touch.location.x as f32;
                     let my = touch.location.y as f32;
-                    for (id, win) in &self.app_windows {
-                        if mx >= win.rect.left()
-                            && mx <= win.rect.right()
-                            && my >= win.rect.top()
-                            && my <= win.rect.bottom()
+
+                    let mut win_id = None;
+                    for id in self.z_order.iter().rev() {
+                        let win = &self.app_windows[id];
+
+                        if mx >= win.rrect.rect().left()
+                            && mx <= win.rrect.rect().right()
+                            && my >= win.rrect.rect().top()
+                            && my <= win.rrect.rect().bottom()
                         {
+                            win_id = Some(id.clone());
                             self.dragging_window = Some(id.clone());
-                            self.drag_offset = (mx - win.rect.left(), my - win.rect.top());
+                            self.drag_offset =
+                                (mx - win.rrect.rect().left(), my - win.rrect.rect().top());
                             break;
                         }
+                    }
+                    if !win_id.is_none() {
+                        let id = win_id.unwrap();
+                        self.z_order.retain(|x| *x != id);
+                        self.z_order.push(id.clone());
                     }
                 }
                 TouchPhase::Ended => {
@@ -461,8 +599,15 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
                         if let Some(win) = self.app_windows.get_mut(app_id) {
                             let new_x = mx as f32 - self.drag_offset.0;
                             let new_y = my as f32 - self.drag_offset.1;
-                            win.rect =
-                                Rect::from_xywh(new_x, new_y, win.rect.width(), win.rect.height());
+                            win.rrect = RRect::new_rect_radii(
+                                Rect::from_xywh(
+                                    new_x,
+                                    new_y,
+                                    win.rrect.rect().width(),
+                                    win.rrect.rect().height(),
+                                ),
+                                win.rrect.radii_ref(),
+                            );
                             if let Some(w) = &self.window {
                                 w.request_redraw();
                             }
@@ -475,6 +620,7 @@ impl ApplicationHandler<VirtelEvent> for VirtelOS {
     }
 }
 
+#[cfg(not(target_os = "android"))]
 pub fn run() {
     let event_loop = EventLoop::<VirtelEvent>::with_user_event().build().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);

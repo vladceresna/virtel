@@ -10,7 +10,8 @@ pub fn render_ui(surface: &mut Surface, node: &UiNode, fonts: &FontEngine) {
         WidgetType::Container { color } => {
             let mut paint = Paint::default();
             paint.set_color(*color);
-            canvas.draw_rect(node.layout_rect, &paint);
+            paint.set_anti_alias(true);
+            canvas.draw_rrect(node.layout_rect, &paint);
         }
         WidgetType::Text {
             content,
@@ -20,8 +21,8 @@ pub fn render_ui(surface: &mut Surface, node: &UiNode, fonts: &FontEngine) {
             fonts.draw_text(
                 surface,
                 content,
-                node.layout_rect.x(),
-                node.layout_rect.y(),
+                node.layout_rect.rect().x(),
+                node.layout_rect.rect().y(),
                 *color,
                 *size,
             );

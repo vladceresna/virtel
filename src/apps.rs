@@ -12,15 +12,16 @@ pub fn prepare_apps() {
     if !is_app_installed("vladceresna.virtel.launcher") {
         println!("installed");
         let (_, launcher) = fetch(
-            "https://virtel.netlify.app/std-apps/4.0.0/vladceresna.virtel.launcher.lpp".to_string(),
+            "https://virtel.netlify.app/std-apps/4.0.0/vladceresna.virtel.launcher/code/app.wren"
+                .to_string(),
             Method::GET,
             None,
             RequestBody::None,
-            ResponseBody::Bytes,
+            ResponseBody::Text,
         )
         .unwrap();
-        if let FetchResult::Bytes(bytecode) = launcher {
-            install_app("vladceresna.virtel.launcher", bytecode).unwrap();
+        if let FetchResult::Text(content) = launcher {
+            install_app("vladceresna.virtel.launcher", content).unwrap();
         }
     }
     println!("prepare apps 2");
@@ -41,21 +42,21 @@ pub fn is_app_installed(app_id: &str) -> bool {
 
 /// .vc - virtel bytecode
 /// .vs - virtel scriptcode (bytecode text interpretation)
-pub fn install_app(app_id: &str, bytecode: Vec<u8>) -> io::Result<()> {
-    // let apps_dir = get_virtel_center()
-    //     .get_settings()
-    //     .filesystem
-    //     .apps_dir
-    //     .clone();
+pub fn install_app(app_id: &str, content: String) -> io::Result<()> {
+    let apps_dir = get_virtel_center()
+        .get_settings()
+        .filesystem
+        .apps_dir
+        .clone();
 
-    // // Write the bytecode to the Virtel filesystem
-    // let temp = format!("{}/{}/code", apps_dir, app_id);
-    // let this_app_code_path = Path::new(&temp);
-    // if !this_app_code_path.exists() {
-    //     fs::create_dir_all(&this_app_code_path)?;
-    // }
-    // let app_bytecode_path = this_app_code_path.join(app_id.to_string() + ".vc");
-    // fs::write(app_bytecode_path, bytecode)?;
+    // Write the bytecode to the Virtel filesystem
+    let temp = format!("{}/{}/code", apps_dir, app_id);
+    let this_app_code_path = Path::new(&temp);
+    if !this_app_code_path.exists() {
+        fs::create_dir_all(&this_app_code_path)?;
+    }
+    let app_bytecode_path = this_app_code_path.join("app.wren");
+    fs::write(app_bytecode_path, content)?;
 
     println!("App isn`t successfully copied to Virtel filesystem.");
     Ok(())

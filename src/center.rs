@@ -5,6 +5,7 @@ use std::{
 };
 
 use once_cell::sync::Lazy;
+use skia_safe::Color;
 
 use crate::{
     app::AppElement,
@@ -27,6 +28,14 @@ impl fmt::Display for VirtelError {
 pub trait UiApi: Send + Sync + Debug {
     fn create_window(&self, title: String, width: i64, height: i64) -> Result<String, VirtelError>;
     fn put_box(&self, node: String, id: String) -> Result<String, VirtelError>;
+    fn draw_text(
+        &self,
+        text: String,
+        color: Color,
+        size: f32,
+        x: f32,
+        y: f32,
+    ) -> Result<String, VirtelError>;
 }
 
 //#[uniffi::export(with_foreign)]

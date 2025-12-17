@@ -56,5 +56,34 @@ impl FontEngine {
         );
 
         paragraph.paint(surface.canvas(), Point::new(x, y));
+        println!("FontDrawText")
+    }
+}
+
+pub fn hex_to_color(hex_raw: &str) -> Color {
+    // (0x, #)
+    let hex = hex_raw.trim_start_matches("0x").trim_start_matches("#");
+
+    // u8::from_str_radix
+    let get_byte = |index: usize| -> u8 {
+        if index + 2 > hex.len() {
+            return 0;
+        }
+        u8::from_str_radix(&hex[index..index + 2], 16).unwrap_or(0)
+    };
+
+    if hex.len() == 8 {
+        // AARRGGBB (8)
+        let a = get_byte(0); // Alpha
+        let r = get_byte(2); // Red
+        let g = get_byte(4); // Green
+        let b = get_byte(6); // Blue
+        Color::from_argb(a, r, g, b)
+    } else {
+        // RRGGBB (6) -> Alpha = 255
+        let r = get_byte(0);
+        let g = get_byte(2);
+        let b = get_byte(4);
+        Color::from_argb(255, r, g, b)
     }
 }

@@ -3,6 +3,7 @@ use crate::center::UiApi;
 // src/ui_bridge.rs
 use crate::events::VirtelEvent;
 use crate::VirtelError;
+use skia_safe::Color;
 use std::fmt::Debug;
 use winit::event_loop::EventLoopProxy;
 
@@ -37,6 +38,30 @@ impl UiApi for WinitUiBridge {
             })
             .map_err(|_| VirtelError::Message("Event loop is closed".into()))?;
 
+        Ok(app_id)
+    }
+    fn draw_text(
+        &self,
+        text: String,
+        color: Color,
+        size: f32,
+        x: f32,
+        y: f32,
+    ) -> Result<String, VirtelError> {
+        let app_id =
+            get_current_app_id().ok_or(VirtelError::Message("No current app id context".into()))?;
+
+        self.proxy
+            .send_event(VirtelEvent::DrawText {
+                app_id: app_id.clone(),
+                text,
+                color,
+                size,
+                x,
+                y,
+            })
+            .map_err(|_| VirtelError::Message("Event loop is closed".into()))?;
+        println!("draw text event");
         Ok(app_id)
     }
 
