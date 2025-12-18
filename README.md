@@ -9,7 +9,7 @@
   <img alt="License: AGPL-3" src="https://img.shields.io/badge/License-AGPL--3-red?style=flat-square">
   <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/Kotlin-Multiplatform-orange?style=flat-square">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-2021-purple?style=flat-square">
-  <img alt="Build Status" src="https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml/badge.svg">
+  <!-- <img alt="Build Status" src="https://github.com/vladceresna/virtel/actions/workflows/ubuntu.yml/badge.svg"> -->
 </p>
 
 ------------
@@ -30,24 +30,29 @@ Modern applications are bloated. They consume gigabytes of storage and significa
 *   **More Space:** Free up gigabytes of storage on your devices.
 *   **Instant Speed:** Applications launch and run instantly without loading overhead.
 *   **True Privacy & Security:** Full control over your data and applications.
-*   **Universal Compatibility:** Write once, run anywhere - Windows, Linux, Android, and more.
+*   **Universal Compatibility:** Write once, run anywhere without compiling - Windows, Linux, Android, and more.
 
 ## 🏗️ Architecture
 
 Virtel is built on a robust, multi-language foundation to ensure performance and safety:
 *   **Core Engine:** Written in **Rust** for memory safety and speed.
-*   **User Interface:** Built with **Kotlin Compose Multiplatform** for a native, modern UI on all platforms.
-*   **Applications:** Run on Virtel's own custom bytecode (`.vc`), written in the **Steps** language.
+*   **User Interface:** Built with **Skia, Taffy and Winit** for a native, modern UI on all platforms.
+*   **Applications:** Run on Wren VM in the **Wren** language.
 
 ## 🦶 The Steps Programming Language
 
 **Steps** is a simple, concise programming language designed specifically for Virtel. Its syntax is straightforward, making it easy to learn while being powerful enough to build complex applications. If you prefer another language, our goal is to support compilers that can transpile other popular languages into Steps bytecode.
 
-**Simple Example (`start.steps`):**
-```steps
-# Set a variable and print it
-var set "Hello, Virtel World!" greeting;
-sys out greeting;
+**Simple Example (`app.wren`):**
+```wren
+import "virtel" for VirtelApp, Log
+
+class MyApp is VirtelApp {
+    static start() {
+        UI.createWindow("My App", 200, 100)
+        Log.info("Hello World!")
+    }
+}
 ```
 
 ## 🚀 Try Virtel Now
@@ -64,9 +69,10 @@ Virtel is more than a project; it's a revolution. We have the technology, but we
 
 ### For Developers: How to Contribute
 
-Virtel is in its early stages, and we need your help! We are looking for contributors, especially those with experience in **Compose Multiplatform**, to help us build critical components like:
-*   The **IDE** for developing Steps applications.
-*   **Compilers** for other languages to target the Steps bytecode.
+Virtel is in its early stages, and we need your help! We are looking for contributors, especially those with experience in **Rust** and **C**, to help us build critical components like:
+*   The **IDE** for developing Wren Virtel applications.
+*   **Compilers** for other languages to target the Wren bytecode.
+*   Support Wren Language and Rust bindings as ruwren
 
 If you're interested in contributing, please check our [Contributing Guidelines](CONTRIBUTING.md) (or open an issue to start the discussion!).
 
@@ -81,17 +87,6 @@ If you're interested in contributing, please check our [Contributing Guidelines]
 - [ ] Redox
 - [ ] Native (OS)
 
-### Implemented Modules
-- [x] **Core:** `csl` (Console), `ref` (References), `var` (Variables), `sys` (System)
-- [x] **Data:** `lst` (Lists), `mat` (Math), `str` (Strings), `bln` (Booleans)
-- [x] **Logic:** `run` (Control Flow: if, while)
-- [x] **I/O:** `fls` (Files), `srv` (Server), `clt` (Client), `spr` (Speaker), `tts` (Text-to-Speech)
-- [x] **UI:** `scr` (Screen Components)
-- [x] **AI:** `llm` (LLM Helper)
-- [ ] **UI/UX:** `dgm` (Diagrams), `ppt`/`ort` (3D), `anm` (Animations)
-- [ ] **Hardware:** `wss` (WebSockets), `blt` (Bluetooth), `ard` (AR), `vrd` (VR), `stt` (Speech-to-Text), `mcr` (Microphone), `cmr` (Camera), `snr` (Sensors)
-- [ ] **Networking:** `cnt` (Connect & Sync)
-
 ## 🔧 Building from Source
 
 Building Virtel is a complex process due to its multi-platform nature. We are working on simplifying it. For now, you can follow these steps:
@@ -105,8 +100,9 @@ Building Virtel is a complex process due to its multi-platform nature. We are wo
 1.  Clone the repository: `git clone https://github.com/vladceresna/virtel.git`
 2.  Open the project in Android Studio.
 3.  Ensure you have the Android SDK and NDK installed via the SDK Manager in Android Studio.
-4.  Sync the project with Gradle files.
-5.  Run the desired configuration (e.g., `desktopRun`).
+4.  Run `cargo mobile init`
+5.  Run `cargo android run` or `cargo run` for desktop
+6.  Read .md files
 
 If you encounter any issues, please open an issue on GitHub with details about your operating system and the error you encountered.
 
