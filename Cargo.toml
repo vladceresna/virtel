@@ -46,6 +46,19 @@ serde = "1.0.228"
 ruwren = "0.4"
 
 
+# minreq = {version="2.0.3", features=["https"]}
+# rodio = { version = "0.20.1", features = ["cpal-shared-stdcxx"] }
+# whichlang = "0.1.0"
+
+# pqc_kyber = "0.7.1"
+# crystals-dilithium = "1.0.0"
+# sha3 = "0.10.8"
+# hex = "0.4.3"
+# rand = "0.8.3"
+# aes-gcm = "0.10.3"
+# base64 = "0.22.1"
+
+
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.15.1"
 log = "0.4.29"
@@ -54,3 +67,20 @@ ndk = "0.9.0"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 simple_logger = "5.1.0"
+
+
+
+
+
+
+
+# [profile.release]
+# opt-level = "z"
+# debug = false
+# lto = true
+# codegen-units = 1
+# strip = true
+# incremental = false
+# debug-assertions = false
+# overflow-checks = false
+# default-features = false

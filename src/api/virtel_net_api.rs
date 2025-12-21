@@ -24,13 +24,6 @@ impl HttpClient {
         }
     }
 }
-pub fn virtel_net_api_wren_bindings() -> &'static str {
-    r#"
-class HttpClient {
-    foreign static get(url)
-}
-"#
-}
 wren_module! {
     pub mod virtel_net {
         pub crate::api::virtel_net_api::HttpClient;

@@ -31,15 +31,6 @@ impl UI {
     }
 }
 
-pub fn virtel_ui_api_wren_bindings() -> &'static str {
-    return r#"
-class UI {
-    foreign static createWindow(title, width, height)
-    foreign static drawText(text, color, size, x, y)
-}
-"#;
-}
-
 wren_module! {
     pub mod virtel_ui {
         pub crate::api::virtel_ui_api::UI;

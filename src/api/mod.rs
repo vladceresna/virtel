@@ -6,10 +6,8 @@ pub mod virtel_net_api;
 pub mod virtel_ui_api;
 
 use crate::api::{
-    virtel_api::{virtel, virtel_api_wren_bindings},
-    virtel_fs_api::{virtel_fs, virtel_fs_api_wren_bindings},
-    virtel_net_api::{virtel_net, virtel_net_api_wren_bindings},
-    virtel_ui_api::{virtel_ui, virtel_ui_api_wren_bindings},
+    virtel_api::virtel, virtel_fs_api::virtel_fs, virtel_net_api::virtel_net,
+    virtel_ui_api::virtel_ui,
 };
 
 pub fn get_ready_apied_vm(base_dir: &str) -> VMWrapper {
@@ -26,12 +24,16 @@ pub fn get_ready_apied_vm(base_dir: &str) -> VMWrapper {
         .enable_relative_import(true)
         .script_loader(script_loader)
         .build();
-    vm.interpret("virtel", virtel_api_wren_bindings()).unwrap();
-    vm.interpret("virtel/fs", virtel_fs_api_wren_bindings())
+    vm.interpret("virtel", include_str!("../wren_api/virtel_api.wren"))
         .unwrap();
-    vm.interpret("virtel/ui", virtel_ui_api_wren_bindings())
+    vm.interpret("virtel/fs", include_str!("../wren_api/virtel_fs_api.wren"))
         .unwrap();
-    vm.interpret("virtel/net", virtel_net_api_wren_bindings())
+    vm.interpret("virtel/ui", include_str!("../wren_api/virtel_ui_api.wren"))
         .unwrap();
+    vm.interpret(
+        "virtel/net",
+        include_str!("../wren_api/virtel_net_api.wren"),
+    )
+    .unwrap();
     return vm;
 }

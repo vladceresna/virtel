@@ -8,7 +8,7 @@ fn get_full_os_path(path: String) -> String {
         .filesystem
         .virtel_dir
         .clone();
-    format!("{}{}", virtel, path)
+    path.replace("$", &virtel) // $/home/dir/
 }
 
 #[derive(WrenObject, Default)]
@@ -47,18 +47,6 @@ impl FS {
         let path = get_full_os_path(path.into_string().unwrap());
         let _ = fs::remove_dir_all(path);
     }
-}
-
-pub fn virtel_fs_api_wren_bindings() -> &'static str {
-    return r#"
-class FS {
-    foreign static readFile(path)
-    foreign static writeFile(path, content)
-    foreign static existsPath(path)
-    foreign static createPath(path)
-    foreign static deletePath(path)
-}
-"#;
 }
 
 wren_module! {
